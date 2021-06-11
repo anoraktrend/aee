@@ -5,7 +5,7 @@ easy to use terminal-based screen oriented editor that requires no
 instruction to use.  The intended audience for aee ranges from 
 people who are new to computers to experienced software developers.
 
-Legal stuff:
+**Legal stuff:**
 
           THIS MATERIAL IS PROVIDED "AS IS".  THERE ARE NO WARRANTIES OF 
           ANY KIND WITH REGARD TO THIS MATERIAL, INCLUDING, BUT NOT 
@@ -33,7 +33,7 @@ Legal stuff:
 
 
 Building the software:
-
+-
 	The editor 'aee' may be built on most UNIX systems by simply 
         entering 'make' at the shell prompt in the directory where 
         the source is located.  The X-Windows version, 'xae', may be 
@@ -52,7 +52,7 @@ Building the software:
         from the files 'create.mk.aee' and 'create.mk.xae'.
         
 General information:
-
+-
 The editor 'aee' (another easy editor) is intended to be a simple, 
 easy to use terminal-based screen oriented editor that requires no 
 instruction to use.  The intended audience for aee ranges from 
@@ -122,13 +122,12 @@ will decry its lack of more features.  I will settle for knowing
 that aee does fulfill the needs of a large number of users.  The 
 goals of aee are:
 
-        1. To be so easy to use as to require no instruction.
-        2. To have enough functionality to be useful to a large number of 
-           people.
+1. To be so easy to use as to require no instruction.
+2. To have enough functionality to be useful to a large number of people.
 
 aee is a superset of 'ee', a simplified text editor that is (as of 
-this writing) available with various free UNIX distributions (Linux 
-and FreeBSD). 
+this writing) available with various free UNIX distributions (FreeBSD 
+and Linux). 
 
 Hugh Mahon              |___|     
 h_mahon@fc.hp.com       |   |     
