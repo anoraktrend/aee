@@ -1,0 +1,1088 @@
+                                   Main Menu
+
+	Aee allows you to move through the file and execute commands without
+having to toggle through different modes.  The following are the topics 
+available in this help file:
+
+	commands	keys	init.ae
+
+Please enter the entire word you are interested in learning more information
+about.  If you would like to return to this menu later while still in this 
+help facility, enter a TAB (press the TAB key, then the RETURN key).  To 
+learn about a topic, enter the topic at the prompt (type the entire topic 
+just as it is in the list, then press RETURN).
+
+The man (reference) page for aee contains additional information, such as 
+configuration information, which is not contained in this on-line help file.
+
+To exit the help facility, simply press the RETURN key without entering other 
+information.
+
+Copyright (c) 1987, 1988, 1989, 1991, 1992, 1994, 1995, 1997, 1999 Hugh Mahon.
+
+commands
+
+	Aee uses word commands to perform several functions.  The following are
+the commands used:
+
+   !            edit         leftmargin   noliteral    rightmargin
+   +-           eight        line         nooverstrike save
+   autoformat   exit         literal      nostatus     show
+   binary       expand       noautoformat nowindows    spacing
+   case         file         nocase       overstrike   status
+   cd           height       noeight      print        tabs
+   character    help         noexpand     pwd          text
+   define       indent       noindent     quit         untabs
+   delete       info         noinfo       read         windows
+   diff         justify      nojustify    resequence   write
+
+
+binary
+
+	Files read while in binary mode will be read in as is, only the 
+new line (also called the line-feed) character has special meaning 
+(terminating a line).  
+
+	The command line option '-binary' may be used to ensure the 
+editor is in the binary mode when starting.
+
+	The 'binary' command may also be used in the file 'init.ae'.
+
+	See also 'text'.
+
+text
+
+	Files read while in the text mode will be checked whether or 
+not they contain carriage-return characters immediately before new-line 
+(also called line-feed) characters.  
+
+	If the file does contain carriage-returns before new-lines, the 
+file is deemed a DOS file.  When it comes time to write the file, if 
+the editor has set a flag and will write the file with 
+carriage-returns.  
+
+	If no carriage-return characters are found, the file is deemed 
+a UNIX file.
+
+	The 'text' mode is the default.  See 'binary' for non-text mode 
+behavior.
+
+	It is possible to change the mode between DOS and UNIX in the 
+menu (which can by default be accessed by pressing the Escape key, or 
+control-[).
+
+	The command line option '-text' can be used to ensure that the 
+editor starts in text mode.
+
+character
+
+	To have the ascii code for the character the cursor is currently
+pointing to displayed, type 'character' at the command prompt.  The decimal 
+form of the number is the one displayed.
+
+cd
+
+	The command 'cd' will change the current working to the one 
+specified, for example:
+
+	cd ..
+
+will cause the working directory to be changed to the directory above the 
+current directory.  
+
+file
+
+	Entering the command 'file' at the command prompt causes the name
+of the file being edited to be displayed.  The file is the name entered
+on the command line when the editor is invoked.
+
+height
+
+        The command 'height' is used to set or display the number of lines 
+that are to be displayed in the info window.  By providing a numeric 
+argument for the command, like so:
+
+                height 8
+
+the number of lines will be set according to the value of the argument.  If 
+no argument is provided, the current value will be displayed.  
+
+        See the commands 'info' and 'noinfo' to learn how to turn on or off 
+the display of the info window.
+
+info
+noinfo
+
+        The command 'info' turns on the display of an information window at 
+the top of the screen.  This window displays the keys associated with the 
+control keys (keys pressed at the same time as the CONTROL key).  
+
+        The command 'noinfo' turns off the display of this window.
+
+	These commands may be used in the file init.ae. See 'init.ae' for 
+more information.
+
+        The info window is by default displayed.  It can be turned off 
+automatically by putting 'noinfo' in an init.ae file, or by specifying the 
+'-i' option when invoking aee.
+
+        See the command 'height' to learn how to change the size of the 
+info window.
+
+line
+
+	Entering the command 'line' at the command prompt will cause the
+number of the line the cursor is currently on to be displayed.
+
+read
+
+	You may read other files into the current buffer by using the command
+'read', as in the example below:
+
+		read file.c
+
+The file named 'file.c' will be read into the buffer you are currently
+operating in.  This may be any buffer you create or in 'main', the initial
+buffer created at the start of aee.  You may read in as many files as you wish
+as often as you wish.  
+
+
+write
+
+	You may write out the buffer you are currently operating in to a file
+using the command 'write', as in the example:
+
+		write file.c
+
+The file name is then compared to the current file name.  If the named file is
+not the same as the current file, aee checks if it already exists.  If the file
+does already exist, you are asked if you want to write over it.  If you decide 
+to write over the file, answer 'y'.  This will cause aee to delete the 
+existing file.  If the file does not already exist, it will be created without 
+prompting for any more information.
+
+
+save
+
+        The command 'save' will save the contents of the buffer 'main' to the 
+file named when the editor was invoked.
+
+
+edit
+
+        You may edit another file within the same edit session by using 
+the command 'edit', as in the example:
+
+                edit file.c
+
+A new buffer named 'file.c' will be created and the file (if it exists) 
+will be read into the buffer.  If journalling was not turned off at the 
+beginning of the edit session (either with a command line option or 
+command in the file .init.ae) then a journal file will also be created 
+for this file.
+
+The buffer will be deleted by the 'delete' command, or when the editor 
+is exited.  If changes have been made to the contents of an edit buffer, 
+the user will be prompted whether or not to save the contents of the buffer.
+
+buffer
+
+	The command 'buffer' performs three functions.  Entered with no 
+argument, 'buffer' will display the name of the current buffer.  Entered with 
+an argument, 'buffer' will move to the buffer with the argument as the name of 
+the buffer.  If the buffer does not exist, it is created.  If the buffer 
+exists, the cursor is placed at the last position it occupied in that buffer.
+
+
+delete
+
+	The command 'delete' deletes the buffer you are currently operating in.
+You cannot delete the buffer named 'main', since this is the buffer containing
+the file you read in upon entering aee.
+
+
+diff
+
+	The 'diff' command will provide a diff of the contents of the 
+current edit buffer and the file associated with the buffer.  A new 
+window (buffer) will be created to contain the diffs.  If the diff 
+command had been previously run then the buffer created previously will 
+be deleted and a fresh buffer created.
+
+	Note that this command will only work if a file is associated 
+with the buffer, which happens when the buffer is the main buffer, or 
+when the 'edit' command was used to edit another file in an existing 
+session.
+
+
+exit
+
+	The command 'exit' causes you to leave the edit session and write the
+buffer 'main' out to the file named when you invoked aee.  If you have created
+any other buffer(s) in the session, you will be prompted if you are sure you
+wish to exit without doing anything with the data in the other buffer(s).
+
+	An optional exclamation mark ('!') after the command allows you to 
+leave aee without going through the rest of the list of files you entered when 
+invoking the edit session.  
+
+
+quit
+
+	The command 'quit' allows you to leave the edit session without saving
+the changes you made during the edit session.  If you have created other 
+buffers during the session, you will be prompted if you are sure you wish to 
+exit without doing anything with the data in the other buffer(s).
+
+	An optional exclamation mark ('!') after the command allows you to 
+leave aee without going through the rest of the list of files you entered when 
+invoking the edit session.  
+
+
++-
+
+	Entering a '+' or '-' and then a number will move the cursor forward
+or backward in the text that number of lines.
+
+
+!
+
+	The exclamation point ('!') at the beginning of the line followed by a 
+shell command allows you to execute the shell command without having to exit 
+or quit the edit session.
+
+	You may read data into a buffer by typing a '<' and then the name of a 
+buffer (if different from the current buffer) before the !command, as follows:
+
+		<inbuff !ls
+
+	You may also send data out to be processed by a shell command by 
+typing a '>' and the name of a buffer (if different from the current buffer) 
+before the !command, as follows:
+
+		>outbuff !sort
+
+	You may output data and read from a shell command at the same time, as 
+follows:
+		<sorted >list !sort
+
+which will send data from buffer 'list' to be sorted, and then place the 
+sorted data in a buffer named 'sorted'.
+
+
+pwd
+
+	Prints the working (current) directory.
+
+case
+nocase
+
+	The command 'case' tells aee to discriminate between upper and lower 
+case during a search or replace command.  The default condition is that aee
+does not discriminate between upper and lower case (nocase).  You may tell
+aee to be case sensitive in the file 'init.ae' (see topic init.ae).
+
+	The command 'nocase' tells aee not to discriminate between upper and 
+lower case during search and replace operations.  This command is used to
+return to the default condition after using the command 'case'.
+
+
+literal
+
+	The command 'literal' tells aee to match characters one to one during
+the search operation, i.e., to match an 'a' in the search string to an 'a' in
+the text, or a '*' to a '*'.  When in literal mode, aee matches exactly what is
+in the search string to the text through which it is searching.  In literal 
+mode, no characters have special meaning.
+
+	The command 'noliteral' tells aee that certain characters in the 
+search string may be metacharacters, that is, characters which have special 
+meaning.  See topic 'noliteral'.  
+
+	'literal' and 'noliteral' may be used in the initialization file.  See
+'init.ae'.
+
+noliteral
+
+	The command 'noliteral' tells aee that some characters (described 
+below) have special meaning.  Noliteral mode is the default.  The 
+following characters have special meaning in noliteral mode of 
+search/replace operations:
+
+	\x	match character x verbatim
+	[a-z]	match character in text in range a to z
+	[^a-z]	match character in text as anything but in range a to z
+	.	match any single character
+	*	match any string
+	^	match beginning of line
+	$	match end of line
+
+	To search for an 'a' at the beginning of a line, type '^a' for the 
+search string at the prompt.  To search for a backslash (\), a dollar sign ($),
+a period (.), or any of the other characters that have special meaning when in
+noliteral mode, precede them with a backslash (\).  To search for a backslash, 
+enter "\\" in the search string.
+
+
+windows
+nowindows
+
+	The command 'windows' allows multiple buffers to exist on the screen.
+When you use the command 'buffer' with an argument, a buffer is created with
+the argument as the name of that window.  If you haven't entered the command
+'nowindow', aee will put the new buffer on the screen along with the current
+window reduced in size.  You may have several windows on your screen at the 
+same time.  This is the default condition.  
+
+	The command 'nowindows' tells aee that you do not want buffers to 
+co-exist on the screen.  When you use the command 'buffer' and an argument, the
+new buffer replaces the previous buffer on the screen.  The old buffer still
+exists, but simply will not be visible until you move back to that buffer.  You
+may turn off windowing in the file 'init.ae' (see topic init.ae).
+
+
+show
+
+	The command 'show' is used to display the function(s) assigned to the
+specified key.  Example:
+
+		show ^g
+
+displays:
+
+		key defined as gold
+
+Note that the carat ('^') is typed by the user.  Both control keys (^x) and 
+function keys  (f#) may be displayed.  
+
+
+define
+
+	The command 'define' is used to assign a function or set of functions
+to a key.  Example:
+
+		define ^L dl
+
+assigns the function 'delete line' to the key combination control-L using the 
+symbol 'dl'.  Note that the '^' is typed by the user.  More than one function 
+may be assigned to a key, as long as each function is separated by one or more 
+spaces.  You may also assign a string to be inserted by executing a control or 
+function key by using delimiters:
+
+		define f8 /insert this string/
+
+causing the text between the slashes (/) to be inserted at the cursor position
+when f8 is pressed.  The 'define' command may also be used in the file 
+'init.ae' (see topic init.ae).
+
+
+resequence
+
+	The command 'resequence' renumbers the lines into proper sequence
+from the top of the file to the bottom.  This command is useful if you have
+inserted or deleted lines in the middle of the file, and wish to know how many
+lines from the top you are.  
+
+
+help
+
+	The 'help' command is used to obtain this help facility.  To find the 
+topic you want, look at the first selection presented, which may be obtained by
+entering a TAB and pressing RETURN at the prompt at the bottom of your screen.
+To exit, simply press RETURN in response to the prompt below and you will 
+return to your edit session.  
+
+	The entire name of the topic must be entered without any other 
+characters before or after the topic name, otherwise this will confuse the help
+facility.
+
+
+eight
+noeight
+
+	The command 'eight' tells aee to send an eight bit character 
+directly to the terminal rather than representing it in a different 
+fashion.  Since some terminals do not have a character set which includes 
+eight bit characters, aee allows the user to choose whether or not eight 
+bit characters are represented by the eight bit value between angle 
+brackets (251 is represented by <251>), or having the code sent directly 
+to the terminal.  The command 'noeight' is used to tell aee to use the 
+representation of the character, which is the default condition. 
+
+	The command 'noeight' is used to tell aee to represent eight bit 
+characters as the decimal value which represents the character between angle
+brackets.  This is the default condition.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+tabs
+untabs
+
+	The command 'tabs' sets tab stops if used with arguments.  If used
+without arguments, 'tabs' displays the stops set with previous 'tabs' commands.
+Example:
+	tabs 3 6 9 12
+
+will set tab stops at columns 3, 6, 9, and 12.  After column 12, if the TAB key
+is pressed, a tab will be inserted and the cursor will move to the next default
+tab stop, in this case, column 16.  
+
+	The command 'untabs' unsets tab stops that were set with previous 
+'tabs' commands.  For example:
+
+	untabs 6 12
+
+will unset tab stops at columns 6 and 12 if tabs had been set there using a
+previous 'tabs' command.
+
+See also the 'spacing' and 'expand' commands.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+spacing
+
+	The command 'spacing' will set the spacing for tabs to be the value 
+specified for the number of spaces between tab stops.  This differs from the 
+'tabs' command in that spacing is regular (while with 'tabs' spacing need not 
+be regular stops).
+
+Example:
+
+	spacing 5
+
+Will space tab stops every 5 spaces, like so:
+
+     1    2    3    4    5
+
+	This command may be used in the file init.ae. See 'init.ae' for more
+information.
+
+See also the 'tabs' and 'expand' commands for additional information
+
+
+expand
+noexpand
+
+	The command 'expand' causes spaces to fill to the next tab stop when
+the TAB key is pressed.  This is useful when you need to move to specific
+columns (when used with the command 'tabs'), but do not want the tab character.
+
+	The command 'noexpand' turns off tab expansion.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+justify
+nojustify
+
+	The command 'justify' tells aee to justify the right side of a 
+paragraph during a 'format' operation.
+
+	The command 'nojustfy' turns off right margin justification.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+autoformat
+noautoformat
+
+        The command 'autoformat' tells the editor to turn on auto paragraph 
+formatting.  This means that when entering text, when a space is entered, the 
+editor will make sure the text in the current paragraph fits into the set 
+margins.  A paragraph is defined by a section of text bounded by the begin or 
+end of files, and blank lines at the begin or end of the text block.
+
+        The command 'noautoformat' turns off auto paragraph formatting.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+        In order for paragraph formatting to work, margins must be observed.  
+When auto paragraph formatting is turned on, the editor is automatically 
+notified to observe margins.  If however, the user later turns off margins, 
+auto formatting will stop.
+
+
+margin
+nomargin
+
+	The command 'margin' tells aee that you wish the length of a line 
+limited to the right margin.  If in the course of typing you go beyond the 
+right margin, aee will then start a new line, and move the characters from the 
+first word that crosses the right margin to the new line.
+
+	The command 'nomargin' tells the editor that the set margins are not 
+to be observed.  
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+rightmargin
+
+	The command 'rightmargin' allows you to set or view a value for the 
+right margin.  If you enter a value after 'rightmargin', that value will be 
+used for the new right margin setting.  
+
+	To view the current right margin setting, simply type 'rightmargin'.
+
+	This command may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+leftmargin
+
+	The command 'leftmargin' allows you to set or view a value for the 
+left margin.  If you enter a value after 'leftmargin', that value will be 
+used for the new left margin setting.  
+
+	To view the current left margin setting, simply type 'leftmargin'.
+
+	This command may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+status
+nostatus
+
+	The command 'status' turns on a status line at the bottom of the screen
+which displays the name of the file, the line number, the column, and other
+flags used by the editor.
+
+	The command 'nostatus' turns off the status line.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+
+overstrike
+nooverstrike
+
+	The command 'overstrike' allows you to overwrite, or replace existing 
+text, instead of inserting in the middle of a line.
+
+	The command 'nooverstrike' turns off the 'overstrike' mode.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+indent
+noindent
+
+	The command 'indent' causes automatic indentation of a line created
+by pressing the RETURN key to the same number of tabs and spaces as the 
+previous line.
+
+	The command 'noindent' turns off automatic indentation.
+
+	These commands may be used in the file init.ae. See 'init.ae' for more
+information.
+
+print
+
+	The command "print" will send the contents of the current buffer to a 
+shell command (the default is the command "lp").  
+
+	The shell command  can be redefined in the "init.ae" file by using 
+the line option "printcommand", as follows:
+
+	printcommand lp -dlaser
+
+The above example will cause the "print" command to send the contents of the 
+current buffer to the shell command "lp" with the option "-dlaser", which 
+specifies the device "laser".  (See the UNIX reference page for "lp(1)" for 
+more information.)
+
+
+keys
+
+	Aee uses a combination of function keys and control keys (a-z pressed 
+along with the CONTROL or CTRL key) to perform operations in the editor.  These
+keys may be redefined to the user's taste using the 'define' command.  The 
+functions available are listed below.  The function name is followed in 
+parenthesis by the symbol name used in defining the key. 
+Enter the symbol or the name in response to the 'topic' prompt.
+
+case sensitive search (case)        gold (gold)
+case insensitive search (nocase)    replace prompt (prp)
+carriage return (cr)                begin of line (bol)
+exit (exit)                         insert line (il)
+expand tabs (expand)                reverse (rev)
+don't expand tabs (noexpand)        begin of text (bot)
+help (help)                         left arrow (left)
+auto indent (indent)                right arrow (right)
+auto indent off (noindent)          carriage return (cr)
+literal search (literal)            mark text (mark)
+regular expresn search (noliteral)  search (srch)
+observe margins (margins)           clear to eol (cl)
+no margins (nomargins)              match (mc)
+overstrike (overstrike)             search prompt (psrch)
+insert characters (nooverstrike)    command (cmd)
+display status line (status)        menu (menu)
+don't display status (nostatus)     undelete (und)
+redraw screen (rd)                  copy text (copy)
+show all windows (windows)          next buffer (nb)
+show only one window (nowindows)    undelete character (udc)
+advance line (al)                   cut text (cut)
+end of line (eol)                   next page (np)
+previous page (pp)                  undelete line (udl)
+advance word (aw)                   delete character (dc)
+end of text (eot)                   paste text (pst)
+previous word (pw)                  undelete word (udw)
+append (append)                     delete line (dl)
+format (format)                     prefix (prefix)
+redraw screen (rd)                  unmark (unmark)
+ascii character (ac)                delete word (dw)
+forward (fwd)                       previous buffer (pb)
+replace (rp)                        up arrow (up)
+backspace (bck)                     down arrow (down)
+
+menu
+
+	The 'menu' function causes a menu to pop up in the middle of the 
+screen.  The menu contains entries for exiting the editor, getting help 
+information, edit functions (cut/paste), file operations (read, write, save), 
+screen redraw, file behavior settings (margins, etc.), search and replace, and 
+miscellaneous operations (spell, paragraph formatting, shell escape).
+
+	The menu function is initially assigned to the Escape key (or 
+control-[ for keyboards without an escape key).  The menu is navigated by 
+using the up and down arrow keys, the space bar and the backspace key.  Once 
+the cursor is on the desired menu item, press the Return key to perform the 
+task indicated.  
+
+delete line
+dl
+
+	'Delete line' is initially assigned to control-L, as well as being
+assigned to the key (if it is on your keyboard) DELETE LINE.  This function
+may be assigned to a key using the symbol 'dl'.  'Delete line' deletes from 
+the current cursor position to the end of the line, and appends the following
+line to the end of the current line.  The line is placed in a buffer and may
+be undeleted using the keyboard function 'undelete line', whose symbol is 
+'udl'.  
+
+See 'undelete line'.
+
+
+clear to eol
+cl
+
+	'Clear to eol' is initially assigned to GOLD control-C, and may be 
+assigned to a key using the symbol 'cl'.  'Clear to eol' deletes from 
+the current cursor position to the end of the line, but does not append the 
+following line to the end of the current line as does 'delete line'.  The 
+line is placed in a buffer and may be undeleted using the keyboard function 
+'undelete line', whose symbol is 'udl'.  
+
+See 'undelete line'.
+
+
+delete word
+dw
+
+	'Delete word' is initially assigned to the key control-W, and to f3.
+This function may be assigned to a key using the symbol 'dw'.  Using this 
+function you may delete from the current cursor position to the beginning of 
+the next word.  For instance, if your cursor is placed on a character that is
+not a 'space' or 'tab' character, then the characters to the next space or tab
+will be deleted, and then the tabs and/or spaces to the next non-space 
+character.  If your cursor is on a space or tab, the space characters up to 
+the first non-space character are deleted.
+
+	The word is placed in a buffer allowing you to undelete it by using
+the command 'undelete character', symbol 'udw'.  
+
+delete character
+dc
+
+	The default assignment for 'delete character' is control-K, and if your
+terminal has it, the DELETE CHAR key.  'Delete character' may be assigned to a
+key using the symbol 'dc'.  'Delete char' deletes the character the cursor is 
+currently on.  Both 'delete character' and 'backspace' use the same buffer to 
+store the last deleted character.  This buffer is accessed by using the 
+function 'undelete character'.
+
+undelete
+und
+
+	The function 'undelete' is not initially assigned.  'Undelete' does 
+an undelete operation of the last delete operations, in reverse order of the 
+delete operations.  The symbol for 'undelete' is 'und'.
+
+undelete line
+udl
+
+	'Undelete line' is initially assigned to gold control-L, gold f2, and
+to gold DELETE LINE, where DELETE LINE is a key on your keyboard.  The symbol
+for 'undelete line' is 'udl'.  This function allows you to insert the most 
+recently deleted line.  The line or partial line will be inserted in front of
+the current cursor position, and will cause the text after the cursor to be at
+the start of a new line.
+
+undelete word
+udw
+
+	'Undelete word' is initially assigned to gold control-W, and gold f3.
+The symbol for 'undelete word' is 'udw'.  This function allows you to insert 
+the most recently deleted word at the cursor.
+
+end of line
+eol
+
+	'End of line' is initially assigned to control-O and uses the symbol
+'eol'.  'End of line' does exactly what you would expect it to do, which is
+to move the cursor to the end of the current line.  If you are already at the
+end of the line, 'end of line' will move the cursor to the end of the next 
+line.
+
+begin of line
+bol
+
+	'Begin of line' is initially assigned to control-D, and uses the symbol
+'bol'.  'Begin of line' moves the cursor to the beginning of the current line.
+If you are at the start of the current line, 'begin of line' will move you to 
+the beginning of the previous line.
+
+end of text
+eot
+
+	'End of text' is initially assigned to control-B, and uses the symbol 
+'eot'.  'End of text' moves the cursor to the bottom of the current buffer.
+
+begin of text
+bot
+
+	'Begin of text' is initially assigned to control-T, and uses the symbol
+'bot'.  'Begin of text' moves the cursor to the top of the current buffer.
+
+next page
+np
+
+	'Next page' is initially assigned to control-N, and if your terminal 
+has it, the key NEXT PAGE.  'Next page' uses the symbol 'np'.  'Next page' 
+moves the cursor forward several lines, depending on the size of your terminal 
+screen, and the number of lines the current buffer occupies on the screen.
+
+previous page
+pp
+
+	'Previous page' is initially assigned to control-P, and if your 
+terminal has it, the key PREV PAGE.  'Previous page' uses the symbol 'pp'.
+'Previous page' moves the cursor forward several lines, depending on the size 
+of your terminal screen, and the number of lines the current buffer occupies on
+the screen.
+
+next buffer
+nb
+
+	'Next buffer' is initially assigned to gold control-N, and uses the 
+symbol 'nb'.  'Next buffer' moves you to the next buffer in the order of buffer
+creation.  If you have windows active, your cursor will be placed in the next
+buffer, otherwise the screen is erased and the next buffer replaces the current
+buffer on the screen.  The name of the buffer is also displayed on the command
+line.
+
+previous buffer
+pb
+
+	'Previous buffer' is initially assigned to gold control-P, and uses the
+symbol 'pb'.  'Previous buffer' moves you to the previous buffer in the order
+of buffer creation.  If you have windows active, your cursor will be placed in
+the next buffer, otherwise the screen is erased and the next buffer replaces 
+the current buffer on the screen.  The name of the buffer is also displayed on 
+the command line.
+
+gold
+
+	'Gold' is initially assigned to control-G, and f1.  'Gold' allows the
+user to have two functions assigned to keys, one is the function executed when
+pressing the key, and the other is executed when the key is pressed immediately
+after pressing the gold key.
+
+	'Gold' also allows the user to repeat a single keystroke many times.  
+Simply press the key assigned to GOLD, enter the number of repetitions you 
+wish, then press the key you wish to be repeated (or GOLD and key).
+
+insert line
+il
+
+	'Insert line' is initially assigned to the key INSERT LINE on your 
+keyboard, and uses the symbol 'il'.  'Insert line' will terminate the line at
+the current cursor position and put the rest of the line at the start of the
+next line.  
+
+search prompt
+psrch
+
+	'Search prompt' is initially assigned to the key gold control-F, and
+gold f5.  'Search prompt' uses the symbol 'psrch'.  'Search prompt' causes a 
+prompt to appear on the command line asking for the string to be found.  If 
+you have executed the 'mark' function, all text from the current cursor 
+position to the start of the string will be marked.  
+
+	You may also use metacharacters in your search string, as well as 
+have aee be case sensitive during search operations.  See topics 'case' 
+and 'literal' for more information. 
+
+	To search for a carriage return, a backspace, or control-v, press
+control-v, and then the desired character.  The control-v character is required
+since the backspace character is used for string editing, and carriage-return 
+is used for string termination.
+
+
+search
+srch
+
+	'Search' is initially assigned to control-F and f5, and uses the symbol
+'srch'.  'Search' searches for the last string prompted for after executing
+'search prompt'.  
+
+replace prompt
+prp
+
+	'Replace prompt' is initially assigned to gold control-Z, and uses the 
+symbol 'prp'.  'Replace prompt' asks the user for the string to be replaced,
+and the string to replace it with.  This is accomplished by entering the 
+initial string surrounded by a delimiter character which is not in the string 
+itself, as follows:
+
+	/old/new/
+
+where "old" is the string to be found and replaced, and "new" is the string
+to replace "old" with.
+
+	You may also use metacharacters in your first string (the string to be
+replaced), as well as have the search operation be case sensitive.  See the 
+topics 'case' and 'literal'.
+
+	It is possible to place the original string into the new string during
+the replace operation, by inserting an ampersand (&) into the new string where
+you wish to re-insert the old string.  This can only be done if in the 
+'noliteral' mode.  To place an ampersand into the new string precede it with a
+backslash (\).
+
+see 'replace'
+
+replace
+rp
+
+	'Replace' is initially assigned to control-Z, and uses the symbol 'rp'.
+'Replace' uses the data obtained when the user executes the function 'replace
+prompt' to search for a string and then replace it with the new string.  
+'Replace' prompts the user each time it finds a match to the old string as to
+whether or not to replace this occurrence.  The beginning of the old string
+found is highlighted, and the prompt asks the user to respond with a carriage
+return or 'r' to replace the string, 'a' to replace all occurrences, 's' to
+skip this occurrence, or 'q' to quit replacing strings.
+
+forward
+fwd
+
+	'Forward' is initially assigned to GOLD control-V, and uses the symbol
+'fwd'.  'Forward' allows the user to specify that the next search or replace 
+operation will search forward of the current cursor position.
+
+reverse
+rev
+
+	'Reverse' is initially assigned to GOLD control-r, and uses the symbol
+'rev'.  'Reverse' allows the user to specify that the next search or replace
+operation will search above or before the current cursor position.
+
+advance line
+al
+
+	'Advance line' is initially assigned to f8, and uses the symbol 'al'.
+'Advance line' moves the cursor to the beginning of the next line.
+
+advance word
+aw
+
+	'Advance word' is initially assigned to f4, and uses the symbol 'aw'.
+'Advance word' moves the cursor forward to the next character after the 
+following spaces and/or tabs.
+
+previous word
+pw
+
+	'Previous word' is initially assigned to gold control-Y, and uses the 
+symbol 'pw'.  'Previous word' moves the cursor to the first character of the 
+word to the left of the current cursor position.
+
+mark
+
+	'Mark' is initially assigned to control-U and f6.  'Mark'  causes  the
+text over which the cursor moves to be "marked" until you execute  either  the
+'cut' or 'copy' function.  This causes the text to be  placed  into  a  buffer
+so that you may place it elsewhere in your file using  the  'paste'  function.
+You may delete the marked text (using the 'cut' function) or simply  copy  the
+text (using the 'copy' function).  Once the text is in  the  buffer,  you  may
+insert it anywhere in your buffer  as  many  times  as  you  like.   The  text
+contained in the buffer before pressing 'mark' is lost. 
+
+ 
+prefix
+
+	'Prefix' is initially assigned to gold control-D, and uses the symbol 
+'prefix'.  'Prefix' performs the same function as 'mark', except that the 
+text marked is added to the current contents of the paste buffer (it is 
+placed before the previous contents, hence 'prefix').
+
+ 
+append
+
+	'Append' is initially assigned to gold control-B, and uses the symbol 
+'append'.  'Append' performs the same function as 'mark', except that the 
+text marked is added to the current contents of the paste buffer (it is 
+placed at the end of the previous contents, hence 'append').
+
+
+paste
+pst
+
+	'Paste' is initially assigned to gold control-V and gold f7, and uses 
+the symbol 'pst'.  'Paste' causes the text you placed into the paste buffer
+using the 'mark' function to be inserted into the current buffer starting at 
+the current cursor position.
+
+cut
+
+	'Cut' is initially assigned to control-X and f7.  'Cut' causes the 
+marked text to be removed from the buffer.  You can insert this text in a 
+buffer anywhere you wish by using the 'paste' function.
+
+copy
+
+	'Copy' is initially assigned to gold control-C and gold f6.  'Copy'
+causes the marked text in the current buffer to be "unmarked", but still causes
+it to be placed into the buffer for use with the 'paste' function.
+
+unmark
+
+	'Unmark' causes the marked test to be unmarked, and leaves the 
+previous contents of the paste buffer intact.  The 'unmark' function is 
+initially unassigned.  The symbol for 'unmark' is 'unmark'.
+
+ascii character
+ac
+
+	'ASCII character' is initially assigned to control-A, and uses the 
+symbol 'ac'.  'ASCII character' prompts the user form the decimal form of the
+ASCII code for the desired character, and then inserts it at the current cursor
+position.
+
+match
+mc
+
+	'Match' is initially assigned to gold control-A, and uses the symbol
+'mc'.  If the cursor is on a parenthesis (), a bracket [], a brace {}, or
+angle bracket <>, 'match' will find the character which will be of the same 
+level (skip nested characters), and place the cursor on it.
+
+
+format
+
+	'Format' is initially assigned to gold control-F, and uses the symbol 
+'format'.  By pressing the function 'format', you will cause the paragraph in 
+which the cursor currently resides to be left and right adjusted according 
+the the current margin settings.  You must have 'nowrap' set, so that aee 
+knows to observe the margins, otherwise no operations will occur.
+
+
+command
+cmd
+
+	'Command' is initially assigned to control-E, and gold f8.
+'Command' is assigned to so many keys because some people assign shell 
+operations to various keys, and since this function is so vital, it is hoped
+that no one will have assigned operations to all of the keys used for this 
+function.  'Command' prompts the user for the name of the operation to be 
+performed, and those operations are described under "commands" in the first 
+topic selection.  'Command' uses the symbol 'cmd'.
+
+up
+
+	'Up' is initially assigned to the up-arrow key.  This function causes 
+the cursor to move to the previous line in the same horizontal position it 
+currently occupies.
+
+down
+
+	'Down' is initially assigned to the down-arrow key.  This function 
+causes the cursor to move to the next line in the same horizontal position it
+currently occupies.
+
+left
+
+	'Left' is initially assigned to the left-arrow key.  'Left' moves the
+cursor to the left of the current cursor position, unless it is at the 
+beginning of a line, in which case it moves to the last character of the 
+previous line.
+
+right
+
+	'Right' is initially assigned to the right-arrow key.  'Right' moves 
+the cursor to the right or the current cursor position, unless it is at the end
+of the line, in which case it moves to the start of the next line.
+
+redraw
+rd
+
+	'Redraw' is initially assigned to control-R, and uses the symbol 'rd'.
+'Redraw' erases the screen and then redraws them, clearing the screen of any
+garbage introduced by messages from outside the editor.
+
+backspace
+bck
+
+	'Backspace' is initially assigned to the BACKSPACE key, and uses the 
+symbol 'bck'.  'Backspace' deletes the character to the left of the cursor
+and places it in a buffer.  The character may be "undeleted" using the function
+'undelete character'.
+
+carriage return
+cr
+
+	'Carriage return' is assigned to the RETURN key, and uses the symbol 
+'cr'.  'Carriage return' terminates a line and moves the cursor to the start of
+the next line.
+
+
+init.ae
+
+	The file 'init.ae' may be used to set parameters and define keys to 
+perform certain functions within ae.  This file may reside in three 
+locations: /usr/local/lib/init.ae, .init.ae in your home directory, and 
+.init.ae in the current working directory.
+
+        First, aee checks for a system level initialization file, located in 
+/usr/local/lib.  Next the user's home directory is checked for a file named 
+.init.ae, then the current directory.  The settings from each file are read, 
+so that the directives from the most recently read file will take precedence 
+over previously read files.  This allows, for example, the .init.ae file in 
+the user's home directory to specify tab expansion, while the .init.ae file 
+in the current working directory specifies no tab expansion.  This allows the 
+user to establish global settings and to automatically override them for 
+specific directories if desired. 
+
+	The 'init.ae' file may be used to set aee to consider upper and lower
+case (using the 'case' and 'nocase' commands), whether or not buffers will 
+co-exist on the screen ('windows', 'nowindows'), and define function and 
+control keys (the 'define' command).  See the above mentioned topics for 
+details on syntax and usage.  An example follows:
+
+	define ^l dl
+	define gold ^l udl
+	case
+	nowindows
+
+This file would disable windows, cause aee to be case sensitive, and define
+control-L to execute the function 'delete line', and gold control-L to execute
+the function 'undelete line'.
+

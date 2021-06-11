@@ -1,0 +1,248 @@
+#!/bin/sh
+
+#
+#	This script will determine if the system is a System V or BSD based
+#	UNIX system and create a makefile for xae appropriate for the system.
+#
+# $Header: /home/hugh/sources/aee/RCS/create.mk.xae,v 1.12 2010/07/18 00:58:28 hugh Exp hugh $
+#
+
+other_cflags=""
+
+HEADER_FILES=""
+
+# if HP-UX, add other CFLAGS
+
+name_string="`uname`"
+
+if [ "$name_string" = "HP-UX" ]
+then
+	other_cflags="$other_cflags -Wa,-Ns10000 -Aa -D_HPUX_SOURCE"
+fi
+
+if [ "$name_string" = "Darwin" ]
+then
+	strip_option=""
+	other_cflags="-DNO_CATGETS"
+else
+	strip_option="-s"
+fi
+
+# check for stdlib.h
+
+if [ -f /usr/include/stdlib.h ]
+then
+	HAS_STDLIB=-DHAS_STDLIB
+else
+	HAS_STDLIB=""
+fi
+
+# check for stdarg.h
+
+if [ -f /usr/include/stdarg.h ]
+then
+	HAS_STDARG=-DHAS_STDARG
+else
+	HAS_STDARG=""
+fi
+
+# check for unistd.h
+
+if [ -f /usr/include/unistd.h ]
+then
+	HAS_UNISTD=-DHAS_UNISTD
+else
+	HAS_UNISTD=""
+fi
+
+# check for ctype.h
+
+if [ -f /usr/include/ctype.h ]
+then
+	HAS_CTYPE=-DHAS_CTYPE
+else
+	HAS_CTYPE=""
+fi
+
+# check for sys/ioctl.h
+
+if [ -f /usr/include/sys/ioctl.h ]
+then
+	HAS_SYS_IOCTL=-DHAS_SYS_IOCTL
+else
+	HAS_SYS_IOCTL=""
+fi
+
+# check for sys/wait.h
+
+if [ -f /usr/include/sys/wait.h ]
+then
+        HAS_SYS_WAIT=-DHAS_SYS_WAIT
+else
+        HAS_SYS_WAIT=""
+fi
+
+# check for localization headers
+
+if [ -f /usr/include/locale.h -a -f /usr/include/nl_types.h ]
+then
+	catgets=""
+else
+	catgets="-DNO_CATGETS"
+fi
+
+# check if this is a SunOS system
+
+if [ -d /usr/5include ]
+then
+	five_include="-I/usr/5include"
+else
+	five_include=""
+fi
+
+if [ -d /usr/5lib ]
+then
+	five_lib="-L/usr/5lib"
+else
+	five_lib=""
+fi
+
+# check location of X11 headers
+
+X_headers=""
+
+if [ -d /usr/include/X11R5 ]
+then
+	X_headers="-I/usr/include/X11R5"
+fi
+
+if [ -d /usr/include/X11R6 ]
+then
+	X_headers="-I/usr/include/X11R6"
+fi
+
+if [ -d /usr/X11R6/include ]
+then
+	X_headers="-I/usr/X11R6/include"
+fi
+
+if [ -d /usr/openwin/include ]
+then
+	X_headers="${X_headers} -I/usr/openwin/include"
+fi
+
+# check location of X11 libraries
+
+X_libs=""
+
+if [ -d /usr/lib/X11R5 ]
+then
+	X_libs="-L/usr/lib/X11R5"
+fi
+
+if [ -d /usr/lib/X11R6 ]
+then
+	X_libs="-L/usr/lib/X11R6"
+fi
+
+if [ -d /usr/X11R6/lib ]
+then
+	X_libs="${X_libs} -L/usr/X11R6/lib"
+fi
+
+if [ -d /usr/openwin/lib ]
+then
+	X_libs="${X_libs} -L/usr/openwin/lib"
+fi
+
+if [ -n "$CFLAGS" ]
+then
+	if [ -z "`echo $CFLAGS | grep '[-]g'`" ]
+	then
+		other_cflags="$other_cflags ${CFLAGS} ${strip_option}"
+	else
+		other_cflags="$other_cflags ${CFLAGS}"
+	fi
+else
+	other_cflags="$other_cflags ${strip_option}"
+fi
+
+# make xae_dir subdirectory exists
+
+if [ ! -d xae_dir ]
+then
+	mkdir xae_dir
+fi
+
+# time to write the makefile
+
+echo "Generating xae_dir/make.xae"
+
+if [ -f xae_dir/make.xae ]
+then
+	mv xae_dir/make.xae xae_dir/make.xae.old
+fi
+
+echo "DEFINES =	-DXAE -Dxae11 $catgets " > xae_dir/make.xae
+echo "" >> xae_dir/make.xae
+echo "CFLAGS =	$HAS_UNISTD $HAS_STDARG $HAS_STDLIB $HAS_CTYPE $HAS_SYS_IOCTL $HAS_SYS_WAIT $X_headers $five_include $X_libs $five_lib $other_cflags" >> xae_dir/make.xae
+echo "" >> xae_dir/make.xae
+echo "" >> xae_dir/make.xae
+echo "all :	xae" >> xae_dir/make.xae
+
+cat  >> xae_dir/make.xae << EOF
+
+CC_CMD = cc \$(DEFINES) -I.. -c \$(CFLAGS)
+
+OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
+
+xae :	\$(OBJS) Xcurse.o xif.o
+	cc -o ../xae \$(OBJS) Xcurse.o xif.o \$(CFLAGS) -lX11
+
+
+
+Xcurse.o: ../Xcurse.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../Xcurse.c 
+aee.o: ../aee.c ../aee.h ../Xcurse.h ../aee_version.h
+	\${CC_CMD} ../aee.c
+control.o: ../control.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../control.c
+delete.o: ../delete.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../delete.c
+format.o: ../format.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../format.c
+help.o: ../help.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../help.c
+journal.o: ../journal.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../journal.c
+file.o: ../file.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../file.c
+keys.o: ../keys.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../keys.c
+localize.o: ../localize.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../localize.c
+mark.o: ../mark.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../mark.c
+motion.o: ../motion.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../motion.c
+new_curse.o: ../new_curse.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../new_curse.c
+srch_rep.o: ../srch_rep.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../srch_rep.c
+windows.o: ../windows.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../windows.c
+xif.o: ../xif.c ../aee.h ../Xcurse.h
+	\${CC_CMD} ../xif.c
+EOF
+
+if [ -f xae_dir/make.xae.old ]
+then
+	diffs="`cmp xae_dir/make.xae.old xae_dir/make.xae`"
+	if [ -n "${diffs}" ]
+	then
+		rm -f xae_dir/*.o xae
+	fi
+	rm -f xae_dir/make.xae.old
+fi
+
+

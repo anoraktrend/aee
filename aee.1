@@ -1,0 +1,1047 @@
+.\"
+.\" Reference page for aee, rae, and xae.
+.\"
+.\" Format this page with one of the following commands:
+.\"
+.\"	tbl aee.1 | nroff -man 
+.\" or
+.\"	tbl aee.1 | troff -man
+.\"
+.\"  Copyright (c) 1991, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2002 Hugh Mahon.
+.\"
+.TH aee 1 "" "" "" ""
+.SH NAME
+aee - another (easy) editor
+.SH SYNOPSIS
+.B aee 
+[ options ... ] [file[s]]
+.br
+.B rae
+[ options ... ] file[s]
+.br
+.B xae 
+[ options ... ] [file[s]]
+.br
+.B rxae
+[ options ... ] file[s]
+.sp
+.SH DESCRIPTION
+.PP
+\fIaee\fR and \fIxae\fR are non-modal editors, that is, the user does not need 
+to switch from one mode to another to insert and delete text.  The editor is 
+always in text mode.  Control sequences and function keys are used to perform 
+the editing functions.  In the case of \fIxae\fR, the mouse can also be used 
+to position the cursor, and perform text selection and pasting.
+.PP
+\fIrae\fR and \fIrxae\fR are the same as \fIaee\fR and \fIxae\fR 
+respectively, except that they are restricted to editing 
+the file(s) named on the invoking command line.  No other files may be opened 
+or written, nor may shell operations be performed.
+.PP
+The arrow keys (up, down, left, right) may be used to move the cursor.  If 
+the keyboard is so equipped, the \fBprev\fR and \fBnext\fR keys will move 
+the cursor to the previous and next pages, respectively.
+.PP
+The \fBgold\fR key is a key that is used to provide alternate behavior for 
+a key, much like a gold function key on a calculator keyboard.  So, for 
+example, function key number 7 (\fBf7\fR) may be used for initiating a 
+search, while pressing the \fBgold\fR key and then \fBf7\fR will produce 
+a prompt for the string to be searched for.  The gold function can be 
+assigned to any assignable key.  By default, the keys \fBf1\fR and 
+\fBcontrol-g\fR (\fB^g\fR) are assigned the gold function.
+.PP
+The rest of the keys by default will behave as described below.
+.\"
+.\"
+.\"
+.SH OPTIONS
+The following are accepted as options when starting \fIaee\fR or \fIxae\fR:
+.RS
+.IP -binary 22
+When reading in the file, treat as a binary file (only special character is 
+a new-line character).
+.IP -e 22
+Turn off echo from initialization file.
+.IP -i 22
+Turn off info window.
+.IP -j 22
+Turn off journaling.
+.IP -n 22
+Turn off highlighting of menu and info window borders.
+.IP -r 22
+Recover from failed edit session (using journal file from that session).
+.IP -tab 22
+Expand tabs to spaces.
+.IP -text 22
+When reading in a file, treat as text only (both carriage-return and new-line 
+are special characters).
+.IP +\fInumber\fR 22
+Move cursor to start of line \fInumber\fR.
+.RE
+.sp
+The following additional options are available for \fIxae\fR only:
+.RS
+.IP "-fn \fIfont\fR" 22
+Specify a font for use with \fIxae\fR.  Resource name \fBBaseFont\fR.
+.IP "-fg \fIcolor\fR" 22
+Specify a foreground color (color of text).  Resource name 
+\fBForegroundColor\fR.
+.IP "-bg \fIcolor\fR" 22
+Specify a background color.  Resource name \fBBackgroundColor\fR.
+.IP "-geometry \fI=columns\fBx\fIlines\fR"
+Specify a geometry for \fIxae\fR.  Resource name \fBGeometry\fR.
+.RE
+.PP
+The \fIxae\fR specific options may be specified in the \fBX-Windows 
+Version 11\fR defaults file for the user.  See your X-Windows 
+documentation for more details.
+.\"
+.\"
+.\"
+.SS Function Keys
+.PP
+\fIaee\fR uses the terminal's function keys to perform editing tasks.  By 
+default, only keys \fBf1\fR through \fBf8\fR are defined.  (Although a 
+terminal may have function keys, the keys may not send unique sequences 
+that can be recognized by software, or may require particular settings in 
+order to be useful.  If in doubt, ask your system administrator.)
+.sp 1
+.TS
+center;
+l l l.
+KEY NAME	NORMAL FUNCTION	GOLD FUNCTION
+
+F1	GOLD	GOLD
+F2	undel character	undel line
+F3	delete word	undel word
+F4	advance word	begin of line
+F5	search	search prompt
+F6	mark	copy
+F7	cut	paste
+F8	advance line	command
+.TE
+.\"
+.\"	Control keys
+.\"
+.SS Control Keys
+.PP
+Control keys are the regular alphabetic keys pressed in conjunction with 
+the \fBcontrol\fR key (sometimes spelled \fBCTRL\fR).  To press control-a 
+(also noted as \fB^a\fR), first press \fBcontrol\fR, then press '\fBa\fR', so 
+that both keys are pressed at the same time.
+.RS 4
+.TS
+center;
+l l l.
+KEY NAME	NORMAL FUNCTION	GOLD FUNCTION
+
+Control A	ascii code	match
+Control B	bottom of text	append
+Control C	copy	clear to eol
+Control D	begin of line	prefix
+Control E	command
+Control F	search	search prompt
+Control G	GOLD	GOLD
+Control H	backspace
+Control J	carriage-return
+Control K	delete character	undelete char
+Control L	delete line	undelete line
+Control M	carriage-return
+Control N	next page	next buffer
+Control O	end of line
+Control P	prev page	prev buffer
+Control R	redraw screen	reverse
+Control T	top of text
+Control U	mark
+Control V	paste	forward search
+Control W	delete word	undelete word
+Control X	cut	format
+Control Y	advance word	prev word
+Control Z	replace	replace prompt
+Control [ (Escape)	menu	
+.TE
+.RE
+.\"
+.\"	Menu operations
+.\"
+.SS Menu Operations
+.PP
+Pop-up menus can be obtained by pressing the 
+.B escape 
+key (or 
+.B ^[ 
+if no 
+.B escape 
+key is present).  When in the menu, the escape key can be 
+used to leave the menu without performing any operations.  Use the up and 
+down arrow keys, 
+.B ^u
+and 
+.B ^d 
+or the 
+.B space
+or 
+.B backspace
+keys to move to the desired items in the menu, then press 
+.B return 
+to perform the indicated task.
+.PP
+The main menu in \fIaee\fR is as follows:
+.RS 4
+.IP "\fBleave editor\fR" 
+If changes have been made, the user will get a menu prompting whether or 
+not the changes should be saved.
+.IP "\fBhelp\fR"
+Displays a help screen, with all of the keyboard operations and commands.
+.IP "\fBedit\fR"
+Pops up a menu to allow the user to \fBmark\fR, \fBcopy\fR marked text, 
+\fBcut\fR marked text, or \fBpaste\fR previously marked text.
+.IP "\fBfile operations\fR"
+Pops up a menu for selecting whether to read a file, write to a file, or 
+save the current contents of the editor, send the contents of 
+the editor to a print command (see the section \fBInitializing aee from a 
+file\fR), as well as recovering from a previous edit session (see 
+\fBRecovery\fR below).
+.IP "\fBredraw screen\fR"
+Provides a means to repaint the screen if the screen has been corrupted.
+.IP "\fBsettings\fR"
+Shows the current values of the operating modes, and margins.  By 
+pressing return when the cursor is on a particular item, the value can be 
+changed.  Also within this menu is an entry to allow the user to save the 
+current configuration of the editor to a file.  
+To leave this menu, press the \fBescape\fR key.  (See \fBModes\fR 
+below.)
+.IP "\fBsearch/replace\fR"
+.br
+Pops up a menu in which the user may choose to enter a string to search 
+for, or search for a string already entered, or perform a replace string 
+operation.
+.IP "\fBmiscellaneous\fR"
+Pops up a menu that allows the user to format the current paragraph, 
+execute a shell command, or check the spelling of the text in the current 
+buffer.
+.RE
+.\"
+.\"
+.\"
+.SS Commands
+.PP
+Some operations require more input than one key can provide, or do not
+need to be so easily accessed.  These commands are entered using the prompt 
+provided by pressing the \fBcommand\fR (^E or ^C or gold f8) key.  The line 
+commands are:
+.sp
+.RS 4
+.IP "\fBauto\fRformat * " 22
+Turn automatic paragraph formatting on.
+.IP "\fBnoauto\fRformat *" 22
+Turn automatic paragraph formatting off (default).
+.IP \fBbi\fRnary* 22
+Turn on binary mode.  Files read into the current session will be 
+treated as binary files, that is, the only special character is the 
+new-line character.  See also \fBtext\fR.
+.IP "\fBbuf\fRfer [\fIname\fR]*" 22
+This command will move from the current buffer to the 
+buffer with the name given by the user.  If the 
+buffer did not previously exist, it is created.
+If no parameter is given, then the name of the 
+current buffer is displayed.  Note: a buffer created with this command 
+is not associated with a file, nor is it journalled.
+.IP "\fBca\fRse*\(dd" 22
+Specifies that the case of each letter is to be
+taken into account in the search operation.
+.IP "\fBnoca\fRse*\(dd" 22
+Specifies that there is no distinction between 
+upper and lower case during search and replace operations (default).
+.IP "\fBcd\fR \fIdirectory\fR" 22
+Change directory
+.IP \fBch\fRaracter 22
+Displays the ascii code of the character the cursor is on.
+.IP "\fBdef\fRine [gold] \fIkey string\fR*" 22
+Assigns all of the string 
+following the key definition to the key 
+specified by the user.  The commands allowed 
+in the string are described in the SYMBOLS 
+section.
+.IP \fBdel\fRete 22
+Deletes the current buffer (the initial buffer 
+may not be deleted).
+.IP \fBdiff\fR 22
+Execute the \fIdiff\fR command comparing the contents of the edit buffer 
+with the associated file and place the results in a separate buffer.
+.IP "\fBecho\fR \fIstring\fR \(dg" 22
+Echoes the string to the terminal during startup of \fIaee\fR.
+.IP "\fBed\fRit \fIfilename\fR" 22
+Edit another file.  A new buffer will be created in which the named 
+file can be edited.  If no file is specified, a temporary buffer name is 
+created for use within \fIaee\fR.  If journalling is on for the initial 
+file being edited, journalling will occur for the new edit buffer as 
+well.
+.IP ee_mode*
+Have \fIaee\fR's main menu look more like \fIee\fR's main menu.
+.IP \fBei\fRght* 22
+If your terminal has an eight bit character set,
+then use this command to cause \fIaee\fR to send the 
+eight bit value to your terminal.  The default 
+condition is to display the eight bit character
+as the decimal value of the character between 
+angle brackets.
+.IP \fBnoei\fRght* 22
+If your terminal does not have an eight 
+bit character set, use this command to cause \fIaee\fR 
+to display eight bit characters as the decimal 
+value of the character between angle brackets 
+(251 is displayed as <251>).  This is the default 
+condition.
+.IP "\fBexi\fRt[!]\(dd" 22
+Exit the current edit session writing out the main buffer to the 
+file name used in entering the editor.  The optional exclamation mark allows
+you to leave without editing the rest of the files in the list of files
+specified when the edit session was invoked.
+.IP "\fBexp\fRand*\(dd" 22
+Causes spaces to be inserted when the tab key is pressed.  Spaces fill to the 
+next tab stop.
+.IP "\fBnoex\fRpand*\(dd" 22
+Tabs are \fInot\fR replaced with spaces (default).
+.IP \fBfil\fRe 22
+Display the name of the file being edited.
+.IP "\fBhelp\fR\(dd" 22
+Provides the user with information about using 
+the editor while in the editor.
+.IP "\fBheight\fR\ [\fInumber\fR] *" 22
+Set the height (number of lines) displayed in the info window.  If no number 
+is specified, the current value is displayed.
+.IP "\fBhelpfile\fR\(dg" 22
+The location and name of the file containing help information.
+.IP "\fBind\fRent*\(dd" 22
+When creating a new line by pressing the carriage return, the new line will
+have the same indentation (number of spaces and tabs) as the previous line.
+.IP "\fBnoind\fRent*\(dd" 22
+Turns off the indent mode (default).
+.IP "\fBinfo\fR *" 22
+Turn info window on (default).
+.IP "\fBnoinfo\fR *" 22
+Turn info window off.
+.IP \fBjournal\fR 22
+Displays the journal file associated with the current edit session buffer.
+.IP \fBjournaldir\fR 22
+Specifies the path to the directory where journal files are to be created.
+.IP \fBjustify\fR 22
+Justify the right side of the text when using the \fBformat\fR function to 
+format a paragraph.
+.IP \fBnojustify\fR 22
+Turn off right justification of a paragraph (default).
+.IP \fBli\fRne 22
+Displays the current line number.
+.IP "\fBlit\fReral*\(dd" 22
+Causes characters in search string to be matched one-to-one with characters
+in the text.
+.IP "\fBnolit\fReral*\(dd" 22
+Allows metacharacters in the search string (default).
+.IP "\fBmarg\fRins *\(dd" 22
+Causes left and right margins to be observed (set using \fBleftmargin\fR 
+and \fBrightmargin\fR).
+.IP "\fBnomarg\fRins *\(dd" 22
+Allows lines to be any length (disregards the margin settings).
+.IP "\fBleft\fRmargin [\fInumber\fR] *" 22
+Set the left margin to \fInumber\fR.  If no number is specified, then the 
+current value is displayed.
+.IP "\fBright\fRmargin [\fInumber\fR] *" 22
+Set the right margin to \fInumber\fR (\fBnowrap\fR must be set for margin 
+setting to be observed).  If no number is specified, then the 
+current value is displayed.
+.IP "\fBover\fRstrike*\(dd" 22
+Causes characters to overstrike or replace existing characters instead of 
+inserting.
+.IP "\fBnoover\fRstrike*\(dd" 22
+Causes characters to be inserted into line at current cursor position without
+replacing existing characters (default).
+.IP \fBprint\fR 22
+Sends the contents of the current buffer to the printer.  The command that is 
+used can be specified in the \fIinit.ae\fR file, see section \fBInitializing 
+aee From A File\fR.
+.IP "\fBprintcommand\fR \(dg"
+Allows the setting of the print command (default: "lp").
+.IP \fBpwd\fR 22
+Display the current directory.
+.IP "\fBquit\fR[!]\(dd" 22
+Quit the current edit session without writing a file.  The optional exclamation
+mark has the same meaning as for the \fBexit\fR command.
+.IP "\fBread\fR \fIfile\fR" 22
+Read a file into the current buffer after 
+the cursor.
+.IP \fBreseq\fRuence 22
+Renumber the lines.
+.IP \fBsave\fR 22
+Save the contents of the main buffer to the file being edited.
+.IP "\fBsho\fRw [gold] \fIkey\fR" 22
+Displays the function(s) assigned to the specified key.
+.IP "\fBstatus\fR*\(dd" 22
+A status line is displayed on the bottom line of the screen.
+.IP \fBnostat\fRus*\(dd" 22
+Turns off the status line (default).
+.IP "\fBsp\fRacing \fInumber\fR *" 22
+Tabs will be spaced every \fInumber\fR spaces, unless other tabs are set 
+using the \fBtabs\fR command.
+.IP "\fBtabs\fR [\fIstops ...\fR] *" 22
+Sets tabs to \fIstops\fR.  After the last user defined tab stop, tabs 
+are the normal sequence of every eight columns, or as set using 
+the \fBstops\fR command.  The first column is 0.
+.IP "\fBunta\fRbs \fIstops ...\fR *" 22
+Removes the specified tab stops.
+.IP \fBte\fRxt* 22
+Turns text mode (default) .  Files read in while in text mode are checked 
+whether they are UNIX files or Windows files.  If carriage return 
+characters are found immediately prededing a new-line character, the 
+editor treats the file as a DOS file and discards the carriage-returns 
+on read, and carriage-returns are inserted on file write.  The menu may 
+be used to toggle between DOS file mode and UNIX file mode.  See also 
+\fBbinary\fR.
+.IP "\fBwind\fRows*\(dd" 22
+This command specifies whether or not buffers 
+are displayed on the screen simultaneously.  If \fBwindows\fR (default) is 
+specified, then buffers exist on the screen together.
+.IP "\fBnowind\fRows*\(dd" 22
+This command specifies that there is only one buffer on the 
+screen at a time.
+.IP "\fBwrite\fR \fIfile\fR" 22
+Write the current buffer out to the specified file.
+.IP 0123456789 22
+Enter a number to go to the line corresponding to that number.
+.IP "\fB+\fR or \fB-\fR \fInumber\fR \(dd" 22
+Moves forward or back the number of lines specified.
+.IP "[<\fIinbuff\fR] [>\fIoutbuff\fR ] \fB!\fRcommand" 22
+Execute the command following the exclamation mark in the UNIX shell.  The 
+shell used is the one specified in the shell variable \fBSHELL\fR in 
+the user's environment, or \fB/bin/sh\fR if \fBSHELL\fR is not defined.  You 
+may send data from the buffer \fIoutbuff\fR (or the current buffer if 
+\fIoutbuff\fR is not specified) out to the shell by using the right angle 
+bracket (>).  You may read into \fIinbuff\fR (or the current buffer if 
+\fIinbuff\fR is not specified) by using the left angle bracket (<) as shown.  
+The data read in from the
+command will be placed after the current cursor location in the buffer
+.ad b
+.fi
+.sp
+\s-4* may be used in init file, see section \fBInitializing aee From A File\fR
+.br
+\(dg only used in initialization file
+.br
+\(dd may also be assigned to a key using the \fBdefine\fR command
+\s+1
+.sp
+.RE
+.\"
+.\"
+.\"
+.SS Search and Replace
+.PP
+\fIaee\fR's search facility provides several abilities.  The user may 
+choose for the search to be case sensitive, or ignore the case (upper or 
+lower) of a character (\fBnocase\fR is the default).  The user may also 
+choose \fBliteral\fR, or \fBnoliteral\fR (the default) modes for the 
+search facility.  The \fBliteral\fR mode interprets the search string 
+literally, \fBnoliteral\fR means that some characters (called 
+\fRmetacharacters\fR) have special meaning, as described below:
+.sp
+.KS
+.TS
+center;
+l l.
+symbol	meaning
+
+^	beginning of line
+$	end of line
+\\\\x	interpret 'x' literally
+[abc]	T{
+match a single character in the text 
+to one in brackets
+T}
+[a-z]	T{
+match a single character in the text 
+to one in range a-z
+T}
+[^abc]	T{
+match a single character in the text 
+that is not within the brackets 
+after '^' ('^' means 'not')
+T}
+*	T{
+match any sequence of characters, 
+useful in middle of string with 
+known beginning and end, but 
+variable middle
+T}
+\.	match any single character
+.TE
+.KE
+.sp
+.PP
+The carat (^) within the square brackets ([]) means that the search will match
+any characters \fInot\fR within the brackets.  The carat \fImust\fR be the 
+first character after the opening bracket.
+.PP
+The asterisk (*) may be useful when searching for a string to which you know
+the beginning and end, but not what characters (if any) or how many may be
+in the middle.  The first character after the asterisk should not be a
+metacharacter (a character with special meaning).
+.PP
+The replace facility uses the same modes as the search facility.  The 
+prompt for the replace operation shows the syntax for the input:
+.sp 2
+.RS 4
+/string1/string2/
+.RE
+.sp 2
+where the slash ('/') may be replaced by any character that is not in the 
+search or replacement string, and "string1" is to be replaced by 
+"string2".  When in \fBnoliteral\fR mode, the search string may be placed 
+in the replacement string by using the ampersand ('&'), like so:
+.sp 2
+.RS 4
+/old/abc&123/
+.RE
+.sp 2
+Where "old" will be inserted between "abc" and "123".
+.\"
+.\"
+.\"
+.SS Recovery
+.PP
+If for some reason an edit session is interrupted, it is possible to 
+recover the work done in the session.  This is accomplished via the 
+information stored in the journal file, which is a record of the 
+changes made to the text in the buffer 
+while in the editor.  To recover a session in which a 
+file named \fIfoo\fR was being edited, use the command:
+.sp
+.nf
+.na
+.RS
+aee -r \fIfoo\fR
+.RE
+.ad b
+.fi
+.PP
+This is only possible if the \fB-j\fR option was not used, since the 
+\fB-j\fR option turns journaling off.
+.PP
+It is also possible to start \fIaee\fR with no arguments, and then to browse 
+the journal files.  This is accomplished through the menus.  To perform this 
+task, bring up the menu by pressing the \fBEsc\fR key, select \fIfile 
+operations\fR, then select \fIrecover from journal\fR.  You should then be 
+presented with a list of files to recover.
+.\"
+.\"
+.\"
+.SS Key Definitions
+.PP 
+The function keys and control sequences (alphabetic keys pressed with 
+the control key) may be defined by the user to perform any of the functions
+described below.  
+.PP
+The user may assign more than one function to each key, as 
+long as each one is separated by one or more spaces.  The following describes 
+the functions of the keys and how the user may redefine the keyboard during 
+the edit session on the command line.  The same syntax is used in 
+the \fIinitialization file\fR.
+.PP
+Note that the '^' is typed by the user in the following examples, and 
+is \fBnot\fR generated by pressing the control key and letter, and that f2 is 
+entered by typing an 'f' and then a '2'.
+.sp
+Examples:
+.br
+.na
+.nf
+.sp
+.RS
+	\fBdefine ^b dl\fR
+.RE
+.ad b
+.fi
+.sp
+will define the key control b to have the function delete line.
+.sp
+.na
+.nf
+.RS
+	\fBdefine gold ^b udl\fR
+.RE
+.sp
+.ad b
+.fi
+assigns the function undelete line to GOLD control b.
+.sp
+.nf
+.na
+.RS
+	\fBdefine f2 /this is an inserted string/ cr\fR
+.RE
+.fi
+.ad b
+.sp
+will cause the string between the delimiters (/) to be 
+inserted followed by a carriage-return whenever the 
+function key f2 is pressed.
+.PP
+If you wish to have a key that deletes to the end of line without appending
+the next line to the end, you may make the following key definition:
+.sp
+.nf
+.na
+.RS
+	\fBdefine f3 dl cr left\fR
+.RE
+.sp
+.fi
+.ad b
+This set of functions will delete to the end of line and append the next to the
+end of the line, then insert a line at the cursor, and then move the cursor 
+back to the end of the previous line, the position where you started.  This may
+of course be assigned to any valid key.
+.sp
+.\"
+.\"
+.\"
+.SS Symbols
+.PP
+The following symbols, as well as the commands noted by (\(dd) in the list 
+of commands may be assigned to keys using the \fBdefine\fR command.
+.sp
+.RS 4
+.TS
+l l.
+Symbol	Description
+_
+menu	pop up menu
+dl	delete line
+dc	delete character
+dw	delete word
+und	T{
+undelete last thing deleted, keeps last 128 things deleted
+T}
+udl	undelete line
+udc	undelete character
+udw	undelete word
+eol	end of line
+bol	begin of line
+bot	begin of text
+eot	end of text
+np	next page
+pp	previous page
+nb	next buffer
+pb	previous buffer
+gold	gold
+il	insert line
+psrch	search prompt
+srch	search
+prp	replace prompt
+rp	replace 
+fwd	forward (search forward of cursor)
+rev	reverse (search before cursor)
+al	advance line
+aw	advance word
+pw	previous word
+format	format paragraph
+mark	mark text
+prefix	T{
+mark text and place \fIbefore\fR existing text in paste buffer
+T}
+append	T{
+mark text and place \fIafter\fR existing text in paste buffer
+T}
+cut	cut marked text
+copy 	copy marked text
+pst	paste previously cut or copied text
+unmark	T{
+unmark text, doesn't affect previous paste buffer contents
+T}
+ac	ascii character
+mc	match (), {}, [], or <>
+cmd	command
+up	up arrow
+down	down arrow
+left	left arrow
+right	right arrow
+rd	redraw screen
+bck	backspace
+cr	carriage return
+/,.	T{
+the first non-alpha character will act as 
+a separator to allow for single line text 
+insertion, the second occurrence of the same 
+character will end the insertion
+T}
+.TE
+.RE
+.\"
+.\"
+.\"
+.SS Initializing aee From A File
+.PP 
+\fIaee\fR checks for a file named \fIinit.ae\fR in \fI/usr/local/lib\fR, 
+.I .init.ae 
+in the user's home directory, then for \fI.init.ae\fR in the 
+current directory.  (This file may be created manually or by using the 
+menu entry '\fIsave editor config\fR' in the 'settings' menu.)  
+If the file exists, it is read 
+and initializes \fIaee\fR to the parameters as defined in the file.  By having 
+initialization files in multiple places, the user may specify settings for 
+global use, and then supplement these with customization for the local 
+directory.  The 
+parameters allowed in the \fIinit.ae\fR file are key definitions, turning off 
+windowing, case sensitivity, literal searching, eight bit characters, as 
+well as the ability to echo strings to the terminal (see the \fBCommands\fR 
+section for the commands allowed in the initialization file).  An example 
+follows:
+.nf
+.na
+.sp
+.RS
+	define ^z rp
+	define gold ^z prp
+	define f3 und
+	define f4 unmark
+	define k0 srch
+	define gold k0 psrch
+	case
+	printcommand lp -dlaser
+	echo \\033&jB
+.RE
+.sp
+.fi
+.ad b
+The above example assigns the command \fBreplace\fR to control-z, and 
+\fBreplace prompt\fR to gold control-z, as well as setting \fIaee\fR to be 
+sensitive to the case of characters during search and replacement 
+operations.  It also defines the function keys \fBf3\fR and \fBf4\fR to be 
+\fBundelete\fR and \fBunmark\fR respectively.  The \fBprint\fR command will 
+send its output to the device 'laser' through the \s-1UNIX\s+1 command 
+\fBlp\fR.  A string is \fBecho\fRed to the terminal which will "turn on" 
+the user function keys on an HP terminal.  
+.PP
+The user may wish to \fBecho\fR strings to the terminal when 
+starting \fIaee\fB to
+set up the terminal or other devices, so the \fBecho\fR facility is
+provided.  \fBEcho\fR is applicable \fIonly\fR in the initialization file.
+No quotes are required around the string to be echoed.  Characters may be
+literal or escaped (using the backslash convention).  The \fB-e\fR option on
+the invoking command line turns off the \fBecho\fR operation.  This may be
+useful if you normally use one type of terminal (and echo strings for its
+use), but occasionally use another terminal and do not wish the strings to
+be \fBecho\fRed.
+.PP
+Operations allowed in the initialization file are noted in the 
+list of commands with an asterisk (*).
+.\"
+.\"
+.\"
+.SS Shell Escapes
+.PP
+Sometimes it is desirable to execute shell commands outside of the editor.  
+This may be accomplished by pressing a key assigned to the \fBcommand\fR
+function (\fB^E\fR, or \fBgold F8\fR), and then entering an 
+exclamation mark (!) followed by the shell command(s) to be executed.  It 
+is possible to send data from the editor to be processed by a shell 
+command and/or read data from a shell command into a buffer in the 
+editor.  The format for this is as follows:
+.na
+.nf
+.sp
+.RS
+	<\fIinbuff\fR >\fIoutbuff\fR !\fIcommand\fR
+.RE
+.sp
+.ad b
+.fi
+where \fIinbuff\fR is the name of the buffer to receive the data and 
+\fIoutbuff\fR is the name of the buffer to output to the shell command.  By
+omitting the name of the buffer, the current buffer will be used.  For example,
+if you have a list of names and wish them sorted, you could use the \s8UNIX\s0
+command \fIsort\fR.  If you wished to view them while in the current edit 
+session, you could use the following sequence:
+.sp
+.na
+.nf
+.RS
+	<sorted >list !sort
+.RE
+.ad b
+.fi
+.sp
+where \fIlist\fR is the name of the buffer containing the unsorted list, 
+\fIsorted\fR is the name of the buffer to contain the sorted list, and 
+\fIsort\fR is the name of the \s8UNIX\s0 command to be executed.  The data 
+read in from the
+command will be placed after the current cursor location in the receiving 
+buffer.  If the specified buffer does not exist when the command is entered, 
+it will be created.  You should be sure of the spelling of the name of the 
+buffer to be the input of the command if you are specifying one.  
+.\"
+.\"
+.\"
+.SS PRINT Command
+.PP
+The \fBprint\fR command allows you to send the contents of the current buffer 
+to a command specified by using the \fBprintcommand\fR operation in the 
+initialization file.  The default is '\fBlp\fR', using the default device.  
+.PP
+If you choose to specify something other than the default command, the 
+command should be able 
+to take its input from \fIstdin\fR, since \fIaee\fR will set up a pipe to feed 
+the information to the command.
+.\"
+.\"     paragraph formatting
+.\"
+.SS Paragraph Formatting
+.PP
+Paragraphs are defined for \fIaee\fR by a block of text bounded by:
+.sp 
+.RS 8
+.IP \(bu 
+Begin or end of file.
+.IP \(bu
+Line with no characters, or only spaces and/or tabs.
+.IP \(bu
+Line starting with a period ('.') or right angle bracket ('>').
+.RE
+.PP
+A paragraph may be formatted two ways:  explicitly by choosing the 
+\fBformat paragraph\fR menu item, or by setting \fIaee\fR to automatically 
+format paragraphs.  The automatic mode may be set via a menu, or via the 
+initialization file.
+.PP
+There are three states for text operation in \fIaee\fR: free-form, wrap, 
+and automatic formatting.
+.PP
+"Free-form" is best used for things like programming.  There are no 
+restrictions on the length of lines, and no formatting takes place.  Margins 
+are not enabled for this state.
+.PP
+"Wrap" allows the user to type in text without having to worry about going 
+beyond the right margin (the right and left margins may be set in 
+the \fBsettings\fR 
+menu, the default is for the right margin to be the right edge of the 
+terminal).  This is the mode that allows the \fBformat paragraph\fR menu 
+item to work.  The "observe margins" entry in the "settings" menu allows the 
+user to toggle this state, as well as the \fBmargin\fR and \fBnomargin\fR 
+commands (see \fBCommands\fR above).
+.PP
+"Automatic formatting" provides word-processor-like behavior.  The user 
+may type in text, while \fIaee\fR will make sure the entire paragraph fits 
+within the margins every time the user inserts a space after 
+typing or deleting text.  Margins must also be enabled in order for 
+automatic formatting to occur.  The "auto paragraph format" item in the 
+"settings" menu allows the user to toggle this state, as well as the commands 
+.B autoformat
+and \fBnoautoformat\fR.
+.\"
+.\"     modes
+.\"
+.SS Modes
+.PP
+Although \fIaee\fR is a 'modeless' editor (it is in text insertion mode all the 
+time), there are modes in some of the things it does.  These include:
+.RS 4
+.IP "\fBtabs to spaces\fR"
+Tabs may be inserted as a single tab character, or replaced with spaces.
+.IP "\fBcase sensitive search\fR"
+The search operation can be sensitive to whether characters are upper- or 
+lower-case, or ignore case completely.
+.IP "\fBliteral search\fR"
+Allows the user to specify whether regular expressions are to be used for 
+searching or not.
+.IP "\fBobserve margins\fR"
+The left and right margins can be observed, or not.
+.IP "\fBinfo window\fR"
+A window showing the keyboard operations that can be performed can be 
+displayed or not.
+.IP "\fBstatus line\fR"
+Display the file name, position in the file, and selected status indicators.
+.IP "\fBauto indent\fR"
+The editor can be set to automatically indent the newly inserted line the same 
+as the previous line, or not (primarily useful for programming).
+.IP "\fBoverstrike\fR"
+Toggle text insertion or overstrike modes.
+.IP "\fBauto paragraph formatting\fR"
+While typing in text, the editor can try to keep it looking reasonably well 
+within the width of the screen.
+.IP "\fBmulti windows\fR"
+Allow multiple buffers to be displayed at the same time, or only a single 
+buffer at a time.
+.IP "\fBinfo window height\fR"
+Displays and allows the user to change the height of the information window 
+displayed at the top of the terminal (window) with key mappings and commands.
+.IP "\fBsave editor config\fR"
+Used to save the current editor configuration to a file (see the 
+section \fBInitializing aee from a file\fR).  In addition to the 
+settings within the settings menu, tabs and key mappings are saved.
+.RE
+.PP
+You may set these modes via the initialization file (see above), with a 
+menu (see \fBMenu\fR above), or via commands (see \fBCommands\fR above).
+.\"
+.\"
+.\"
+.SS Mark, Cut, Copy, and Paste
+.PP
+To move large chunks of text around, use the control key 
+commands \fBmark\fR (^U or f6), \fBcut\fR (^X or f7), 
+and \fBpaste\fR (gold ^V or gold f7).  These commands allow you to 
+mark the text you wish to use so that it may be put in the paste buffer.  The 
+paste buffer differs from the buffers mentioned below in that you may not move
+to it, and that it is only used for these operations.  Once the text has been 
+placed in the paste buffer, you may move your cursor wherever you wish and 
+insert the text there, as many times you wish, anywhere you want.  
+.PP
+Simply move the cursor to the start of a section of text you wish to mark, and
+press the key assigned the control key function \fBmark\fR (^U or f6).  Move 
+the cursor over the text you wish to place in the paste buffer.  The text 
+between the cursor position at which you pressed the \fBmark\fR key and the 
+current position will be highlighted.  Once you have marked all of the text 
+you wish to place in the paste buffer, press the key for \fBcut\fR (^X or f7)
+or \fBcopy\fR (^C or gold f6).  The
+\fBcut\fR operation deletes the text from the buffer in which the text is 
+contained, and the \fBcopy\fR operation simply places the text in the paste
+buffer without deleting it.  Now you may move to another 
+section and use the \fBpaste\fR function to insert it as many times as you 
+wish.  
+.PP
+If you wish to copy several sections of text that are not adjacent to each 
+other, you may use the \fBappend\fR function (gold ^B) to put the text you 
+will mark at the end of the current paste buffer contents, or the 
+\fBprefix\fR function (gold ^D) to 
+place the newly marked text before the current paste buffer contents when you 
+\fBcopy\fR or \fBcut\fR.  The \fBprefix\fR and \fBappend\fR functions are 
+used in place of the \fBmark\fR function.
+.PP
+Sometimes you may start marking text, then decide to cancel the operation.  
+It is possible to do that by using the \fBunmark\fR operation.  The 
+\fBunmark\fR operation is not assigned to any key by default.
+.\"
+.\"	Buffer operations
+.\"
+.SS Buffer Operations
+.PP 
+\fIaee\fR allows you to examine more than one file in the editor during
+one edit session.  This mechanism is known as buffers, and the first
+buffer is called \fBmain\fR.  Buffers may or may not be viewed
+simultaneously on the screen depending upon the wishes of the user.  The
+default condition allows for the buffers to co-exist on the screen, but
+this may be changed by using the command \fBnowindows\fR.  To return to
+the default condition, enter the command \fBwindows\fR, and buffers will
+co-exist on the screen.  You may switch between having windows and not
+having windows at any time without losing information in the buffers.
+\fIaee\fR will remind you that you have buffers if you attempt to leave
+the editor without deleting them.
+.PP
+Buffers are created when you enter the command \fBbuffer\fR with a single
+argument, which is used as the buffer's name.  This command not 
+only creates the new buffer, but it moves 
+the cursor to the new buffer.  This is also the way
+to move to a buffer which already exists.  Buffer movement is also
+facilitated by the control key commands \fBnb\fR (gold ^N) and \fBpb\fR 
+(gold ^P), short for \fBnext buffer\fR 
+and \fBprevious buffer\fR.  This is especially useful if you mistype or forget 
+the name of any of the buffers you have created and have windowing turned off.
+.PP
+The command \fBbuffer\fR without any arguments displays the name of the 
+current buffer.  
+.PP
+Buffers can be deleted by using the command \fBdelete\fR.  Simply move to the 
+buffer to be deleted and use the command \fBdelete\fR.  You \fBcannot\fR 
+delete the first buffer, called \fBmain\fR.  Note that all 
+commands operate in the 
+buffer in which your cursor is operating, so you may use the \fBwrite\fR and
+\fBread\fR commands to save or read a file into the current buffer.
+.\"
+.\"	On-Line Help
+.\"
+.SH On-Line Help
+.PP
+On-line help is provided through the 'help' command or menu item.  This 
+command uses a file with help information.  By default the help file is 
+located in \fB/usr/local/lib/help.ae\fR, but this file may be located 
+in the user's home directory with the name \fB.help.ae\fR, or in the 
+current directory with the name \fBhelp.ae\fR.
+.\"
+.\"	Warnings
+.\"
+.SH WARNINGS
+.PP
+A journal file will not be created if the user does not have write 
+permission to the directory in which the file is to reside.
+.PP
+If the file to edit does not exist, and is to be 
+created in a directory to which the user does not have write permission, 
+\fIaee\fR will exit with an error without editing the file.
+.PP
+The automatic paragraph formatting operation 
+may be too slow for slower systems.
+.PP
+Writing the information to the journal during some operations may be 
+rather disk I/O intensive, which may impact performance noticably on 
+slower systems.  Journal files may also grow considerably during an edit 
+session, which may be a concern if there is little disk space available.  
+Turning off journaling may be useful if performance is slow, but turning 
+off journaling will mean the loss of data should a system or network 
+failure occur while using the editor.
+.\"
+.\"
+.\"
+.SH CAVEATS
+.PP
+THIS MATERIAL IS PROVIDED "AS IS".  THERE ARE 
+NO WARRANTIES OF ANY KIND WITH REGARD TO THIS 
+MATERIAL, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND 
+FITNESS FOR A PARTICULAR PURPOSE.  Neither 
+Hewlett-Packard nor Hugh Mahon shall be liable 
+for errors contained herein, nor for 
+incidental or consequential damages in 
+connection with the furnishing, performance or 
+use of this material.  Neither Hewlett-Packard 
+nor Hugh Mahon assumes any responsibility for 
+the use or reliability of this software or 
+documentation.  This software and 
+documentation is totally UNSUPPORTED.  There 
+is no support contract available.  Hewlett-Packard 
+has done NO Quality Assurance on ANY 
+of the program or documentation.  You may find 
+the quality of the materials inferior to 
+supported materials. 
+.PP
+Always make a copy of files that cannot be easily reproduced before 
+editing.  Save files early, and save often.
+.\"
+.\"
+.\"
+.SH FILES
+.PP
+.I /usr/local/lib/init.ae
+.br
+.I $HOME/.aeeinfo
+.br
+.I $HOME/.init.ae
+.br
+.I .init.ae
+.\"
+.\"
+.\"
+.SH AUTHOR
+.PP
+The software 
+.I aee
+and 
+.I xae
+was developed by Hugh Mahon.
+.PP
+This software and documentation contains 
+proprietary information which is protected by 
+copyright.  All rights are reserved. 
+.PP
+Copyright (c) 1986, 1987, 1988, 1991, 1992, 1993, 1994, 1995, 1996, 
+1997, 1998, 1999, 2002 portions 
+Hugh Mahon and 
+portions Hewlett-Packard Company.

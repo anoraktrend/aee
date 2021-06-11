@@ -1,0 +1,114 @@
+version 2.2.15b
+- modified new_curse.c to handle different subdirectory naming in terminfo 
+  directory; first noted on Mac OS 10.2
+
+version 2.2.15a
+- properly set file name variables if no file associated with journal entry
+- when generating menu for recovering from journal if there was no file
+  name then use the journal name
+
+version 2.2.15
+- added ability to specify ee_mode so main menu for aee will look more like 
+  ee's main menu
+
+version 2.2.14c
+- made more changes to correct behavior when reading DOS files
+  with CR/LF, was incrementing counter when encountered LF but
+  not pointer, causing incorrect behavior in corner cases when
+  the last buffer read contained a CR as the last character
+
+version 2.2.14b
+- made changes to handle dos files better: fixed defect in which sometimes
+  two lines would be joined
+
+version 2.2.14a
+- modified get_full_path() so that it gets the true path name even if the path
+  specified is a full path (i.e., starts with a /)
+
+version 2.2.14
+- modified so that full path is determined for an edited file, and 
+  comparison of full path is done with info in journal info file to 
+  determine if the same file is being edited already
+- corrected logic in diff function which caused the diff buffer to be 
+  created and then deleted before the diff
+
+version 2.2.13
+- added a new command: 'diff' which provides the diffs between the editor 
+  buffer contents and the file associated with the buffer
+- minor change to have status_display called if string found in search
+  (previously the status line would be blank)
+
+version 2.2.12b
+- modified to take into account Darwin (Mac OS X) to provide a 
+  different option to strip the final executable
+
+version 2.2.12a
+- defect fix in file.c to correctly get the date info of the just written file
+
+version 2.2.12
+- added code to detect if the file was changed outside of the editor during 
+  editor and notify user
+- added code to check if the file is being edited already (at least by the 
+  same user)
+
+version 2.2.11
+- added code to check for the parent process going away, since otherwise aee
+  will become a run-away process (xae is unaffected, so the changes are
+  ifdef'd for aee only)
+
+version 2.2.10
+- modified aee.c to use a header file to specify the version number 
+- modified control.c so that when a new file is saved the current working 
+  directory is used as the path rather than the original working directory 
+  (except of course if an alternate path is provided as the name of the file 
+  to be saved)
+
+version 2.2.9
+- modified create.make and new_curse.c to allow defining TERMCAP file 
+  location (since some distributions move the file)
+
+version 2.2.8
+- fixed defect which caused aee and xae to crash when recovering from a 
+  journal where the session didn't have a file name associated with the 
+  journal
+- added ability to specify a file name with the 'save' command, 
+  previously a name would be ignored and the name prompted for (unless 
+  a name were already associated).  Note, if a name is already 
+  associated with the buffer any name supplied with the 'save' command 
+  is ignored.
+
+version 2.2.7
+- fixed defect which caused core dump in xae when mouse cursor leaves 
+  left side of window 
+
+version 2.2.6
+- corrected defect in control.c which prevented file from being saved in 
+  restricted mode
+
+version 2.2.5
+- added 'home' key to Xcurse
+- added options for 'text' and 'binary' modes 
+- added sending carriage-return to pipe if dos_file is true (so that diffs 
+  between the file and editor contents will work even with DOS files)
+- fixed defect in new_curse
+- added check for more select headers to get BSD_SELECT set in create.mk.aee
+
+version 2.2.4
+- fixed defect which caused line to be improperly resized when tab stops 
+  changed
+
+version 2.2.3
+- fixed defect which caused segmentation fault if marking text on the last 
+  line of a buffer
+
+version 2.2.2
+- added handling for DOS/Windows files (with CR/LF)
+- minor changes to allow use of /usr/local/aee for help.ae and init.ae files
+
+version 2.2.1
+- Minor error and help message changes to improve usability
+
+[aee-2.2.0-1]
+- First announcement to Freshmeat
+
+

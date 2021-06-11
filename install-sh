@@ -1,0 +1,52 @@
+#/bin/sh
+
+set -x
+
+rm -f /usr/local/bin/aee
+rm -f /usr/local/bin/rae
+rm -f /usr/local/bin/xae
+rm -f /usr/local/bin/rxae
+rm -f /usr/local/man/man1/aee.1
+rm -f /usr/local/lib/help.ae
+
+if [ ! -d /usr/local/bin ]
+then
+	mkdir /usr/local
+	mkdir /usr/local/bin
+fi
+
+if [ ! -d /usr/local/man/man1 ]
+then
+	mkdir /usr/local/man
+	mkdir /usr/local/man/man1
+fi
+
+if [ ! -d /usr/local/aee ]
+then
+	mkdir /usr/local/aee
+fi
+
+if [ -x aee ]
+then
+	install  aee     /usr/local/bin
+fi
+
+if [ -x xae ]
+then
+	install xae /usr/local/bin
+fi
+
+install  aee.1   /usr/local/man/man1
+install  help.ae /usr/local/aee
+
+cd /usr/local/bin
+if [ -x aee ]
+then
+	ln aee rae
+fi
+
+if [ -x xae ]
+then
+	ln xae rxae
+fi
+

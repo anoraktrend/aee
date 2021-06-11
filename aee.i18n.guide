@@ -1,0 +1,68 @@
+Another Easy Editor ("aee") provides the ability to translate the 
+messages displayed to the user and the commands entered.  This is done 
+via message catalogs, following X/Open standards.  aee supports eight 
+bit characters.  The contents of this file apply to both 'aee' and 
+'xae' (an X-Windows version of aee).
+
+(The name aee.i18n.guide is for "aee internationalization guide".  The 
+i18n abbreviation is used because there are 18 characters between the 
+first letter ("i") and last ("n") of "internationalization".) 
+
+All of the messages, warnings, information, and commands, are contained 
+in the message catalog.  Each numbered entry represents an individual 
+string used by aee.  Some strings contain formatting information for 
+formatted print statements, which are of the form "%s", or "%d", these 
+must be preserved in the translation, or the correct information will not 
+be displayed.  For those strings containing multiple formatting codes, 
+the order of each item must be preserved as well. 
+
+Care should be taken when translating commands and initialization keywords 
+because the algorithm used for detecting uniqueness of entered commands 
+will not be able to distinguish words that are not unique before the end 
+of the shorter word, for example, it would not be able to distinguish the 
+command 'abcd' from 'abcde'.
+
+After translating the messages, use the 'gencat' command to create the 
+compiled catalog used when running the software.  The standard syntax 
+would be: 
+
+	gencat aee.cat aee.msg
+
+Where aee.msg is the file containing the translations, and aee.cat is the 
+compiled catalog.  If the file aee.cat does not exist, it will be created.  
+Check the documentation for your system for proper syntax.  
+
+Message catalog placement varies from system to system.  A common location 
+for message catalogs is in /usr/lib/nls.  In this directory are 
+directories with the names of other languages.  The default language is 
+'C'.  There is also an environment variable, named NLSPATH used to 
+determine where message catalogs can be found.  This variable is similar 
+to the PATH variable used for commands, but with some differences.  The 
+NLSPATH variable must have the ability to handle different names for 
+languages and the catalog files, so it has field descriptors for these.  A 
+typical setting for NLSPATH could be:
+
+	NLSPATH=/usr/lib/nls/%L/%N.cat:/usr/local/lib/nls/%L/%N.cat
+
+Where "%L" is the field descriptor for the language (obtained from the 
+LANG environment variable) and "%N" is the name of the file (with the 
+".cat" appended by the path variable, it is not passed from the requesting 
+program).  The colon (:) is used to separate paths, so in the above 
+example there are two paths possible for message catalogs.  You may wish 
+to maintain catalogs for applications that are not supported by your 
+system vendor in a location unique for you, and this is facilitated by the 
+NLSPATH variable.  Remember to set and export both the LANG and NLSPATH 
+variables for each user that expects to use localization either in a 
+system-wide profile or in each user's profile.  See your system 
+documentation for more information.
+
+The message catalog supplied with aee also uses the '$quote' directive to 
+specify a quote around strings to ensure proper padding.  This directive 
+may not be supported on all systems, and lead to quotes being included in 
+the string used in aee, which will cause incorrect behavior.  If the 
+'$quote' directive is not supported by your system's gencat command, edit 
+the msg file to remove the leading and trailing quotation marks.
+
+The file 'catalog.aee' contains the message catalog for aee.  The 
+shell script 'genstr' is used to generate the catalog.  The input file 
+for genstr is localize.c, which initializes the strings for aee and xae.

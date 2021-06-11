@@ -1,0 +1,330 @@
+#!/bin/sh
+
+#
+#	This script will determine if the system is a System V or BSD based
+#	UNIX system and create a makefile for aee appropriate for the system.
+#
+# $Header: /home/hugh/sources/aee/RCS/create.mk.aee,v 1.19 2010/07/18 00:57:43 hugh Exp hugh $
+#
+
+other_cflags=""
+
+# test for compilers, if gcc is on the system then use that, otherwise 
+# default to 'cc'
+
+string="`whereis gcc | grep bin`"
+
+if [ -n "$string" ]
+then
+	xcc="gcc"
+else
+	xcc="cc"
+fi
+
+# test for existence of termcap (exists on both BSD and SysV systems)
+
+if [ -f /etc/termcap -o -f /usr/share/lib/termcap -o -f /usr/share/misc/termcap ]
+then
+	if [ -f /usr/share/lib/termcap ]
+	then
+		termcap_exists="-DTERMCAP=\"\\\"/usr/share/lib/termcap\\\"\""
+	elif [ -f /usr/share/misc/termcap ]
+	then
+		termcap_exists="-DTERMCAP=\"\\\"/usr/share/misc/termcap\\\"\""
+	elif [ -f /etc/termcap ]
+	then
+		termcap_exists="-DTERMCAP=\"\\\"/etc/termcap\\\"\""
+	fi
+else
+	termcap_exists=""
+fi
+
+# test for terminfo directory (exists on SysV systems)
+
+if [ -d /usr/lib/terminfo -o -d /usr/share/lib/terminfo -o -d /usr/share/terminfo ]
+then
+	terminfo_exists=""
+else
+	terminfo_exists="-DCAP"
+fi
+
+# test for existence of termio header (on SysV systems)
+
+if [ -f /usr/include/termio.h ]
+then
+	termio="-DSYS5"
+else
+	termio=""
+fi
+
+# test for sgtty header (on BSD systems)
+
+if [ -f /usr/include/sgtty.h ]
+then
+	sgtty="TRUE"
+else
+	sgtty=""
+fi
+
+# look for select call in headers, make sure headers exist
+
+HEADER_FILES=""
+
+if [ -f /usr/include/sys/time.h ]
+then
+	HEADER_FILES="/usr/include/sys/time.h "
+fi
+
+if [ -f /usr/include/sys/types.h ]
+then
+	HEADER_FILES="$HEADER_FILES /usr/include/sys/types.h"
+fi
+
+# check for unistd.h
+
+if [ -f /usr/include/unistd.h ]
+then
+	HAS_UNISTD=-DHAS_UNISTD
+	HEADER_FILES="$HEADER_FILES /usr/include/unistd.h"
+else
+	HAS_UNISTD=""
+fi
+
+if [ -n "$HEADER_FILES" ]
+then
+	string="`grep select $HEADER_FILES`"
+	if [ -n "$string" ]
+	then
+		BSD_SELECT="-DBSD_SELECT"
+	else
+		BSD_SELECT=""
+	fi
+fi
+
+# if HP-UX, add other CFLAGS
+
+name_string="`uname`"
+
+if [ "$name_string" = "HP-UX" ]
+then
+	other_cflags="$other_cflags -Wa,-Ns10000 -Aa -D_HPUX_SOURCE"
+fi
+
+if [ "$name_string" = "Darwin" ]
+then
+	strip_option=""
+	other_cflags="-DNO_CATGETS"
+else
+	strip_option="-s"
+fi
+
+# check for existence of select.h (on AIX)
+
+if [ -f /usr/include/sys/select.h ]
+then
+	select_hdr="-DSLCT_HDR"
+else
+	select_hdr=""
+fi
+
+# check for stdlib.h
+
+if [ -f /usr/include/stdlib.h ]
+then
+	HAS_STDLIB=-DHAS_STDLIB
+else
+	HAS_STDLIB=""
+fi
+
+# check for stdarg.h
+
+if [ -f /usr/include/stdarg.h ]
+then
+	HAS_STDARG=-DHAS_STDARG
+else
+	HAS_STDARG=""
+fi
+
+# check for ctype.h
+
+if [ -f /usr/include/ctype.h ]
+then
+	HAS_CTYPE=-DHAS_CTYPE
+else
+	HAS_CTYPE=""
+fi
+
+# check for sys/ioctl.h
+
+if [ -f /usr/include/sys/ioctl.h ]
+then
+	HAS_SYS_IOCTL=-DHAS_SYS_IOCTL
+else
+	HAS_SYS_IOCTL=""
+fi
+
+# check for sys/wait.h
+
+if [ -f /usr/include/sys/wait.h ]
+then
+        HAS_SYS_WAIT=-DHAS_SYS_WAIT
+else
+        HAS_SYS_WAIT=""
+fi
+
+# check for localization headers
+
+if [ -f /usr/include/locale.h -a -f /usr/include/nl_types.h ]
+then
+	catgets=""
+else
+	catgets="-DNO_CATGETS"
+fi
+
+# make decisions about use of new_curse.c (use of new_curse is recommended 
+# rather than local curses)
+
+if [ -n "$terminfo_exists" -a -z "$termcap_exists" ]
+then
+	echo "Neither terminfo or termcap are on this system!  "
+	if [ -f /usr/include/curses.h ]
+	then
+		echo "Relying on local curses implementation."
+	else
+		cat <<-EOF
+		Don't know where to find curses, you'll need to modify 
+		source code to be able to build!
+		
+		Modify the file make.default and build aee by typing:
+		
+		make -f makefile.aee
+		
+		EOF
+
+		exit 1
+	fi
+	
+	TARGET="curses"
+	curses=""
+else
+	curses="-DNCURSE"
+	TARGET="aee"
+fi
+
+if [ -z "$termio" -a -z "$sgtty" ]
+then
+	echo "Neither termio.h or sgtty.h are on this system!  "
+	if [ -f /usr/include/curses.h ]
+	then
+		echo "Relying on local curses implementation."
+	else
+		cat <<-EOF
+		Don't know where to find curses, you'll need to modify 
+		source code to be able to build!
+		
+		Modify the file makefile.aee and build aee by typing:
+		
+		make -f makefile.aee
+		
+		EOF
+
+		exit 1
+	fi
+	
+	TARGET="curses"
+	curses=""
+fi
+
+# check if this is a SunOS system
+
+if [ -d /usr/5include ]
+then
+	five_include="-I/usr/5include"
+else
+	five_include=""
+fi
+
+if [ -d /usr/5lib ]
+then
+	five_lib="-L/usr/5lib"
+else
+	five_lib=""
+fi
+
+
+# time to write the makefile
+
+echo "Generating make.aee"
+
+if [ -f make.aee ]
+then
+	mv make.aee make.aee.old
+fi
+
+if [ -n "$CFLAGS" ]
+then
+	if [ -z "`echo $CFLAGS | grep '[-]g'`" ]
+	then
+		other_cflags="$other_cflags ${CFLAGS} ${strip_option}"
+	else
+		other_cflags="$other_cflags ${CFLAGS}"
+	fi
+else
+	other_cflags="$other_cflags ${strip_option}"
+fi
+
+echo "DEFINES =	$termio $terminfo_exists $BSD_SELECT $catgets $select $curses " > make.aee
+echo "" >> make.aee
+echo "CFLAGS =	$HAS_UNISTD $HAS_STDARG $HAS_STDLIB $HAS_CTYPE $HAS_SYS_IOCTL $HAS_SYS_WAIT $other_cflags $five_lib $five_include $select_hdr $termcap_exists" >> make.aee
+echo "" >> make.aee
+echo "" >> make.aee
+echo "all :	$TARGET" >> make.aee
+
+
+cat  >> make.aee << EOF
+
+CC = $xcc
+
+OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
+
+.c.o: 
+	\$(CC) \$(DEFINES) -c \$*.c \$(CFLAGS)
+
+curses :	\$(OBJS)
+	\$(CC) -o aee \$(OBJS) \$(CFLAGS) -lcurses 
+
+aee :	\$(OBJS) new_curse.o
+	\$(CC) -o aee \$(OBJS) new_curse.o \$(CFLAGS) 
+
+new_curse.o :	new_curse.c new_curse.h
+	\$(CC) new_curse.c -c \$(DEFINES) \$(CFLAGS)
+
+
+aee.o: aee.c aee.h new_curse.h aee_version.h
+control.o: control.c aee.h new_curse.h 
+delete.o: delete.c aee.h new_curse.h 
+format.o: format.c aee.h new_curse.h 
+help.o: help.c aee.h new_curse.h 
+journal.o: journal.c aee.h new_curse.h 
+windows.o: windows.c aee.h new_curse.h 
+file.o: file.c aee.h new_curse.h 
+keys.o: keys.c aee.h new_curse.h 
+localize.o: localize.c aee.h new_curse.h 
+mark.o: mark.c aee.h new_curse.h 
+motion.o: motion.c aee.h new_curse.h 
+new_curse.o: new_curse.c aee.h new_curse.h 
+srch_rep.o: srch_rep.c aee.h new_curse.h 
+xif.o: xif.c aee.h new_curse.h 
+new_curse.o: new_curse.c new_curse.h
+EOF
+
+if [ -f make.aee.old ]
+then
+	diffs="`cmp make.aee.old make.aee`"
+	if [ -n "${diffs}" ]
+	then
+		rm -f *.o aee 
+	fi
+	rm -f make.aee.old
+fi
+
