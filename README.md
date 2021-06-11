@@ -128,9 +128,9 @@ goals of aee are:
 aee is a superset of 'ee', a simplified text editor that is (as of
 this writing) available with various free UNIX distributions (FreeBSD
 and Linux).
-
+```
 Hugh Mahon              |___|
 h_mahon@fc.hp.com       |   |
                             |\  /|
                             | \/ |
-
+```
