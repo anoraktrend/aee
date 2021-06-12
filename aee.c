@@ -2509,7 +2509,7 @@ char *string;		/* string containing user command		*/
 	}
 	if (shell_fork)
 	{
-		printf(press_ret_to_cont_str);
+		printf("%s", press_ret_to_cont_str);
 		fflush(stdout);
 		while (((in = getchar()) != '\n') && (in != '\r'))
 			;

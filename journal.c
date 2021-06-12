@@ -215,7 +215,7 @@ struct text *line;
 	{
 		wmove(com_win, 0, 0);
 		wstandout(com_win);
-		wprintf(com_win, journal_err_str);
+		wprintw(com_win, journal_err_str);
 		wstandend(com_win);
 		wrefresh(com_win);
 		return;
