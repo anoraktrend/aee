@@ -310,7 +310,7 @@ char *file_name;
 		 |	Unable to open journal file.
 		 */
 
-		buffer->journ_fd = NULL;
+		buffer->journ_fd = '\0';
 		return(1);
 	}
 
@@ -564,7 +564,7 @@ struct journal_db *list;
 
 	for (tmp = list; (db_fp != NULL) && (tmp != NULL); tmp = tmp->next)
 	{
-		if (tmp->file_name != '\0')
+		if (tmp->file_name != NULL)
 		{
 			fprintf(db_fp, "%d %d %s %s\n", 
 				(int)strlen(tmp->file_name), 
@@ -860,7 +860,7 @@ struct bufr *buffer;
 	{
 		wprintw(com_win, cant_opn_rcvr_fil_msg);
 		buffer->journalling = FALSE;
-		buffer->journ_fd = NULL;
+		buffer->journ_fd = '\0';
 		return;
 	}
 

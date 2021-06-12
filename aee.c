@@ -1543,7 +1543,7 @@ struct bufr *buf_alloc()	/* allocate space for buffers		*/
 	temp_buf->main_buffer = FALSE;
 	temp_buf->edit_buffer = FALSE;
 	temp_buf->dos_file = FALSE;
-	temp_buf->journ_fd = NULL;
+	temp_buf->journ_fd = '\0';
 	return (temp_buf);
 }
 
