@@ -2,7 +2,7 @@ version 2.2.22
 Been awhile since this has been updated. :-(
 - a bunch of work to drag this into the 21st century. ;-)
   bulk of it was converting incompatible ints. Change string termination
-  from NULL to '\0'. Reverse a previous conversion from NULL ot '\0' back
+  from NULL to '\0'. Reverse a previous conversion from NULL to '\0' back
   to NULL and a bunch of other things that I can't remember.
 
 version 2.2.15b
