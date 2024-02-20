@@ -4,8 +4,6 @@ set -x
 
 rm -f /usr/local/bin/aee
 rm -f /usr/local/bin/rae
-rm -f /usr/local/bin/xae
-rm -f /usr/local/bin/rxae
 rm -f /usr/local/man/man1/aee.1
 rm -f /usr/local/lib/help.ae
 
@@ -29,12 +27,6 @@ fi
 if [ -x aee ]
 then
 	install  aee     /usr/local/bin
-	install  eex     /usr/local/bin
-fi
-
-if [ -x xae ]
-then
-	install xae /usr/local/bin
 fi
 
 install  aee.1   /usr/local/man/man1
@@ -46,8 +38,4 @@ then
 	ln aee rae
 fi
 
-if [ -x xae ]
-then
-	ln xae rxae
-fi
 
