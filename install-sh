@@ -29,6 +29,7 @@ fi
 if [ -x aee ]
 then
 	install  aee     /usr/local/bin
+	install  eex     /usr/local/bin
 fi
 
 if [ -x xae ]

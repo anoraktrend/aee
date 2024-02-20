@@ -37,6 +37,8 @@ char *XCURSE_version_string = "@(#) Xcurse.c $Revision: 1.41 $";
 
 extern int eightbit;
 
+struct _line *top_of_win;
+
 static WINDOW *virtual_scr;
 WINDOW *curscr;
 WINDOW *stdscr;

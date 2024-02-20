@@ -1,4 +1,5 @@
 #!/bin/sh
+
 #
 #	This script will determine if the system is a System V or BSD based
 #	UNIX system and create a makefile for aee appropriate for the system.
@@ -11,10 +12,15 @@ other_cflags="-DHAS_NCURSES -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAI
 # test for compilers, if clang is available, prefer t gcc is on the system then use that, otherwise 
 # default to 'cc'
 
-string="`whereis clang | grep bin`"
+string="`whereis gcc | grep bin`"
 if [ -n "$string" ]
 then
 	xcc="clang"
+else
+	string="`whereis gcc | grep bin`"
+if [ -n "$string" ]
+then
+	xcc="gcc"
 else
 	xcc="cc"
 fi
@@ -182,7 +188,7 @@ fi
 # make decisions about use of new_curse.c (use of new_curse is recommended 
 # rather than local curses)
 
-if false
+if [ -n "$terminfo_exists" -a -z "$termcap_exists" ]
 then
 	echo "Neither terminfo or termcap are on this system!  "
 	if [ -f /usr/include/curses.h ]
@@ -289,7 +295,7 @@ OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o k
 	\$(CC) \$(DEFINES) -c \$*.c \$(CFLAGS)
 
 curses :	\$(OBJS)
-	\$(CC) -o aee \$(OBJS) \$(CFLAGS) \$(LDFLAGS) -lncurses 
+	\$(CC) -o aee \$(OBJS) \$(CFLAGS) -lcurses 
 
 aee :	\$(OBJS) new_curse.o
 	\$(CC) -o aee \$(OBJS) new_curse.o \$(CFLAGS) 

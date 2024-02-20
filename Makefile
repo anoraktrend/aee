@@ -23,8 +23,8 @@ both :	main xae
 
 xae :	localxae buildxae
 
-buildaee :	
-	make -f make.aee
+buildaee :	localaee
+	$(MAKE) -f make.aee
 
 localaee:
 	@./create.mk.aee
@@ -37,6 +37,9 @@ localxae:
 
 install :
 	@./install-sh
+
+uninstall :
+	@./uninstall-sh
 
 clean :
 	rm -f *.o aee xae xae_dir/*.o

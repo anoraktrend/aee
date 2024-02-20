@@ -5,12 +5,19 @@
 #	UNIX system and create a makefile for xae appropriate for the system.
 #
 # $Header: /home/hugh/sources/aee/RCS/create.mk.xae,v 1.12 2010/07/18 00:58:28 hugh Exp hugh $
-#
+# $Update_Header: Lucy, add old Cflag from gcc default that is no longer in modern gcc, add cursed cflags
 
-other_cflags=""
+other_cflags="-DHAS_NCURSES -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -Wl,--allow-multiple-definition -fuse-ld=lld"
 
 HEADER_FILES=""
 
+string="`whereis clang | grep bin`"
+if [ -n "$string" ]
+then
+        xcc="clang"
+else
+        xcc="cc"
+fi
 # if HP-UX, add other CFLAGS
 
 name_string="`uname`"
@@ -192,12 +199,14 @@ echo "all :	xae" >> xae_dir/make.xae
 
 cat  >> xae_dir/make.xae << EOF
 
-CC_CMD = cc \$(DEFINES) -I.. -c \$(CFLAGS)
+CC=$xcc
+
+CC_CMD = \$(CC) \$(DEFINES) -I.. -c \$(CFLAGS)
 
 OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
 
 xae :	\$(OBJS) Xcurse.o xif.o
-	cc -o ../xae \$(OBJS) Xcurse.o xif.o \$(CFLAGS) -lX11
+	clang -fuse-ld=lld -o ../xae \$(OBJS) Xcurse.o xif.o \$(CFLAGS) -O3 -lX11
 
 
 

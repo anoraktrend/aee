@@ -64,7 +64,7 @@ strings_init()
 	catalog = catopen("aee", 0);
 #endif /* NO_CATGETS */
 
-	ae_help_file = catgetlocal( 1, "/usr/local/lib/help.ae");
+	ae_help_file = catgetlocal( 1, "/usr/share/aee/help.ae");
 	main_buffer_name = catgetlocal( 2, "main");
 
 
