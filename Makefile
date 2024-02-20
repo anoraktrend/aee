@@ -1,39 +1,6 @@
-# This is the make file for aee, "another easy editor".
-#
-# A file called 'make.aee' will be generated which will contain information 
-# specific to the local system, such as if it is a BSD or System V based 
-# version of UNIX, whether or not it has catgets, or select.  
-#
-# The "install" target ("make install") will copy the aee and xae binaries to 
-# the /usr/local/bin directory on the local system.  The man page (aee.1) 
-# will be copied into the /usr/local/man/man1 directory.
-#
-# The "clean" target ("make clean") will remove the 
-# object files, and the aee and xae binaries.
-#
+qDEFINES =	-DSYS5  -DBSD_SELECT   -DNCURSE 
 
-main :	localaee buildaee 
-
-all :	both
-
-aee :	main
-	exit
-
-both :	main xae
-
-xae :	localxae buildxae
-
-buildaee :	localaee
-	$(MAKE) -f make.aee
-
-localaee:
-	@./create.mk.aee
-
-buildxae :	
-	(cd xae_dir; make -f make.xae)
-
-localxae:
-	@./create.mk.xae
+CFLAGS =	-DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_NCURSES -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -Wl,--allow-multiple-definition -s   -DSLCT_HDR 
 
 install :
 	@./install-sh
@@ -44,3 +11,40 @@ uninstall :
 clean :
 	rm -f *.o aee xae xae_dir/*.o
 
+all :	curses
+
+CC = clang
+
+OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
+
+main = curses
+
+.c.o: 
+	$(CC) $(DEFINES) -c $*.c $(CFLAGS)
+
+curses :	$(OBJS)
+	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -lncurses 
+
+aee :	$(OBJS) new_curse.o
+	$(CC) -o aee $(OBJS) new_curse.o $(CFLAGS) 
+
+new_curse.o :	new_curse.c new_curse.h
+	$(CC) new_curse.c -c $(DEFINES) $(CFLAGS)
+
+
+aee.o: aee.c aee.h new_curse.h aee_version.h
+control.o: control.c aee.h new_curse.h 
+delete.o: delete.c aee.h new_curse.h 
+format.o: format.c aee.h new_curse.h 
+help.o: help.c aee.h new_curse.h 
+journal.o: journal.c aee.h new_curse.h 
+windows.o: windows.c aee.h new_curse.h 
+file.o: file.c aee.h new_curse.h 
+keys.o: keys.c aee.h new_curse.h 
+localize.o: localize.c aee.h new_curse.h 
+mark.o: mark.c aee.h new_curse.h 
+motion.o: motion.c aee.h new_curse.h 
+new_curse.o: new_curse.c aee.h new_curse.h 
+srch_rep.o: srch_rep.c aee.h new_curse.h 
+xif.o: xif.c aee.h new_curse.h 
+new_curse.o: new_curse.c new_curse.h
