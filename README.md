@@ -5,7 +5,7 @@ easy to use terminal-based screen oriented editor that requires no
 instruction to use.  The intended audience for aee ranges from
 people who are new to computers to experienced software developers.
 
-Modifications include: changes to the Cflags to enable building on modern systems, attempts to replace the gcc dependencie with clang, linking with ld.lld, my intention is to provide a working version of the current build system within the main branch and figure out how to import existing EE modifications on side branches, (until I finish with them).
+Modifications include: changes to the Cflags to enable building on modern systems, attempts to replace the gcc dependencie with clang, linking with ld.lld, removal of xae, alterations to the build system that make it viable to build on modern systems without hassel.
 
 **Legal stuff:**
 
