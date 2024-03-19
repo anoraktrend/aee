@@ -5,7 +5,9 @@ easy to use terminal-based screen oriented editor that requires no
 instruction to use.  The intended audience for aee ranges from
 people who are new to computers to experienced software developers.
 
-Modifications include: changes to the Cflags to enable building on modern systems, attempts to replace the gcc dependencie with clang, linking with ld.lld, removal of xae, alterations to the build system that make it viable to build on modern systems without hassel.
+Modifications include: changes to the make file and new_curse to 
+enable building on modern systems, removal of xae, alterations to 
+new_curse.c to request proper TERM variable setting.
 
 **Legal stuff:**
 
