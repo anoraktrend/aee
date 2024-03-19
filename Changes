@@ -1,3 +1,9 @@
+Version 2.3.0
+Nearly been a decade since this updated. maintainer changed. :-?
+- Change up the build system to allow people to use ncurses, (a modern curses library).
+- Clean up a bunch of stuff and disentangle New_Curse from the system
+- remove the Xif stuff as it's unnecessary, and thus dump XAE as well
+
 version 2.2.22
 Been awhile since this has been updated. :-(
 - a bunch of work to drag this into the 21st century. ;-)

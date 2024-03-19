@@ -25,11 +25,11 @@ OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o k
 curses :	$(OBJS)
 	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -lncurses 
 
-aee :	$(OBJS) new_curse.o
-	$(CC) -o aee $(OBJS) new_curse.o $(CFLAGS) 
 
-#new_curse.o :	new_curse.c new_curse.h
-#	$(CC) new_curse.c -c $(DEFINES) $(CFLAGS)
+
+
+
+
 
 
 aee.o: aee.c aee.h new_curse.h aee_version.h
@@ -44,7 +44,7 @@ keys.o: keys.c aee.h new_curse.h
 localize.o: localize.c aee.h new_curse.h 
 mark.o: mark.c aee.h new_curse.h 
 motion.o: motion.c aee.h new_curse.h 
-new_curse.o: new_curse.c aee.h new_curse.h 
+
 srch_rep.o: srch_rep.c aee.h new_curse.h 
-xif.o: xif.c aee.h new_curse.h 
-new_curse.o: new_curse.c new_curse.h
+
+
