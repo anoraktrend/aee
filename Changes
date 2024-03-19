@@ -1,9 +1,11 @@
 Version 2.3.0
 Been a couple of years since this updated. Alternative Maintainer Release. :-?
 - Change up the build system to allow people to use ncurses, (a modern curses library).
-- Clean up a bunch of stuff and disentangle New_Curse from the system
-- Remove the Xif stuff as it's unnecessaryish and thus dump XAE as unnecessary, as well
-- REGRESSION: As a result of disentangling New_Curse, I have to (re)implement or import some system to handle resizing.
+- Clean up a bunch of stuff and switch New_Curse to the version in the ee source 
+  variant from AMDmi3
+- Remove the Xif stuff as it's unnecessaryish and dump XAE as unnecessary, as well
+- REGRESSION: As a result of switching  New_Curse, I have to figure out how to
+  allow the code to run in xterm.
 - PROGRESS: no longer need to warn linker of multiple defines.
 
 version 2.2.22
