@@ -2,10 +2,12 @@ qDEFINES =	-DSYS5  -DBSD_SELECT   -DNCURSE
 
 CFLAGS =	-DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_NCURSES -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -Wl,--allow-multiple-definition -s   -DSLCT_HDR 
 
-install :
+main :	curses
+
+install : curses 
 	@./install-sh
 
-uninstall :
+uninstall : clean
 	@./uninstall-sh
 
 clean :
@@ -17,8 +19,6 @@ CC = clang
 
 OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
 
-main = curses
-
 .c.o: 
 	$(CC) $(DEFINES) -c $*.c $(CFLAGS)
 
@@ -28,8 +28,8 @@ curses :	$(OBJS)
 aee :	$(OBJS) new_curse.o
 	$(CC) -o aee $(OBJS) new_curse.o $(CFLAGS) 
 
-new_curse.o :	new_curse.c new_curse.h
-	$(CC) new_curse.c -c $(DEFINES) $(CFLAGS)
+#new_curse.o :	new_curse.c new_curse.h
+#	$(CC) new_curse.c -c $(DEFINES) $(CFLAGS)
 
 
 aee.o: aee.c aee.h new_curse.h aee_version.h
