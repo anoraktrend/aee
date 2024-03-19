@@ -38,22 +38,11 @@ Building the software:
 -
 	The editor 'aee' may be built on most UNIX systems by simply
         entering 'make' at the shell prompt in the directory where
-        the source is located.  The X-Windows version, 'xae', may be
-        built using the command 'make xae', and both aee and xae may
-        be built using the single command:
+        the source is located. If you find it necessary to change the
+	options you build with, (and you might), simply edit the makefile 
+	and/or install/uninstall scripts.
 
-        	make both
-
-        In certain situations, the scripts which do the setup for
-        the build (normally hidden from the user) may not be able to
-        find the information necessary to build the code.  If this
-        happens, a message to that effect is provided instructing
-        the user to try manual steps to build the code.  In this
-        case a certain level of knowledge on the part of the user is
-        expected.  Most of the needed information can be deduced
-        from the files 'create.mk.aee' and 'create.mk.xae'.
-
-General information:
+Historical information from the author:
 -
 The editor 'aee' (another easy editor) is intended to be a simple,
 easy to use terminal-based screen oriented editor that requires no
