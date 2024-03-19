@@ -38,7 +38,12 @@ Building the software:
 -
         The editor 'aee' may be built on most UNIX systems by simply
         entering 'make' at the shell prompt in the directory where
-        the source is located. If you find it necessary to change the
+        the source is located, followed by make install.
+        This software isn't compatible with xterm, if you aren't
+        using xterm but still get an error, please set your TERM 
+        variable properly
+          
+        If you find it necessary to change the
         options you build with, (and you might), simply edit the makefile
         and/or install/uninstall scripts.
 
