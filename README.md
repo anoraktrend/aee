@@ -39,8 +39,8 @@ Building the software:
 	The editor 'aee' may be built on most UNIX systems by simply
         entering 'make' at the shell prompt in the directory where
         the source is located. If you find it necessary to change the
-	options you build with, (and you might), simply edit the makefile 
-	and/or install/uninstall scripts.
+        options you build with, (and you might), simply edit the makefile
+        and/or install/uninstall scripts.
 
 Historical information from the author:
 -
