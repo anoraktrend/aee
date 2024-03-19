@@ -48,12 +48,14 @@
  |	copyright.  All rights are reserved.
  |
  */
-char *copyright_notice = "Copyright (c) 1986 - 1988, 1991 - 2002, 2009, 2010 Hugh Mahon.";
+char *copyright_notice = "Copyright (c) 1986 - 1988, 1991 - 2002, 2009, 2010 Hugh Mahon. Modifications Copyright (c) Lucy Randall.";
 
 char *long_notice[] = {
 	"This software and documentation contains", 
 	"proprietary information which is protected by", 
-	"copyright.  All rights are reserved."
+	"copyright.  All rights are reserved",
+	"other than those waived by the provided",
+	"Artistic License"
 	};
 
 #include "aee_version.h"

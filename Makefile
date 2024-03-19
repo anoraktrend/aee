@@ -25,26 +25,18 @@ OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o k
 curses :	$(OBJS)
 	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -lncurses 
 
-
-
-
-
-
-
-
-aee.o: aee.c aee.h new_curse.h aee_version.h
-control.o: control.c aee.h new_curse.h 
-delete.o: delete.c aee.h new_curse.h 
-format.o: format.c aee.h new_curse.h 
-help.o: help.c aee.h new_curse.h 
-journal.o: journal.c aee.h new_curse.h 
-windows.o: windows.c aee.h new_curse.h 
-file.o: file.c aee.h new_curse.h 
-keys.o: keys.c aee.h new_curse.h 
-localize.o: localize.c aee.h new_curse.h 
-mark.o: mark.c aee.h new_curse.h 
-motion.o: motion.c aee.h new_curse.h 
-
-srch_rep.o: srch_rep.c aee.h new_curse.h 
+aee.o: aee.c aee.h  aee_version.h
+control.o: control.c aee.h  
+delete.o: delete.c aee.h  
+format.o: format.c aee.h  
+help.o: help.c aee.h  
+journal.o: journal.c aee.h  
+windows.o: windows.c aee.h  
+file.o: file.c aee.h  
+keys.o: keys.c aee.h  
+localize.o: localize.c aee.h  
+mark.o: mark.c aee.h  
+motion.o: motion.c aee.h  
+srch_rep.o: srch_rep.c aee.h  
 
 
