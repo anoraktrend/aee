@@ -4,6 +4,7 @@ Been a couple of years since this updated. Alternative Maintainer Release. :-?
 - Clean up a bunch of stuff and disentangle New_Curse from the system
 - Remove the Xif stuff as it's unnecessaryish and thus dump XAE as unnecessary, as well
 - REGRESSION: As a result of disentangling New_Curse, I have to (re)implement or import some system to handle resizing.
+- PROGRESS: no longer need to warn linker of multiple defines.
 
 version 2.2.22
 Been awhile since this has been updated. :-(
