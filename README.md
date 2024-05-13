@@ -6,8 +6,11 @@ instruction to use.  The intended audience for aee ranges from
 people who are new to computers to experienced software developers.
 
 Modifications include: changes to the make file and new_curse to 
-enable building on modern systems, removal of xae, alterations to 
-new_curse.c to request proper TERM variable setting.
+enable building on modern systems, removal of xae, and, finally, 
+removal of new_curse.
+
+Based on the source version from the gitlab mirror of 
+[freebsd's ports](https://gitlab.com/ports1/aee).
 
 **Legal stuff:**
 
@@ -41,9 +44,9 @@ Building the software:
         The editor 'aee' may be built on most UNIX systems by simply
         entering 'make' at the shell prompt in the directory where
         the source is located, followed by make install.
-        This software isn't compatible with xterm, if you aren't
-        using xterm but still get an error, please set your TERM 
-        variable properly
+        You can try using the curses option if you don't have ncurses.
+        new_curse has been excised because it isn't very useful in the modern era
+        If you would like to try it, it's available via a link above.
           
         If you find it necessary to change the
         options you build with, (and you might), simply edit the makefile
