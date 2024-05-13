@@ -29,6 +29,11 @@ then
 	install  aee     /usr/local/bin
 fi
 
+if [ -x ane ]
+then
+	install  ane     /usr/local/bin
+fi
+
 install  aee.1   /usr/local/man/man1
 install  help.ae /usr/local/aee
 

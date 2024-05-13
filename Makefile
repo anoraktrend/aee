@@ -1,29 +1,35 @@
-DEFINES =	-DSYS5  -DNCURSE -DBSD_SELECT 
+DEFINES =	-DSYS5 -DBSD_SELECT 
 
-CFLAGS =	-DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_NCURSES -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -s   -DSLCT_HDR 
+CFLAGS =	-DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_NCURSES -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -s -DSLCT_HDR 
 
-main :	curses
+main :	ncurses
 
-install : curses 
+install : main 
 	@./install-sh
 
 uninstall : clean
 	@./uninstall-sh
 
 clean :
-	rm -f *.o aee xae xae_dir/*.o
+	rm -f *.o aee ane xae_dir/*.o
 
-all :	curses
+all :	ncurses new_curse
 
 CC = clang
 
-OBJS = aee.o control.o new_curse.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
+OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
 
 .c.o: 
 	$(CC) $(DEFINES) -c $*.c $(CFLAGS)
 
+ncurses :	$(OBJS)
+	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DHAS_NCURSES -lncursesw 
+
 curses :	$(OBJS)
-	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -lncurses 
+	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DCURSES -lncursesw
+
+new_curse :	$(OBJS) $(new_curse.o)
+	$(CC) -o aee $(OBJS) -DNCURSE new_curse.o $(CFLAGS) $(LDFLAGS)
 
 aee.o: aee.c aee.h new_curse.h aee_version.h
 control.o: control.c new_curse.h aee.h  
