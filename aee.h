@@ -39,23 +39,16 @@
 
 extern int eightbit;		/* eight bit character flag		*/
 
-#ifndef XAE
 #ifdef NCURSE
 #include "new_curse.h"
+#elif HAS_NCURSES
+#include <ncurses.h>
 #else
 #include <curses.h>
 #endif
-#else	/* ifdef XAE	*/
-#ifdef xae11
-#include "Xcurse.h"
-#else
-#include "X10curse.h"
-#endif	/* xae11 */
-#endif	/* XAE */
 
 extern struct stat buf;
 
-#ifndef XAE
 #ifdef SYS5			/* System V specific tty operations	*/
 extern struct termio old_term;
 extern struct termio new_term;
@@ -64,7 +57,6 @@ extern struct termio new_term;
 extern struct sgttyb old_term;
 extern struct sgttyb new_term;
 #endif
-#endif	/* XAE */
 
 #ifndef SIGCHLD
 #define SIGCHLD SIGCLD

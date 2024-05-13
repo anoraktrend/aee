@@ -979,6 +979,7 @@ printf("starting initscr \n");fflush(stdout);
 	if ((String_table[cm__] == NULL) || (Booleans[hc__]))
 	{
 		fprintf(stderr, "sorry, unable to use this terminal type for screen editing\nplease try properly setting the TERM variable\n");
+		String_table[cm__] = "\0";
 		exit(0);
 	}
 	Key_Get();
