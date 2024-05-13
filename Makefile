@@ -1,6 +1,6 @@
 DEFINES =	-DSYS5 -DBSD_SELECT 
 
-CFLAGS =	-DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -s -DSLCT_HDR 
+CFLAGS =	-DHAS_UNISTD -fuse-ld=lld -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -Ofast -march=native -mtune=native -flto -fcommon -s -DSLCT_HDR 
 
 main :	ncurses
 
@@ -11,9 +11,9 @@ uninstall : clean
 	@./uninstall-sh
 
 clean :
-	rm -f *.o aee ane xae_dir/*.o
+	rm -f *.o aee
 
-all :	ncurses new_curse
+all :	ncurses
 
 CC = clang
 
@@ -23,22 +23,19 @@ OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o k
 	$(CC) $(DEFINES) -c $*.c $(CFLAGS)
 
 ncurses :	$(OBJS)
-	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DHAS_NCURSES -lncursesw 
+	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DNCURSE -DCURSES -DHAS_NCURSES -lncursesw 
 
-curses :	$(OBJS)
-	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DCURSES -lncursesw
-
-aee.o: aee.c aee.h  aee_version.h
-control.o: control.c  aee.h  
-delete.o: delete.c  aee.h  
-format.o: format.c  aee.h  
-help.o: help.c  aee.h  
-journal.o: journal.c  aee.h  
-windows.o: windows.c  aee.h  
-file.o: file.c  aee.h  
-keys.o: keys.c  aee.h  
-localize.o: localize.c  aee.h  
-mark.o: mark.c aee.h  
-motion.o: motion.c  aee.h  
-srch_rep.o: srch_rep.c aee.h
-
+aee.o: aee.c aee.h new_curse.h  aee_version.h
+control.o: control.c  aee.h new_curse.h  
+delete.o: delete.c  aee.h new_curse.h  
+format.o: format.c  aee.h new_curse.h  
+help.o: help.c  aee.h new_curse.h  
+journal.o: journal.c  aee.h new_curse.h  
+windows.o: windows.c  aee.h new_curse.h  
+file.o: file.c  aee.h new_curse.h  
+keys.o: keys.c  aee.h new_curse.h  
+localize.o: localize.c  aee.h new_curse.h  
+mark.o: mark.c aee.h new_curse.h  
+motion.o: motion.c  aee.h new_curse.h  
+srch_rep.o: srch_rep.c aee.h new_curse.h
+new_curse.o: new_curse.c aee.h new_curse.h

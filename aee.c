@@ -525,7 +525,6 @@ main(argc, argv)		/* beginning of main program		*/
 int argc;
 char *argv[];
 {
-	setenv("TERM", "dummy", 0);
 #ifdef DEBUG
 	error_fp = fopen("/tmp/ae.mem_debug", "w");
 #endif /* DEBUG */
