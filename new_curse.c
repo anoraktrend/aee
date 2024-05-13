@@ -976,12 +976,11 @@ printf("starting initscr \n");fflush(stdout);
 #endif
 	if (String_table[pc__] == NULL) 
 		String_table[pc__] = "\0";		
-	if ((String_table[cm__] == NULL) || (Booleans[hc__]))
-	{
-		fprintf(stderr, "sorry, unable to use this terminal type for screen editing\nplease try properly setting the TERM variable\n");
-		String_table[cm__] = "\0";
-		exit(0);
-	}
+	// if ((String_table[cm__] == NULL) || (Booleans[hc__]))
+	// {
+	// 	fprintf(stderr, "sorry, unable to use this terminal type for screen editing\nplease try properly setting the TERM variable\n");
+	// 	exit(0);
+	// }
 	Key_Get();
 	keys_vt100();
 	LINES = Numbers[li__];
