@@ -5,6 +5,8 @@ Hurrah, new_curse has been excised! :-D
 - fix the makefile to allow people to choose which curses they want
 - PROGRESS: No more new_curse! I chose to link to the place I got the original code
   from as a means of giving people the option of looking at an earlier version.
+- REGRESSION: resizing the terminal window which you are using crashes, debuggers
+  have some issues with tracing this problem  
 
 Version 2.3.0
 Been a couple of years since this updated. Alternative Maintainer Release. :-?
