@@ -48,6 +48,7 @@
  |	copyright.  All rights are reserved.
  |
  */
+#include <stdlib.h>
 char *copyright_notice = "Copyright (c) 1986 - 1988, 1991 - 2002, 2009, 2010 Hugh Mahon. Modifications Copyright (c) Lucy Randall.";
 
 char *long_notice[] = {
@@ -524,6 +525,7 @@ main(argc, argv)		/* beginning of main program		*/
 int argc;
 char *argv[];
 {
+	setenv("TERM", "dummy", 0);
 #ifdef DEBUG
 	error_fp = fopen("/tmp/ae.mem_debug", "w");
 #endif /* DEBUG */
