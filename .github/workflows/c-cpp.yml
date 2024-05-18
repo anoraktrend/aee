@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make
+    - name: make install
+      run: DESTDIR=. PREFIX=/usr/ make install
+    - name: make uninstall
+      run: make uninstall
+    - name: make clean
+      run: make clean
