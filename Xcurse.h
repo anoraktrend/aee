@@ -132,7 +132,7 @@ struct _line {
 	int number;
 	};
 
-struct _line *top_of_win;
+extern struct _line *top_of_win;
 
 typedef struct WIND {
 	int SR;		/* starting row		*/

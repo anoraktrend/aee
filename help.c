@@ -12,7 +12,7 @@
 
 char *help_file_list[4] = {
 	"/usr/local/aee/help.ae", 
-	"/usr/local/lib/help.ae", 
+	"/usr/share/aee/help.ae", 
 	"~/.help.ae", 
 	"help.ae" 
 	};

@@ -85,6 +85,8 @@ char * new_curse_name= "@(#) new_curse.c $Revision: 1.54 $";
 #endif
 
 
+struct _line *top_of_win;
+
 WINDOW *curscr;
 static WINDOW *virtual_scr;
 WINDOW *stdscr;

@@ -1543,7 +1543,7 @@ struct bufr *buf_alloc()	/* allocate space for buffers		*/
 	temp_buf->main_buffer = FALSE;
 	temp_buf->edit_buffer = FALSE;
 	temp_buf->dos_file = FALSE;
-	temp_buf->journ_fd = '\0';
+	temp_buf->journ_fd = '-1';
 	return (temp_buf);
 }
 
@@ -2628,7 +2628,7 @@ char *string;
 
 char *init_name[6] = {
 	"/usr/local/aee/init.ae", 
-	"/usr/local/lib/init.ae", 
+	"/usr/share/aee/init.ae", 
 	NULL,                           /* to be ~/.init.ae */
 	".init.ae",
 	NULL,                           /* to be ~/.aeerc */

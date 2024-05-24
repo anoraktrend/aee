@@ -2,7 +2,7 @@ $
 $ 
 $set 1
 $quote "
-1 "/usr/local/lib/help.ae"
+1 "/usr/share/aee/help.ae"
 2 "main"
 3 "modes menu"
 4 "tabs to spaces        " 
