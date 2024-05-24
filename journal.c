@@ -72,6 +72,7 @@ char *jrn_vers_str = "@(#)                           journal.c $Revision: 1.41 $
 #include "aee.h"
 
 #include <time.h>
+#include <unistd.h>
 
 /*
  |	writes the contents of the line, updates the value stored in 
@@ -310,7 +311,7 @@ char *file_name;
 		 |	Unable to open journal file.
 		 */
 
-		buffer->journ_fd = '\0';
+		buffer->journ_fd = '-1';
 		return(1);
 	}
 
@@ -860,7 +861,7 @@ struct bufr *buffer;
 	{
 		wprintw(com_win, cant_opn_rcvr_fil_msg);
 		buffer->journalling = FALSE;
-		buffer->journ_fd = '\0';
+		buffer->journ_fd = '-1';
 		return;
 	}
 
