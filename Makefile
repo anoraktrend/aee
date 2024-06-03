@@ -14,7 +14,7 @@ uninstall : clean
 clean :
 	rm -f *.o aee ane xae_dir/*.o
 
-all :	ncurses new_curse
+all :	ncurses cursedee
 
 CC = clang
 
@@ -26,8 +26,11 @@ OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o k
 ncurses :	$(OBJS)
 	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS)  
 
-curses :	$(OBJS)
-	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS)
+cursedee :
+	make -f makefile.ee.newcurse.lib
+
+aeelib	:	
+	make -f makefile.newcurse.lib
 
 aee.o: aee.c aee.h new_curse.h aee_version.h
 control.o: control.c new_curse.h aee.h  
