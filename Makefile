@@ -1,6 +1,8 @@
 DEFINES =	-DSYS5 -DBSD_SELECT -DNCURSE -DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -DSLCT_HDR 
 
-CFLAGS=		-Ofast -march=native -mtune=native -flto -fcommon -s
+CFLAGS=		-O0 -march=native -mtune=native -flto -fcommon -lcurses
+
+LDFLAGS=	-s
 
 main :	ncurses
 
@@ -16,16 +18,16 @@ all :	ncurses new_curse
 
 CC = clang
 
-OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o new_curse.o motion.o keys.o help.o windows.o journal.o file.o
+OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o keys.o help.o windows.o journal.o file.o
 
 .c.o: 
 	$(CC) $(DEFINES) -c $*.c $(CFLAGS)
 
 ncurses :	$(OBJS)
-	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DHAS_NCURSES -lncursesw 
+	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS)  
 
 curses :	$(OBJS)
-	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS) -DCURSES -lncursesw
+	$(CC) -o aee $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 aee.o: aee.c aee.h new_curse.h aee_version.h
 control.o: control.c new_curse.h aee.h  
