@@ -311,7 +311,7 @@ char *file_name;
 		 |	Unable to open journal file.
 		 */
 
-		buffer->journ_fd = '-1';
+		buffer->journ_fd = '1';
 		return(1);
 	}
 
@@ -861,7 +861,7 @@ struct bufr *buffer;
 	{
 		wprintw(com_win, cant_opn_rcvr_fil_msg);
 		buffer->journalling = FALSE;
-		buffer->journ_fd = '-1';
+		buffer->journ_fd = '1';
 		return;
 	}
 
