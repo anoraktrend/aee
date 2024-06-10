@@ -1,0 +1,3 @@
+[submodule "ee-fbsd"]
+	path = ee-fbsd
+	url = https://github.com/anoraktrend/ee-fbsd
