@@ -42,7 +42,7 @@
 #include <stdio.h>
 
 #ifdef SYS5
-#include <termio.h>
+#include "termio.h"
 #else
 #include <sgtty.h>
 #include <fcntl.h>
