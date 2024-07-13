@@ -1,8 +1,8 @@
 DEFINES =	-DSYS5 -DBSD_SELECT -DNO_CATGETS -DHAS_NCURSES -DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -DSLCT_HDR 
 
-CFLAGS=		-O0 -march=native -mtune=native -flto -fcommon -lcurses
+CFLAGS +=		-O0 -march=native -mtune=native -flto -fcommon -lcurses
 
-LDFLAGS=	-s
+LDFLAGS+=	-s
 
 main :	ncurses
 
