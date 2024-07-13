@@ -43,6 +43,8 @@ extern int eightbit;		/* eight bit character flag		*/
 #include "new_curse.h"
 #elif HAS_NCURSES
 #include <ncurses.h>
+#elif iglunix
+#include "/usr/bad/ncurses/include/ncursesw/ncurses.h"
 #else
 #include <curses.h>
 #endif
