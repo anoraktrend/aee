@@ -4,13 +4,13 @@ CFLAGS +=		-O2 -march=native -mtune=native -flto -fcommon -lncursesw
 
 LDFLAGS+=	-s
 
-PREFIX?= /usr
+PREFIX?= /usr/
 
 main :	ncurses
 
 install : main 
-	install -m755 aee -d $(DESTDIR)$(PREFIX)/bin/
-	install -m644 aee.1 -d $(DESTDIR)$(PREFIX)/share/man/man1/
+	install -m755 aee $(DESTDIR)$(PREFIX)bin/
+	install -m644 aee.1 $(DESTDIR)$(PREFIX)share/man/man1/
 
 uninstall : clean
 	rm -rf $(DESTDIR)$(PREFIX)/bin/aee $(DESTDIR)$(PREFIX)/share/man/man1/aee.1
