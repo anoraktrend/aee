@@ -4,12 +4,12 @@ CFLAGS +=		-O2 -march=native -mtune=native -flto -fcommon -lncursesw
 
 LDFLAGS+=	-s
 
-PREFIX?= /usr/
+PREFIX?= /usr
 
 main :	ncurses
 
 install : main 
-	install -Dm755 aee $(DESTDIR)$(PREFIX)/bin/
+	install -Ddm755 aee $(DESTDIR)$(PREFIX)/bin/
 	install -Ddm644 aee.1 $(DESTDIR)$(PREFIX)/share/man/man1/
 
 uninstall : clean
