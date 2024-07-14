@@ -1,16 +1,19 @@
 DEFINES =	-DSYS5 -DBSD_SELECT -DNO_CATGETS -DHAS_NCURSES -DHAS_UNISTD  -DHAS_STDLIB -DHAS_CTYPE -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_WAIT -DSLCT_HDR 
 
-CFLAGS +=		-O0 -march=native -mtune=native -flto -fcommon -lcurses
+CFLAGS +=		-O2 -march=native -mtune=native -flto -fcommon -lncursesw
 
 LDFLAGS+=	-s
+
+PREFIX?= /usr/
 
 main :	ncurses
 
 install : main 
-	@./install-sh
+	install -Dm755 aee $(DESTDIR)$(PREFIX)/bin/
+	install -Dm644 aee.1 $(DESTDIR)$(PREFIX)/share/man/man1
 
 uninstall : clean
-	@./uninstall-sh
+	rm -rf $(DESTDIR)$(PREFIX)/bin/aee $(DESTDIR)$(PREFIX)/share/man/man1/aee.1
 clean :
 	rm -f *.o aee ane xae_dir/*.o
 
