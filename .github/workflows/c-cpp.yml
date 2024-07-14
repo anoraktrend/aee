@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name make prefix
+    - name: make prefix
       run: mkdir -p ./usr/bin ./usr/share/man/man1/
     - name: make
       run: make CFLAGS="-static"
