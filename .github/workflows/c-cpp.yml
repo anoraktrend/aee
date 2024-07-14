@@ -19,7 +19,7 @@ jobs:
       run: make CFLAGS="-static"
     - name: make install
       run: DESTDIR=. PREFIX=/usr/ make install
-    - name:
+    - name: package
       run: tar czf aee-14.1.tar.gz ./usr/
     - name: make uninstall
       run: make uninstall
