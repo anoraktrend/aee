@@ -54,6 +54,45 @@ char *string;
  |	documentation, or the X/Open Internationalization Guide.
  */
 
+// Create enum for message IDs
+enum MessageId {
+    MSG_HELP_FILE = 1,
+    MSG_MAIN_BUFFER,
+    MSG_MODES_MENU,
+    // ...etc
+};
+
+struct LocalizedStrings {
+    char *ae_help_file;
+    char *main_buffer_name;
+    // ...other strings
+};
+
+// Initialize localized strings
+struct LocalizedStrings* init_localized_strings(void) {
+    struct LocalizedStrings *strings = malloc(sizeof(struct LocalizedStrings));
+    
+    // Initialize with defaults
+    strings->ae_help_file = strdup("/usr/local/lib/help.ae");
+    strings->main_buffer_name = strdup("main");
+    // ...etc
+    
+    return strings;
+}
+
+// Free localized strings
+void free_localized_strings(struct LocalizedStrings *strings) {
+    free(strings->ae_help_file);
+    free(strings->main_buffer_name);
+    // ...etc
+    free(strings);
+}
+
+// Get localized string by ID
+const char* get_localized_string(enum MessageId id) {
+    // ...implementation
+}
+
 void 
 strings_init()
 {
@@ -64,8 +103,10 @@ strings_init()
 	catalog = catopen("aee", 0);
 #endif /* NO_CATGETS */
 
-	ae_help_file = catgetlocal( 1, "/usr/local/lib/help.ae");
-	main_buffer_name = catgetlocal( 2, "main");
+	struct LocalizedStrings *localized_strings = init_localized_strings();
+
+	ae_help_file = catgetlocal( 1, localized_strings->ae_help_file);
+	main_buffer_name = catgetlocal( 2, localized_strings->main_buffer_name);
 
 
 	/*

@@ -127,23 +127,10 @@ struct text {
 	char changed;		/* flag indicating info in line changed */
 	};
 
-extern struct text *first_line;	/* first line of current buffer		*/
-extern struct text *dlt_line;	/* structure for info on deleted line	*/
-extern struct text *curr_line;	/* current line cursor is on		*/
-extern struct text *fpste_line;	/* first line of select buffer		*/
-extern struct text *cpste_line;	/* current paste/select line		*/
-extern struct text *paste_buff;	/* first line of paste buffer		*/
-extern struct text *pste_tmp;	/* temporary paste pointer		*/
-extern struct text *tmp_line;	/* temporary line pointer		*/
-extern struct text *srch_line;	/* temporary pointer for search routine */
-
-
 struct files {		/* structure to store names of files to be edited*/
 	char *name;		/* name of file				*/
 	struct files *next_name;
 	};
-
-extern struct files *top_of_stack;
 
 struct bufr {			/* structure for names of buffers	*/
 	char *name;		/* name of buffer			*/
@@ -180,16 +167,10 @@ struct bufr {			/* structure for names of buffers	*/
 				   using stat(2)			*/
 	};
 
-extern struct bufr *first_buff;	/* first buffer in list			*/
-extern struct bufr *curr_buff;	/* pointer to current buffer		*/
-extern struct bufr *t_buff;	/* temporary pointer for buffers	*/
-
 struct tab_stops {		/* structure to store tab stops		*/
 	int column;		/* column for tab			*/
 	struct tab_stops *next_stop;
 	};
-
-extern struct tab_stops *tabs;
 
 struct del_buffs {
 	int flag;
@@ -212,13 +193,66 @@ struct journal_db {
 
 #define CHNG_SYMBOL(a) (a != 0 ? '+' : ' ')
 
+struct EditorState {
+    // Text handling
+    struct text *first_line;
+    struct text *curr_line; 
+    struct text *paste_buff;
+    struct text *dlt_line;
+    struct text *fpste_line;
+    struct text *cpste_line;
+    struct text *pste_tmp;
+    struct text *tmp_line;
+    struct text *srch_line;
+    
+    // Buffers
+    struct bufr *first_buff;
+    struct bufr *curr_buff;
+    struct bufr *t_buff;
+    
+    // UI state
+    WINDOW *com_win;
+    WINDOW *help_win; 
+    WINDOW *info_win;
+    
+    // Flags
+    bool windows;
+    bool mark_text;
+    bool journ_on;
+    bool input_file;
+    bool edit;
+    bool gold;
+    bool recover;
+    bool case_sen;
+    bool change;
+    bool literal;
+    bool forward;
+    
+    // Settings
+    int left_margin;
+    int right_margin;
+    int tab_spacing;
+    int info_win_height;
+    
+    // Other state
+    char *srch_str;
+    char *u_srch_str;
+    char *old_string;
+    char *new_string;
+    
+    struct files *top_of_stack;
+    struct del_buffs *undel_first;
+    struct del_buffs *undel_current;
+};
+
+// Initialize new editor state
+struct EditorState* editor_state_new(void);
+
+// Clean up editor state
+void editor_state_free(struct EditorState *state);
+
 extern struct del_buffs *undel_first;
 extern struct del_buffs *undel_current;
-
-extern WINDOW *com_win;		/* command window			*/
-extern WINDOW *help_win;	/* window for help facility		*/
-extern int windows;		/* flag for windows or no windows	*/
-extern WINDOW *info_win;
 
 extern int lines_moved;		/* number of lines moved in search	*/
 extern int d_wrd_len;		/* length of deleted word		*/
@@ -252,7 +286,6 @@ extern int tab_spacing;	/* spacing for tabs				*/
  |	boolean flags
  */
 
-extern char mark_text;		/* flag to indicate if MARK is active	*/
 extern char journ_on;		/* flag for journaling			*/
 extern char input_file;		/* indicate to read input file		*/
 extern char recv_file;		/* indicate reading a file		*/
