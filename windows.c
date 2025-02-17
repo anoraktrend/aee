@@ -12,6 +12,17 @@
 
 #include "aee.h"
 
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;
+extern struct bufr *first_buff;
+extern struct bufr *t_buff;
+extern WINDOW *com_win;
+extern WINDOW *info_win;
+extern char mark_text;
+extern int windows;
+extern int num_of_bufs;
+extern int info_win_height;
+
 void 
 new_screen()		/* draw all of the new information on the screen */
 {

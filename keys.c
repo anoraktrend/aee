@@ -12,6 +12,10 @@
 
 #include "aee.h"
 
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;
+extern WINDOW *com_win;
+
 void 
 control()		/* handles control key operations		*/
 {

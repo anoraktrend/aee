@@ -67,11 +67,14 @@
  |
  */
 
-char *jrn_vers_str = "@(#)                           journal.c $Revision: 1.41 $";
-
 #include "aee.h"
+#include <time.h> // Add include for time functions
 
-#include <time.h>
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;
+extern WINDOW *com_win;
+
+char *jrn_vers_str = "@(#)                           journal.c $Revision: 1.41 $";
 
 /*
  |	writes the contents of the line, updates the value stored in 

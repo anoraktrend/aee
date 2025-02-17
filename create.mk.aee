@@ -7,7 +7,7 @@
 # $Header: /home/hugh/sources/aee/RCS/create.mk.aee,v 1.19 2010/07/18 00:57:43 hugh Exp hugh $
 #
 
-other_cflags=""
+other_cflags="-g"
 
 # test for compilers, if gcc is on the system then use that, otherwise 
 # default to 'cc'

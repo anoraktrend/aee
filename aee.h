@@ -16,6 +16,15 @@
 #include <pwd.h>
 #include <limits.h>
 
+// Add support for bool type
+#ifdef HAS_STDBOOL
+#include <stdbool.h>
+#else
+typedef unsigned char bool;
+#define true 1
+#define false 0 
+#endif
+
 #ifdef HAS_SYS_WAIT
 #include <sys/wait.h>
 #endif
@@ -259,7 +268,6 @@ extern int d_wrd_len;		/* length of deleted word		*/
 extern int value;		/* temporary integer value		*/
 extern int tmp_pos;		/* temporary position			*/
 extern int tmp_vert;		/* temporary vertical position		*/
-extern int tmp_horz;		/* temporary horizontal position	*/
 extern int repl_length;		/* length of string to replace		*/
 extern int pst_pos;		/* position in cpste_line->line		*/
 extern int gold_count;		/* number of times to execute pressed key */
@@ -584,7 +592,8 @@ extern char *ee_mode_main_menu_strings[10];
  |	Declare addresses for routines referenced in menus below.
  */
 
-/* --- */
+/* External variable declarations */
+extern char mark_text;  // Changed from int to char to match aee.c
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define P_(s) s
@@ -775,6 +784,6 @@ void raise_window P_((void));
 void set_window_name P_((char *name));
 #endif /* XAE */
 
-#undef P_
+extern struct _line *top_of_win;
 
 

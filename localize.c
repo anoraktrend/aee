@@ -93,6 +93,25 @@ const char* get_localized_string(enum MessageId id) {
     // ...implementation
 }
 
+/* Define messages */
+char *file_being_edited_msg;
+char *file_modified_msg;
+
+/* Menu definitions moved from aee.c */
+struct menu_entries file_being_edited_menu[] = {
+    {"", NULL, NULL, NULL, NULL, MENU_WARN},
+    {"Continue editing anyway?", NULL, NULL, NULL, NULL, -1},
+    {NULL, NULL, NULL, NULL, NULL, -1}
+};
+
+struct menu_entries file_modified_menu[] = {
+    {"", NULL, NULL, NULL, NULL, MENU_WARN},
+    {"Cancel write", NULL, NULL, NULL, NULL, -1}, 
+    {"Write anyway", NULL, NULL, NULL, NULL, -1},
+    {"Show differences", NULL, NULL, NULL, NULL, -1},
+    {NULL, NULL, NULL, NULL, NULL, -1}
+};
+
 void 
 strings_init()
 {

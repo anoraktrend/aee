@@ -10,6 +10,26 @@
 
 #include "aee.h"
 
+/* Add missing external declarations */
+extern struct bufr *curr_buff;
+extern WINDOW *com_win;
+extern char mark_text;
+extern struct text *paste_buff;
+extern struct text *fpste_line;
+extern struct text *cpste_line;
+extern struct text *tmp_line;
+extern struct text *pste_tmp;
+extern char *pst_line;
+extern char *pst_pnt;
+extern int pst_pos;
+extern char *pste1;
+extern char *pste2;
+
+/* Constants for mark_text values */
+#define Mark 1
+#define Append 2  
+#define Prefix 3
+
 void 
 copy()			/* copy selected (marked) text into paste buffer */
 {
@@ -53,7 +73,7 @@ copy()			/* copy selected (marked) text into paste buffer */
 	}
 	else
 	{
-		wmove(com_win, 0,0);
+		wmove(com_win, 0, 0);
 		werase(com_win);
 		wprintw(com_win, mark_not_actv_str);
 		wrefresh(com_win);
@@ -128,7 +148,7 @@ paste()		/* insert text from paste buffer into current buffer	*/
 	}
 	else if (mark_text)
 	{
-		wmove(com_win,0,0);
+		wmove(com_win, 0, 0);
 		wclrtoeol(com_win);
 		wprintw(com_win, mark_active_str);
 		wrefresh(com_win);
@@ -143,31 +163,41 @@ paste()		/* insert text from paste buffer into current buffer	*/
 void 
 unmark_text()	/* unmark text and do not change contents of paste buffer */
 {
-	if (mark_text)
-	{
-		mark_text = FALSE;
-		while (cpste_line->prev_line != NULL)
-			cpste_line = cpste_line->prev_line;
-		while (cpste_line->next_line != NULL)
-		{
-			if (cpste_line->line != NULL)
-				free(cpste_line->line);
-			cpste_line = cpste_line->next_line;
-			free(cpste_line->prev_line);
-		}
-		free(cpste_line->line);
-		free(cpste_line);
-		midscreen(curr_buff->scr_vert, curr_buff->position);
-	}
-	else
-	{
-		wmove(com_win,0,0);
-		wclrtoeol(com_win);
-		wprintw(com_win, mark_not_actv_str);
-		wrefresh(com_win);
-		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
-		clr_cmd_line = TRUE;
-	}
+    if (mark_text)
+    {
+        mark_text = FALSE;
+        if (cpste_line != NULL) {
+            // Clean up paste buffer
+            while (cpste_line->prev_line != NULL)
+                cpste_line = cpste_line->prev_line;
+            while (cpste_line->next_line != NULL)
+            {
+                if (cpste_line->line != NULL)
+                    free(cpste_line->line);
+                cpste_line = cpste_line->next_line;
+                free(cpste_line->prev_line);
+            }
+            if (cpste_line->line != NULL)
+                free(cpste_line->line);
+            free(cpste_line);
+            cpste_line = NULL;
+        }
+        // Update display
+        wmove(com_win, 0, 0);
+        wclrtoeol(com_win);
+        wprintw(com_win, "Mark mode disabled");
+        wrefresh(com_win);
+        midscreen(curr_buff->scr_vert, curr_buff->position);
+    }
+    else
+    {
+        wmove(com_win,0,0);
+        wclrtoeol(com_win);
+        wprintw(com_win, mark_not_actv_str);
+        wrefresh(com_win);
+        wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+        clr_cmd_line = TRUE;
+    }
 }
 
 void 
@@ -385,8 +415,7 @@ fast_right()	/* move right one character and select (mark) but do not display	*/
 }
 
 void 
-fast_line(direct)	/* move to the previous or next line while selecting text but do not display */
-char *direct;	/* direction of movement	*/
+fast_line(char *direct)	/* move to the previous or next line while selecting text but do not display */
 {
 	if (*direct == 'u')
 	{
@@ -454,95 +483,102 @@ char *direct;	/* direction of movement	*/
 }
 
 int 
-slct(flag)	/* initiate process for selecting (marking) text	*/
-int flag;
+slct(int flag)	/* initiate process for selecting (marking) text	*/
 {
+    // If mark mode is already active, disable it
+    if (mark_text) {
+        unmark_text();
+        return 0;
+    }
 
-	if (!mark_text)
-	{
-		mark_text = flag;
-		cpste_line = fpste_line = txtalloc();
-		cpste_line->line = pst_line = pst_pnt = xalloc(10);
-		pst_pos = cpste_line->line_length = 1;
-		*pst_pnt = '\0';
-		cpste_line->max_length = 10;
-		cpste_line->prev_line = NULL;
-		cpste_line->next_line = NULL;
-		cpste_line->line_number	 = 1;
-	}
-	else
-	{
-		wmove(com_win,0,0);
-		wclrtoeol(com_win);
-		wprintw(com_win, mark_alrdy_actv_str);
-		wrefresh(com_win);
-		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
-		clr_cmd_line = TRUE;
-	}
-	return(0);
+    // Otherwise enable mark mode
+    mark_text = flag;
+    
+    // Initialize paste buffer structures
+    cpste_line = fpste_line = txtalloc();
+    if (cpste_line == NULL) {
+        wmove(com_win, 0, 0);
+        wclrtoeol(com_win);
+        wprintw(com_win, "Error: Could not allocate memory");
+        wrefresh(com_win);
+        mark_text = FALSE;
+        return(-1);
+    }
+
+    // Initialize line buffer with proper size
+    cpste_line->line = pst_line = pst_pnt = xalloc(curr_buff->curr_line->max_length);
+    if (pst_line == NULL) {
+        free(cpste_line);
+        wmove(com_win, 0, 0);
+        wclrtoeol(com_win);
+        wprintw(com_win, "Error: Could not allocate memory");
+        wrefresh(com_win);
+        mark_text = FALSE;
+        return(-1);
+    }
+
+    // Initialize buffer state
+    pst_pos = cpste_line->line_length = 1;
+    *pst_pnt = '\0';
+    cpste_line->max_length = curr_buff->curr_line->max_length;
+    cpste_line->prev_line = NULL;
+    cpste_line->next_line = NULL;
+    cpste_line->line_number = 1;
+
+    // Update display
+    wmove(com_win, 0, 0);
+    wclrtoeol(com_win);
+    wprintw(com_win, "Mark mode enabled");
+    wrefresh(com_win);
+    return(0);
 }
-	
+
 void 
 slct_dlt()	/* delete character in buffer	*/
 {
-	if ((pst_pos == cpste_line->line_length) && (pst_pos != 1))
-	{
-		pst_pos--;
-		cpste_line->line_length--;
-		pst_pnt--;
-		*pst_pnt = '\0';
-	}
-	else if (pst_pos != cpste_line->line_length)
-	{
-		pste1 = pste2 = pst_pnt;
-		value = pst_pos;
-		pste1++;
-		while (value < cpste_line->line_length)
-		{
-			*pste2 = *pste1;
-			pste1++;
-			pste2++;
-			value++;
-		}
-		*pste2 = *pste1;
-		cpste_line->line_length--;
-	}
-}
+    int tmpi;  // Declare tmpi variable
+    
+    // Add bounds checking at the start
+    if (!mark_text || cpste_line == NULL || pst_pnt == NULL) {
+        wmove(com_win, 0, 0);
+        wclrtoeol(com_win);
+        wprintw(com_win, "Error: Invalid mark state");
+        wrefresh(com_win);
+        return;
+    }
 
-void 
-slct_right()	/* select text while moving right and display	*/
-{
-	int tmpi;
-
-	if ((pst_pos == cpste_line->line_length) && 
-		(curr_buff->position != curr_buff->curr_line->line_length))
-	{
-		if ((cpste_line->max_length - cpste_line->line_length) < 5)
-			pst_pnt = resiz_line(10, cpste_line, pst_pos);
-		*pst_pnt = *curr_buff->pointer;
-		pst_pnt++;
-		*pst_pnt = '\0';
-		pst_pos++;
-		cpste_line->line_length++;
-		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
-		wstandout(curr_buff->win);
-		if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
-			tmpi = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
-		else
-			waddch(curr_buff->win, *curr_buff->pointer);
-		wstandend(curr_buff->win);
-	}
-	else if (curr_buff->position < curr_buff->curr_line->line_length)
-	{
-		slct_dlt();
-		pste1 = curr_buff->pointer;
-		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
-		if ((*pste1 < 32) || (*pste1 > 126))
-			tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
-		else
-			waddch(curr_buff->win, *pste1);
-	}
-/*	wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);*/
+    if (mark_text)
+    {
+        if ((pst_pos == cpste_line->line_length) && 
+            (curr_buff->position != curr_buff->curr_line->line_length))
+        {
+            if ((cpste_line->max_length - cpste_line->line_length) < 5)
+                pst_pnt = resiz_line(10, cpste_line, pst_pos);
+            *pst_pnt = *curr_buff->pointer;
+            pst_pnt++;
+            *pst_pnt = '\0';
+            pst_pos++;
+            cpste_line->line_length++;
+            wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+            wstandout(curr_buff->win);
+            if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
+                tmpi = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+            else
+                waddch(curr_buff->win, *curr_buff->pointer);
+            wstandend(curr_buff->win);
+        }
+        else if (curr_buff->position < curr_buff->curr_line->line_length)
+        {
+            slct_dlt();
+            pste1 = curr_buff->pointer;
+            wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+            if ((*pste1 < 32) || (*pste1 > 126))
+                tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+            else
+                waddch(curr_buff->win, *pste1);
+        }
+        wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+    }
 }
 
 void 
@@ -550,49 +586,110 @@ slct_left()	/* select text while moving left and display	*/
 {
 	int tmpi;
 
+	// Add null check and bounds check at start
+	if (cpste_line == NULL || curr_buff == NULL) {
+		wmove(com_win, 0, 0);
+		wclrtoeol(com_win);
+		wprintw(com_win, "Error: Invalid paste buffer");
+		wrefresh(com_win);
+		return;
+	}
+
 	if (pst_pos != 1)
 	{
-		slct_dlt();
-		pste1 = curr_buff->pointer;
-		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
-		if ((*pste1 < 32) || (*pste1 > 126))
-			tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
-		else
-			waddch(curr_buff->win, *pste1);
+		if (pst_pos <= cpste_line->line_length) { // Add bounds check
+			slct_dlt();
+			pste1 = curr_buff->pointer;
+			wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+			if ((*pste1 < 32) || (*pste1 > 126))
+				tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+			else
+				waddch(curr_buff->win, *pste1);
+		}
 	}
 	else if (curr_buff->position < curr_buff->curr_line->line_length)
 	{
 		if ((cpste_line->max_length - cpste_line->line_length) < 5)
 			pst_pnt = resiz_line(10, cpste_line, pst_pos);
-		pste1 = pst_pnt;
-		tmpi = pst_pos;
-		while (tmpi < cpste_line->line_length)
-		{
-			tmpi++;
+		if (pst_pnt != NULL) { // Add null check after resize
+			pste1 = pst_pnt;
+			tmpi = pst_pos;
+			while (tmpi < cpste_line->line_length)
+			{
+				tmpi++;
+				pste1++;
+			}
 			pste1++;
+			while (pst_pnt < pste1)
+			{
+				pste2 = pste1 - 1;
+				*pste1 = *pste2;
+				pste1--;
+			}
+			*pst_pnt = *curr_buff->pointer;
+			cpste_line->line_length++;
+			wstandout(curr_buff->win);
+			if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
+				tmpi += out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+			else
+				waddch(curr_buff->win, *pste1);
+			wstandend(curr_buff->win);
 		}
-		pste1++;
-		while (pst_pnt < pste1)
-		{
-			pste2= pste1 - 1;
-			*pste1= *pste2;
-			pste1--;
-		}
-		*pst_pnt = *curr_buff->pointer;
-		cpste_line->line_length++;
-		wstandout(curr_buff->win);
-		if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
-			tmpi += out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
-		else
-			waddch(curr_buff->win, *pste1);
-		wstandend(curr_buff->win);
 	}
 	wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 }
 
 void 
-slct_line(direct)	/* move to the previous or next line	*/
-char *direct;	/* direction	*/
+slct_right()    /* select text while moving right and display */
+{
+    int tmpi;
+
+    // Add null check and bounds check at start
+    if (cpste_line == NULL || curr_buff == NULL) {
+        wmove(com_win, 0, 0);
+        wclrtoeol(com_win);
+        wprintw(com_win, "Error: Invalid paste buffer");
+        wrefresh(com_win);
+        return;
+    }
+
+    if (curr_buff->position < curr_buff->curr_line->line_length)
+    {
+        if ((pst_pos == cpste_line->line_length) && (*pst_pnt == '\0'))
+        {
+            if ((cpste_line->max_length - cpste_line->line_length) < 5)
+                pst_pnt = resiz_line(10, cpste_line, pst_pos);
+            if (pst_pnt != NULL) {
+                *pst_pnt = *curr_buff->pointer;
+                pst_pnt++;
+                pst_pos++;
+                cpste_line->line_length++;
+                *pst_pnt = '\0';
+                wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+                wstandout(curr_buff->win);
+                if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
+                    tmpi = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+                else
+                    waddch(curr_buff->win, *curr_buff->pointer);
+                wstandend(curr_buff->win);
+            }
+        }
+        else if (curr_buff->position < curr_buff->curr_line->line_length)
+        {
+            slct_dlt();
+            pste1 = curr_buff->pointer;
+            wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+            if ((*pste1 < 32) || (*pste1 > 126))
+                tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+            else
+                waddch(curr_buff->win, *pste1);
+        }
+        wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
+    }
+}
+
+void 
+slct_line(char *direct)	/* move to the previous or next line	*/
 {
 	if (*direct == 'u')
 	{

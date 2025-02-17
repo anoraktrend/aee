@@ -12,29 +12,32 @@
  */
 
 #include "aee.h"
+#include <stdlib.h>
+#include <unistd.h>
+
+/* Add missing extern declarations */
+extern WINDOW *com_win;
+extern struct bufr *curr_buff;
+extern struct bufr *first_buff;
+extern struct stack_entry *top_of_stack;
+
+/* Global variables */
+static int tmp_horz;
+
+/* External strings */
+extern char *journal_err_str;
+extern char *main_buffer_name;
+extern char *no_char;
+extern char *pwd_err_msg;
+extern char *bad_rcvr_msg;
+extern char *rcvr_op_comp_msg;
+extern char *cant_opn_rcvr_fil_msg;
+extern char *recover_name_prompt;
+extern char *recover_menu_title;
+extern char *other_recover_file_str;
 
 struct menu_entries file_error_menu[] = {
 	{"", NULL, NULL, NULL, NULL, MENU_WARN}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}
-	};
-
-char *file_being_edited_msg;
-
-struct menu_entries file_being_edited_menu[] = {
-	{"", NULL, NULL, NULL, NULL, MENU_WARN}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}
-	};
-
-char *file_modified_msg;
-
-struct menu_entries file_modified_menu[] = {
-	{"", NULL, NULL, NULL, NULL, MENU_WARN}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}, 
-	{NULL, NULL, NULL, NULL, NULL, -1}, 
 	{NULL, NULL, NULL, NULL, NULL, -1}, 
 	{NULL, NULL, NULL, NULL, NULL, -1}
 	};
@@ -518,6 +521,7 @@ check_fp()	/* open or close files according to flags recv_file,
 	int line_num;
 	char buffer[512];
 	int value;
+	struct text *tmp_line;
 
 	clr_cmd_line = TRUE;
 

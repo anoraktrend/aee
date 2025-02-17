@@ -9,6 +9,14 @@
  */
 
 #include "aee.h"
+// Remove direct ncurses.h include since it conflicts with new_curse.h
+// #include <ncursesw/ncurses.h>
+
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;
+extern WINDOW *com_win;
+extern char mark_text;  /* Changed from int to char */
+extern struct text *dlt_line;
 
 int 
 Blank_Line(test_line)	/* test if line has any non-space characters	*/

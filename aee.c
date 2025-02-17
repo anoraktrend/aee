@@ -98,11 +98,11 @@ WINDOW *help_win;		/* window for help facility		*/
 int windows;			/* flag for windows or no windows	*/
 WINDOW *info_win;
 
+/* Add the actual definition */
+struct _line *top_of_win;
+
 int lines_moved;		/* number of lines moved in search	*/
 int d_wrd_len;			/* length of deleted word		*/
-int value;			/* temporary integer value		*/
-int tmp_pos;			/* temporary position			*/
-int tmp_vert;			/* temporary vertical position		*/
 int tmp_horz;			/* temporary horizontal position	*/
 int repl_length;		/* length of string to replace		*/
 int pst_pos;			/* position in cpste_line->line		*/
@@ -125,6 +125,9 @@ int local_LINES = 0;		/* copy of LINES, to detect when win resizes */
 int local_COLS = 0;		/* copy of COLS, to detect when win resizes  */
 int bit_bucket;			/* file descriptor to /dev/null		*/
 int tab_spacing = 8;		/* spacing for tabs			*/
+int value;               /* Temporary value used throughout program */
+int tmp_vert;           /* Temporary vertical position */ 
+int tmp_pos;            /* Temporary position */
 
 /*
  |	boolean flags
@@ -203,7 +206,7 @@ char *subject;			/* subject user wants to learn about	*/
 char *start_of_string;		/* start of search string		*/
 char match_char;		/* character found by search for match	*/
 char in_buff_name[128];		/* input buffer name			*/
-char out_buff_name[128];	/* output buffer name			*/
+char out_buff_name[128];		/* output buffer name			*/
 char *start_at_line;		/* move to this line at start of session*/
 char *print_command = "lp";	/* string to hold command for printing file */
 char nohighlight = FALSE;
@@ -238,10 +241,6 @@ char info_data[MAX_HELP_LINES][MAX_HELP_COLS];
 struct edit_keys assignment[] = {
 { "", "",  0, 0, 0, 0 },
 { "", "",  0, 0, 0, 0 }, 
-{ "", "",  0, 0, 0, 0 },
-{ "", "",  0, 0, 0, 0 },
-{ "", "",  0, 0, 0, 0 },
-{ "", "",  0, 0, 0, 0 },
 { "", "",  0, 0, 0, 0 },
 { "", "",  0, 0, 0, 0 },
 { "", "",  0, 0, 0, 0 },
@@ -430,7 +429,6 @@ struct menu_entries rae_err_menu[] = {
 	{"", NULL, NULL, NULL, NULL, -1}, 
 	{NULL, NULL, NULL, NULL, NULL, -1}
 	};
-
 
 char *commands[72];
 char *init_strings[41];

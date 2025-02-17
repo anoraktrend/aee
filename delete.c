@@ -10,6 +10,18 @@
 
 #include "aee.h"
 
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;
+extern char mark_text;
+extern struct text *dlt_line;
+extern struct text *cpste_line;
+extern struct text *fpste_line;
+extern struct text *tmp_line;
+extern char *pst_line;  // Changed type from struct text * to char * /* Changed from struct text * to char * */
+extern int pst_pos;
+extern char observ_margins;  // Changed type from int to char;   /* Changed from int to char */
+extern int left_margin;
+
 void 
 del_char(save_flag)	/* delete character at current cursor position	*/
 int save_flag;
@@ -167,7 +179,7 @@ int length;
 		tposit++;
 		*d_word5 = *d_word2;
 		d_word5++;
-		d_word2++;
+		d_word2++;;
 	}
 	curr_buff->curr_line->line_length += length;
 	curr_buff->curr_line->changed = TRUE;
@@ -181,7 +193,7 @@ int length;
 		tposit++;
 		*d_word2 = *d_word3;
 		d_word3++;
-		d_word2++;
+		*d_word2++;
 	}
 	*d_word2 = '\0';
 	if ((mark_text) && (pst_pos == 1) && ((cpste_line->line_length > 1) || (cpste_line->next_line != NULL)))
@@ -291,13 +303,13 @@ int save_flag;
 			free(cpste_line->prev_line->line);
 			free(cpste_line->prev_line);
 			cpste_line->prev_line = NULL;
-			pst_pnt = pst_line = cpste_line->line;
+			pst_pnt = pst_line = (char *)cpste_line->line;  // Added typecast
 			pst_pos = 1;
 		}
 		else
 		{
 			pst_pos = cpste_line->line_length = 1;
-			pst_pnt = pst_line = cpste_line->line;
+			pst_pnt = pst_line = (char *)cpste_line->line;  // Added typecast  
 			*pst_pnt = '\0';
 		}
 	}

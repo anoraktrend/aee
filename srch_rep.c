@@ -12,6 +12,12 @@
 
 #include "aee.h"
 
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;       /* Current buffer */
+extern WINDOW *com_win;              /* Command window */
+extern char mark_text;                /* Text marking flag */
+extern struct text *srch_line;       /* Search line pointer */
+
 int 
 search(move_cursor, start_line, offset, pointer, s_str_off, srch_short, disp)	/* search for srch_str in file after cursor	*/
 int move_cursor;/* should the cursor be moved by search to the found string */

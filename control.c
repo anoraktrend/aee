@@ -10,6 +10,18 @@
 
 #include "aee.h"
 
+// Add extern declarations for global variables
+extern WINDOW *com_win;
+extern WINDOW *info_win;
+extern struct bufr *curr_buff;
+extern struct bufr *first_buff;
+extern struct bufr *t_buff;
+extern struct files *top_of_stack;
+extern struct tab_stops *tabs;
+extern struct text *tmp_line;
+extern char windows;
+extern int num_of_bufs;
+
 static char item_alpha[] = "abcdefghijklmnopqrstuvwxyz0123456789 ";
 
 #define max_alpha_char 36

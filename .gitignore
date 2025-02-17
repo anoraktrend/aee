@@ -1,0 +1,5 @@
+*.o
+*.rv
+aee
+make.*
+*.txt

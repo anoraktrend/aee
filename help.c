@@ -10,6 +10,14 @@
 
 #include "aee.h"
 
+/* Add missing extern declarations */
+extern WINDOW *com_win;
+extern WINDOW *help_win;
+extern struct bufr *curr_buff;
+extern struct bufr *first_buff;
+extern struct bufr *t_buff;
+extern int windows;
+
 char *help_file_list[4] = {
 	"/usr/local/aee/help.ae", 
 	"/usr/local/lib/help.ae", 

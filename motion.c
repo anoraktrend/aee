@@ -10,6 +10,13 @@
 
 #include "aee.h"
 
+/* Add missing extern declarations */
+extern struct bufr *curr_buff;
+extern WINDOW *com_win;
+extern char mark_text;
+extern struct text *cpste_line;
+extern char *pst_line;          /* Changed from struct text * to char * to match aee.h */
+
 void 
 bottom()			/* go to bottom of file			*/
 {
