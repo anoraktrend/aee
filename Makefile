@@ -38,6 +38,9 @@ localxae:
 install :
 	@./install-sh
 
+uninstall :
+	@./uninstall-sh
+
 clean :
 	rm -f *.o aee xae xae_dir/*.o make.aee
 

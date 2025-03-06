@@ -4,7 +4,7 @@ set -x
 
 ${DESTDIR:=""}
 
-${PREFIX:=/usr/local}
+${PREFIX:=usr/local}
 
 rm -f $DESTDIR/$PREFIX/bin/aee
 rm -f $DESTDIR/$PREFIX/bin/rae
