@@ -24,7 +24,7 @@ both :	main xae
 xae :	localxae buildxae
 
 buildaee :	
-	make -f make.aee
+	make -f make.aee curses
 
 localaee:
 	@./create.mk.aee
@@ -39,5 +39,5 @@ install :
 	@./install-sh
 
 clean :
-	rm -f *.o aee xae xae_dir/*.o
+	rm -f *.o aee xae xae_dir/*.o make.aee
 

@@ -12,11 +12,13 @@ other_cflags="-g"
 # test for compilers, if gcc is on the system then use that, otherwise 
 # default to 'cc'
 
-string="`whereis gcc | grep bin`"
+string="`whereis clang | grep bin`"
+
+string2="`whereis gcc | grep bin`"
 
 if [ -n "$string" ]
 then
-	xcc="gcc"
+	xcc="clang"
 else
 	xcc="cc"
 fi
@@ -207,7 +209,7 @@ then
 	TARGET="curses"
 	curses=""
 else
-	curses="-DNCURSE"
+	curses=""
 	TARGET="aee"
 fi
 
@@ -291,7 +293,7 @@ OBJS = aee.o control.o format.o localize.o srch_rep.o delete.o mark.o motion.o k
 	\$(CC) \$(DEFINES) -c \$*.c \$(CFLAGS)
 
 curses :	\$(OBJS)
-	\$(CC) -o aee \$(OBJS) \$(CFLAGS) -lcurses 
+	\$(CC) -o aee \$(OBJS) \$(CFLAGS) -lncursesw 
 
 aee :	\$(OBJS) new_curse.o
 	\$(CC) -o aee \$(OBJS) new_curse.o \$(CFLAGS) 

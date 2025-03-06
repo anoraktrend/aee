@@ -2,51 +2,55 @@
 
 set -x
 
-rm -f /usr/local/bin/aee
-rm -f /usr/local/bin/rae
-rm -f /usr/local/bin/xae
-rm -f /usr/local/bin/rxae
-rm -f /usr/local/man/man1/aee.1
-rm -f /usr/local/lib/help.ae
+${DESTDIR:=""}
 
-if [ ! -d /usr/local/bin ]
+${PREFIX:=/usr/local}
+
+rm -f $DESTDIR/$PREFIX/bin/aee
+rm -f $DESTDIR/$PREFIX/bin/rae
+rm -f $DESTDIR/$PREFIX/man/man1/aee.1
+rm -f $DESTDIR/$PREFIX/lib/help.ae
+
+if [ ! -d "$DESTDIR" ]
 then
-	mkdir /usr/local
-	mkdir /usr/local/bin
+	mkdir $DESTDIR
 fi
 
-if [ ! -d /usr/local/man/man1 ]
+if [ ! -d "$DESTDIR/$PREFIX" ]
 then
-	mkdir /usr/local/man
-	mkdir /usr/local/man/man1
+	mkdir $DESTDIR/$PREFIX
+	mkdir $DESTDIR/$PREFIX/bin
+	mkdir $DESTDIR/$PREFIX/share
 fi
 
-if [ ! -d /usr/local/aee ]
+if [ ! -d "$DESTDIR/$PREFIX/share/man/man1" ]
 then
-	mkdir /usr/local/aee
+	mkdir $DESTDIR/$PREFIX/share/man
+	mkdir $DESTDIR/$PREFIX/share/man/man1
+fi
+
+if [ ! -d "$DESTDIR/$PREFIX/share/aee" ]
+then
+	mkdir $DESTDIR/$PREFIX/share/aee
 fi
 
 if [ -x aee ]
 then
-	install  aee     /usr/local/bin
+	install  aee     $DESTDIR/$PREFIX/bin
 fi
 
-if [ -x xae ]
+if [ -x ane ]
 then
-	install xae /usr/local/bin
+	install  ane     $DESTDIR/$PREFIX/bin
 fi
 
-install  aee.1   /usr/local/man/man1
-install  help.ae /usr/local/aee
+install  aee.1   $DESTDIR/$PREFIX/share/man/man1
+install  help.ae $DESTDIR/$PREFIX/share/aee
 
-cd /usr/local/bin
+cd $DESTDIR/$PREFIX/bin
 if [ -x aee ]
 then
 	ln aee rae
 fi
 
-if [ -x xae ]
-then
-	ln xae rxae
-fi
 
