@@ -5,3 +5,8 @@ make.*
 *.txt
 rae
 package/
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+xae
