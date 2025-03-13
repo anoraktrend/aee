@@ -2,7 +2,6 @@
 *.rv
 aee
 make.*
-*.txt
 rae
 package/
 build/
