@@ -21,37 +21,22 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <ctype.h>
-
+#include <termios.h>
 
 
 extern int eightbit;		/* eight bit character flag		*/
 
-#ifndef XAE
 #ifdef NCURSE
 #include "new_curse.h"
 #else
 #include <curses.h>
 #endif
-#else	/* ifdef XAE	*/
-#ifdef xae11
-#include "Xcurse.h"
-#else
-#include "X10curse.h"
-#endif	/* xae11 */
-#endif	/* XAE */
 
-extern struct stat buf;
-
-#ifndef XAE
-#ifdef SYS5			/* System V specific tty operations	*/
-extern struct termio old_term;
-extern struct termio new_term;
+extern struct stat buf;			/* System V specific tty operations	*/
+extern struct termios old_term;
+extern struct termios new_term;
 #include <fcntl.h>
-#else
-extern struct sgttyb old_term;
-extern struct sgttyb new_term;
-#endif
-#endif	/* XAE */
+
 
 #ifndef SIGCHLD
 #define SIGCHLD SIGCLD
@@ -65,14 +50,10 @@ extern struct sgttyb new_term;
 #define MAX_NAME_LEN 15
 #endif	/* NAME_MAX	*/
 
-#ifndef NO_CATGETS
 #include <locale.h>
 #include <nl_types.h>
 
 extern nl_catd catalog;
-#else
-#define catgetlocal(a, b) (b)
-#endif /* NO_CATGETS */
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
