@@ -15,35 +15,13 @@
 #include <string.h>
 #include <pwd.h>
 #include <limits.h>
-
-// Add support for bool type
-#ifdef HAS_STDBOOL
 #include <stdbool.h>
-#else
-typedef unsigned char bool;
-#define true 1
-#define false 0 
-#endif
-
-#ifdef HAS_SYS_WAIT
 #include <sys/wait.h>
-#endif
-
-#ifdef HAS_STDLIB
 #include <stdlib.h>
-#endif
-
-#ifdef HAS_STDARG
 #include <stdarg.h>
-#endif
-
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
-
-#ifdef HAS_CTYPE
 #include <ctype.h>
-#endif
+
 
 
 extern int eightbit;		/* eight bit character flag		*/
