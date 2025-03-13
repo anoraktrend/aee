@@ -45,7 +45,29 @@
 #include <termio.h>
 #else
 #include <sgtty.h>
+#include <sys/ttold.h> /* For TIOCGETP, TIOCSETP */
 #include <fcntl.h>
+
+/* Define missing terminal constants if not already defined */
+#ifndef EVENP
+#define EVENP 0x20
+#endif
+
+#ifndef ODDP  
+#define ODDP 0x40
+#endif
+
+#ifndef ECHO
+#define ECHO 0x08
+#endif
+
+#ifndef RAW
+#define RAW 0x20
+#endif
+
+#ifndef FNDELAY
+#define FNDELAY O_NDELAY
+#endif
 #endif
 
 #define KEY_BREAK	0401
@@ -183,6 +205,7 @@ extern WINDOW *curscr;
 extern WINDOW *stdscr;
 
 extern int LINES, COLS;
+extern char *term_type; // Add this near other extern declarations
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define P_(s) s

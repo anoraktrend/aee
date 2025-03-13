@@ -50,6 +50,14 @@ char * new_curse_name= "@(#) new_curse.c $Revision: 1.54 $";
 #include <signal.h>
 #include <fcntl.h>
 
+// Add at top with other global declarations
+char *term_type = NULL;
+
+// Define ERR if not defined
+#ifndef ERR
+#define ERR (-1)
+#endif
+
 #ifdef SYS5
 #include <string.h>
 #else
@@ -58,14 +66,6 @@ char * new_curse_name= "@(#) new_curse.c $Revision: 1.54 $";
 
 #ifdef BSD_SELECT
 #include <sys/types.h>
-#include <sys/time.h>
-
-#ifdef SLCT_HDR
-#include <sys/select.h>  /* on AIX */
-#endif /* SLCT_HDR */
-
-#endif /* BSD_SELECT */
-
 #ifdef HAS_STDLIB
 #include <stdlib.h>
 #endif
@@ -1177,8 +1177,6 @@ Key_Get()		/* create linked list with all key sequences obtained from terminal d
 			key_def = kcbt__;
 		else if (key_def == (kcbt__ + 1))
 			key_def = kbeg__;
-		else if (key_def == (kUND__ + 1))
-			key_def = kf11__;
 		if (String_table[key_def] != NULL)
 		{
 			if (KEY_TOS == NULL)
@@ -3818,5 +3816,25 @@ nc_clearattrib(flag)
 int flag;
 {
 	nc_attributes &= ~flag;
+}
+
+void
+set_up_term()       /* set up terminal */
+{
+    int counter;
+    char *tmp_ptr;
+    char *cap_ptr;
+
+    // Remove any terminal type restrictions and allow all TERM types including xterm-256color
+    term_type = getenv("TERM");
+    if (term_type == NULL)
+        term_type = "dumb";
+
+    // Initialize terminal
+    if ((initscr() == ERR) || (term_type == NULL))
+    {
+        fprintf(stderr, "Cannot initialize terminal.\n");
+        exit(-1);
+    }
 }
 
