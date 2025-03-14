@@ -45,7 +45,7 @@
 #include <termio.h>
 #else
 #include <sgtty.h>
-#include <sys/ttold.h> /* For TIOCGETP, TIOCSETP */
+#include <termios.h> /* For TIOCGETP, TIOCSETP */
 #include <fcntl.h>
 
 /* Define missing terminal constants if not already defined */

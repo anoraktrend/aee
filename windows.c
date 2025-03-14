@@ -511,12 +511,8 @@ resize_check()
 void 
 set_up_term()		/* set up the terminal for operating with ae	*/
 {
-#ifndef XAE
 	initscr();
-#else
-	initscr(win_width, win_height);
-	event_init();
-#endif
+	ae_init();
 	savetty();
 	saveterm();
 	noecho();

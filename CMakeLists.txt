@@ -42,29 +42,38 @@ set(AEE_SOURCES
     file.c
 )
 
+# Declare necessary compile definitions (e.g., use new_curse)
+add_compile_definitions(NCURSE)
+
+# Set the C standard
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# Include current source directory
+include_directories(${CMAKE_SOURCE_DIR})
+
 # AEE executable
 add_executable(aee ${AEE_SOURCES} new_curse.c)
 target_link_libraries(aee PRIVATE ${CURSES_LIBRARIES})
 target_include_directories(aee PRIVATE ${CURSES_INCLUDE_DIRS})
-
-# XAE executable
-if(BUILD_XAE)
-    add_executable(xae ${AEE_SOURCES} Xcurse.c xif.c)
-    target_compile_definitions(xae PRIVATE XAE xae11)
-    target_link_libraries(xae PRIVATE ${X11_LIBRARIES})
-    target_include_directories(xae PRIVATE ${X11_INCLUDE_DIR})
-endif()
+target_compile_definitions(aee PRIVATE
+    AEE_VERSION_MAJOR=${AEE_VERSION_MAJOR}
+    AEE_VERSION_MINOR=${AEE_VERSION_MINOR}
+    HAS_STDLIB
+    HAS_STDARG
+    HAS_UNISTD
+    HAS_CTYPE
+    HAS_SYS_IOCTL
+    HAS_SYS_WAIT
+    HAS_LOCALE
+    HAS_NL_TYPES
+    BSD_SELECT
+)
 
 # Installation
 install(TARGETS aee
     RUNTIME DESTINATION bin
 )
-
-if(BUILD_XAE)
-    install(TARGETS xae
-        RUNTIME DESTINATION bin
-    )
-endif()
 
 install(FILES aee.1
     DESTINATION share/man/man1

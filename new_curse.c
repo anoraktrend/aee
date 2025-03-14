@@ -49,6 +49,11 @@ char * new_curse_name= "@(#) new_curse.c $Revision: 1.54 $";
 #include "new_curse.h"
 #include <signal.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <string.h>
+#ifdef BSD
+#include <sgtty.h>
+#endif
 
 // Add at top with other global declarations
 char *term_type = NULL;
@@ -56,6 +61,12 @@ char *term_type = NULL;
 // Define ERR if not defined
 #ifndef ERR
 #define ERR (-1)
+#endif
+
+#ifdef __linux__
+#ifndef SYS5
+#define SYS5
+#endif
 #endif
 
 #ifdef SYS5
@@ -66,6 +77,7 @@ char *term_type = NULL;
 
 #ifdef BSD_SELECT
 #include <sys/types.h>
+#endif /* BSD_SELECT */
 #ifdef HAS_STDLIB
 #include <stdlib.h>
 #endif
@@ -83,7 +95,6 @@ char *term_type = NULL;
 #ifdef HAS_SYS_IOCTL
 #include <sys/ioctl.h>
 #endif
-
 
 WINDOW *curscr;
 static WINDOW *virtual_scr;
@@ -3817,24 +3828,3 @@ int flag;
 {
 	nc_attributes &= ~flag;
 }
-
-void
-set_up_term()       /* set up terminal */
-{
-    int counter;
-    char *tmp_ptr;
-    char *cap_ptr;
-
-    // Remove any terminal type restrictions and allow all TERM types including xterm-256color
-    term_type = getenv("TERM");
-    if (term_type == NULL)
-        term_type = "dumb";
-
-    // Initialize terminal
-    if ((initscr() == ERR) || (term_type == NULL))
-    {
-        fprintf(stderr, "Cannot initialize terminal.\n");
-        exit(-1);
-    }
-}
-

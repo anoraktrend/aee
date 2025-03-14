@@ -199,7 +199,7 @@ char *tmp_file;			/* temporary file name			*/
 char d_char;			/* deleted character			*/
 char *d_word;			/* deleted word				*/
 char *d_line;			/* deleted line				*/
-char *term_type;		/* type of terminal being used		*/
+extern char *term_type;		/* type of terminal being used		*/
 char *help_line;			/* input line for help facility		*/
 char *sline;			/* temporary line pointer for help fac	*/
 char *subject;			/* subject user wants to learn about	*/
