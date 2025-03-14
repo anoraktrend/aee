@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
 project(aee C)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  # Settings specific to Release build
+  add_definitions(-DNDEBUG) # Disable assertions and debug code
+  set(CMAKE_OPTIMIZATION_FLAGS "-O3") # Enable aggressive optimizations
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # Settings specific to Debug build
+  set(CMAKE_OPTIMIZATION_FLAGS "-Og -g -DTEST_TERMINAL") # Enable debug information and minimal optimizations
+endif()
+
+# Set compile flags based on the build type
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_OPTIMIZATION_FLAGS}")
 # Version
 set(AEE_VERSION_MAJOR 1)
 set(AEE_VERSION_MINOR 0)
