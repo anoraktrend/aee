@@ -27,7 +27,7 @@
 extern int eightbit;		/* eight bit character flag		*/
 
 #ifdef NCURSE
-#include "new_curse.h"
+#include "curses_compat.h"
 #else
 #include <curses.h>
 #endif
@@ -744,5 +744,41 @@ void set_window_name P_((char *name));
 #endif /* XAE */
 
 extern struct _line *top_of_win;
+
+// mark.c functions
+extern void cut_text P_((void)); 
+extern void mark_operation P_((void));
+
+// motion.c functions
+extern void move_rel P_((char* direction, int lines));
+extern void eol P_((void));
+extern void bol P_((void));
+
+// keys.c functions
+extern void keyboard P_((void));
+extern void control P_((void));
+extern void function_key P_((void)); 
+extern void gold_func P_((void));
+
+// format.c functions
+extern void Format P_((void));
+extern void Auto_Format P_((void));
+extern int first_word_len P_((struct text *test_line));
+
+// windows.c functions
+extern void new_screen P_((void));
+extern void raise_window P_((void));
+extern void set_window_name P_((char *name));
+extern struct bufr* add_buf P_((char *ident));
+extern void chng_buf P_((char *name));
+extern int del_buf P_((void));
+extern void redo_win P_((void));
+extern void resize_check P_((void));
+
+// search functions
+extern int search P_((int move_cursor, struct text *start_line, int offset, 
+                     char *pointer, int s_str_off, int srch_short, int disp));
+extern void replace P_((void));
+extern void match P_((void));
 
 

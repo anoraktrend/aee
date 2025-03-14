@@ -51,10 +51,8 @@ set(AEE_SOURCES
     windows.c
     journal.c
     file.c
+    curses_compat.c
 )
-
-# Declare necessary compile definitions (e.g., use new_curse)
-add_compile_definitions(NCURSE)
 
 # Set the C standard
 set(CMAKE_C_STANDARD 99)
@@ -64,7 +62,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 include_directories(${CMAKE_SOURCE_DIR})
 
 # AEE executable
-add_executable(aee ${AEE_SOURCES} new_curse.c)
+add_executable(aee ${AEE_SOURCES})
 target_link_libraries(aee PRIVATE ${CURSES_LIBRARIES})
 target_include_directories(aee PRIVATE ${CURSES_INCLUDE_DIRS})
 target_compile_definitions(aee PRIVATE
