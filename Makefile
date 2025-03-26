@@ -32,3 +32,7 @@ install :
 
 clean :
 	rm -f *.o aee make.aee
+
+uninstall : clean
+	chmod +x uninstall-sh
+	@./uninstall-sh
