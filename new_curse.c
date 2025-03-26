@@ -1882,10 +1882,10 @@ int place;
 					EVAL = TRUE;
 					while (EVAL)
 					{
-						/*
-						 |  find the end of the 
-						 |  conditional statement
-						 */
+							/*
+							 |  find the end of the 
+							 |  conditional statement
+							 */
 						while ((strncmp(Otemp, "%t", 2)) && (*Otemp != '\0'))
 						{
 							/*
@@ -2970,6 +2970,8 @@ struct _line *line2;
 		count1 = 1;			/* lines unequal	*/
 	return(count1);
 }
+
+struct _line *top_of_win;  /* Global definition */
 
 struct _line *
 Insert_line(row, end_row, window)	/* insert line into screen */

@@ -12,32 +12,21 @@
 # object files, and the aee and xae binaries.
 #
 
-main :	localaee buildaee 
+main :	localaee
 
 all :	both
 
-aee :	main
+aee :	main buildaee
 	exit
 
-both :	main xae
-
-xae :	localxae buildxae
-
-buildaee :	
+buildaee :
 	make -f make.aee
 
 localaee:
 	@./create.mk.aee
 
-buildxae :	
-	(cd xae_dir; make -f make.xae)
-
-localxae:
-	@./create.mk.xae
-
 install :
 	@./install-sh
 
 clean :
-	rm -f *.o aee xae xae_dir/*.o
-
+	rm -f *.o aee make.aee

@@ -742,6 +742,6 @@ void raise_window P_((void));
 void set_window_name P_((char *name));
 #endif /* XAE */
 
-#undef P_
+extern struct _line *top_of_win;  /* Add extern declaration */
 
 
