@@ -18,25 +18,17 @@ aee - another (easy) editor
 .br
 .B rae
 [ options ... ] file[s]
-.br
-.B xae 
-[ options ... ] [file[s]]
-.br
-.B rxae
-[ options ... ] file[s]
 .sp
 .SH DESCRIPTION
 .PP
-\fIaee\fR and \fIxae\fR are non-modal editors, that is, the user does not need 
-to switch from one mode to another to insert and delete text.  The editor is 
-always in text mode.  Control sequences and function keys are used to perform 
-the editing functions.  In the case of \fIxae\fR, the mouse can also be used 
-to position the cursor, and perform text selection and pasting.
+\fIaee\fR is a non-modal editor, that is, the user does not need to switch 
+from one mode to another to insert and delete text.  The editor is always 
+in text mode.  Control sequences and function keys are used to perform the 
+editing functions.
 .PP
-\fIrae\fR and \fIrxae\fR are the same as \fIaee\fR and \fIxae\fR 
-respectively, except that they are restricted to editing 
-the file(s) named on the invoking command line.  No other files may be opened 
-or written, nor may shell operations be performed.
+\fIrae\fR is the same as \fIaee\fR respectively, except that it is restricted 
+to editing the file(s) named on the invoking command line.  No other files may 
+be opened or written, nor may shell operations be performed.
 .PP
 The arrow keys (up, down, left, right) may be used to move the cursor.  If 
 the keyboard is so equipped, the \fBprev\fR and \fBnext\fR keys will move 
@@ -79,22 +71,6 @@ are special characters).
 Move cursor to start of line \fInumber\fR.
 .RE
 .sp
-The following additional options are available for \fIxae\fR only:
-.RS
-.IP "-fn \fIfont\fR" 22
-Specify a font for use with \fIxae\fR.  Resource name \fBBaseFont\fR.
-.IP "-fg \fIcolor\fR" 22
-Specify a foreground color (color of text).  Resource name 
-\fBForegroundColor\fR.
-.IP "-bg \fIcolor\fR" 22
-Specify a background color.  Resource name \fBBackgroundColor\fR.
-.IP "-geometry \fI=columns\fBx\fIlines\fR"
-Specify a geometry for \fIxae\fR.  Resource name \fBGeometry\fR.
-.RE
-.PP
-The \fIxae\fR specific options may be specified in the \fBX-Windows 
-Version 11\fR defaults file for the user.  See your X-Windows 
-documentation for more details.
 .\"
 .\"
 .\"
@@ -1033,8 +1009,6 @@ editing.  Save files early, and save often.
 .PP
 The software 
 .I aee
-and 
-.I xae
 was developed by Hugh Mahon.
 .PP
 This software and documentation contains 

@@ -130,21 +130,10 @@ this writing) available with various free UNIX distributions (FreeBSD
 and Linux).
 
 # AEE - Another Easy Editor
+Make system modifications and build fixes done by Lucy. Lucy also removed XAE because of its redundency and 
+her belief that it is no longer neccessary in the modern day. Additionally, Lucy intends to add more features
+and convert it to rust. 
 
-## Building from source
-
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
-
-## Installing
-
-```bash
-sudo make install
-```
 ```
 Hugh Mahon              |___|
 h_mahon@fc.hp.com       |   |

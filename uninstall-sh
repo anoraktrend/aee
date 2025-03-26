@@ -1,0 +1,12 @@
+#/bin/sh
+
+set -x
+
+${DESTDIR:=""}
+
+${PREFIX:=usr/local}
+
+rm -f $DESTDIR/$PREFIX/bin/aee
+rm -f $DESTDIR/$PREFIX/bin/rae
+rm -f $DESTDIR/$PREFIX/man/man1/aee.1
+rm -f $DESTDIR/$PREFIX/lib/help.ae

@@ -23,9 +23,11 @@ buildaee :
 	make -f make.aee
 
 localaee:
+	chmod +x create.mk.aee
 	@./create.mk.aee
 
 install :
+	chmod +x install-sh
 	@./install-sh
 
 clean :
