@@ -26,7 +26,7 @@ localaee:
 	chmod +x create.mk.aee
 	@./create.mk.aee
 
-install :
+install : aee
 	chmod +x install-sh
 	@./install-sh
 

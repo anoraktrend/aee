@@ -2,4 +2,7 @@ Project: AEE
 Project Developer: Hugh Mahon. This version is maintained by Lucy B.
 Contributors: Hugh Mahon, Chris H,  Lucy B.
 
-RECENT CHANGES: Lucy used "Github Copilot" to fix the multiple definitions in ncurses.h and .c, she intends to go back and fix these herself once she learns more C.
+RECENT CHANGES: Lucy used "Github Copilot" to fix the multiple definitions in ncurses.h and .c,
+she intends to go back and fix these herself once she learns more C.
+Lucy has also updated the install-sh to allow users to install to a prefix and destdir, like other build systems.
+Lucy has also modified the makefile and removed references to xae in the manpage file. She must ensure to excise references to that program as time continues.
