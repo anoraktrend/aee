@@ -1,6 +1,6 @@
 # Maintainer: Your Name <your.email@example.com>
 pkgname=aee-git
-pkgver=r25.c77b92a
+pkgver=2.2.22.r25.c77b92a
 pkgrel=1
 pkgdesc="Another Easy Editor - a simple, easy to use terminal-based screen oriented editor"
 arch=('x86_64' 'i686' 'aarch64')
@@ -15,7 +15,7 @@ sha256sums=('SKIP')
 
 pkgver() {
     cd "$srcdir/aee"
-    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+    printf "2.2.22.r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 build() {
