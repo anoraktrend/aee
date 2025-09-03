@@ -16,15 +16,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_OPTIMIZATION_FLAGS}")
 set(AEE_VERSION_MAJOR 1)
 set(AEE_VERSION_MINOR 0)
 
-# Options
-option(BUILD_XAE "Build X11 version" ON)
-
-# Find required packages
-find_package(Curses REQUIRED)
-if(BUILD_XAE)
-    find_package(X11 REQUIRED)
-endif()
-
 # Configure compiler flags
 include(CheckIncludeFiles)
 check_include_files(stdlib.h HAS_STDLIB)
