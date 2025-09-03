@@ -11,6 +11,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 # Set compile flags based on the build type
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_OPTIMIZATION_FLAGS} -Wno-format-security -Wno-unused-result -Wno-error")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_OPTIMIZATION_FLAGS}")
 # Version
 set(AEE_VERSION_MAJOR 1)
