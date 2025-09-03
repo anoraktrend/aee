@@ -16,6 +16,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_OPTIMIZATION_FLAGS}")
 set(AEE_VERSION_MAJOR 1)
 set(AEE_VERSION_MINOR 0)
 
+# Find required packages
+find_package(Curses REQUIRED)
+
 # Configure compiler flags
 include(CheckIncludeFiles)
 check_include_files(stdlib.h HAS_STDLIB)
@@ -55,7 +58,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 # AEE executable
 add_executable(aee ${AEE_SOURCES})
 target_link_libraries(aee PRIVATE ${CURSES_LIBRARIES})
-target_include_directories(aee PRIVATE ${CURSES_INCLUDE_DIRS})
+target_include_directories(aee PRIVATE ${CURSES_INCLUDE_DIR})
 target_compile_definitions(aee PRIVATE
     AEE_VERSION_MAJOR=${AEE_VERSION_MAJOR}
     AEE_VERSION_MINOR=${AEE_VERSION_MINOR}
