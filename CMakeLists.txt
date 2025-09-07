@@ -72,6 +72,7 @@ target_compile_definitions(aee PRIVATE
     HAS_LOCALE
     HAS_NL_TYPES
     BSD_SELECT
+    NOCATGETS
 )
 
 # Installation

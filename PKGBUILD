@@ -1,10 +1,10 @@
-# Maintainer: Your Name <your.email@example.com>
-pkgname=aee-git
+# Maintainer: Your Name <lucyrandall@helltop.net>
+pkgname=aee-anoraktrend
 pkgver=2.2.22.r25.c77b92a
 pkgrel=1
 pkgdesc="Another Easy Editor - a simple, easy to use terminal-based screen oriented editor"
 arch=('x86_64' 'i686' 'aarch64')
-url="https://github.com/anoraktrend/aee"
+url="https://helltop.net/projects"
 license=('custom:Artistic')
 depends=('ncurses')
 makedepends=('git' 'cmake' 'make')
