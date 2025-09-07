@@ -73,7 +73,7 @@ struct LocalizedStrings* init_localized_strings(void) {
     struct LocalizedStrings *strings = malloc(sizeof(struct LocalizedStrings));
     
     // Initialize with defaults
-    strings->ae_help_file = strdup("/usr/local/lib/help.ae");
+    strings->ae_help_file = strdup("/usr/share/aee/help.ae");
     strings->main_buffer_name = strdup("main");
     // ...etc
     

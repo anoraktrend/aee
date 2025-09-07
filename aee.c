@@ -2624,8 +2624,7 @@ char *string;
 }
 
 char *init_name[6] = {
-	"/usr/local/aee/init.ae", 
-	"/usr/local/lib/init.ae", 
+	"/etc/aee/init.ae", 
 	NULL,                           /* to be ~/.init.ae */
 	".init.ae",
 	NULL,                           /* to be ~/.aeerc */

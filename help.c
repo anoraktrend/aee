@@ -18,11 +18,8 @@ extern struct bufr *first_buff;
 extern struct bufr *t_buff;
 extern int windows;
 
-char *help_file_list[4] = {
-	"/usr/local/aee/help.ae", 
-	"/usr/local/lib/help.ae", 
-	"~/.help.ae", 
-	"help.ae" 
+char *help_file_list[1] = {
+	"/usr/share/aee/help.ae"
 	};
 
 void 
