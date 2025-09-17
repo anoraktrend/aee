@@ -10,7 +10,13 @@
 
 #include "aee.h"
 
-#ifndef NO_CATGETS
+#ifdef NO_CATGETS
+/*
+ * When NO_CATGETS is defined, simply return the default string
+ * without any catalog lookup
+ */
+#define catgetlocal(number, string) (string)
+#else
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define P_(s) s
@@ -54,45 +60,6 @@ char *string;
  |	documentation, or the X/Open Internationalization Guide.
  */
 
-// Create enum for message IDs
-enum MessageId {
-    MSG_HELP_FILE = 1,
-    MSG_MAIN_BUFFER,
-    MSG_MODES_MENU,
-    // ...etc
-};
-
-struct LocalizedStrings {
-    char *ae_help_file;
-    char *main_buffer_name;
-    // ...other strings
-};
-
-// Initialize localized strings
-struct LocalizedStrings* init_localized_strings(void) {
-    struct LocalizedStrings *strings = malloc(sizeof(struct LocalizedStrings));
-    
-    // Initialize with defaults
-    strings->ae_help_file = strdup("/usr/share/aee/help.ae");
-    strings->main_buffer_name = strdup("main");
-    // ...etc
-    
-    return strings;
-}
-
-// Free localized strings
-void free_localized_strings(struct LocalizedStrings *strings) {
-    free(strings->ae_help_file);
-    free(strings->main_buffer_name);
-    // ...etc
-    free(strings);
-}
-
-// Get localized string by ID
-const char* get_localized_string(enum MessageId id) {
-    // ...implementation
-}
-
 /* Define messages */
 char *file_being_edited_msg;
 char *file_modified_msg;
@@ -122,10 +89,13 @@ strings_init()
 	catalog = catopen("aee", 0);
 #endif /* NO_CATGETS */
 
-	struct LocalizedStrings *localized_strings = init_localized_strings();
-
-	ae_help_file = catgetlocal( 1, localized_strings->ae_help_file);
-	main_buffer_name = catgetlocal( 2, localized_strings->main_buffer_name);
+#ifdef NO_CATGETS
+	ae_help_file = "/usr/share/aee/help.ae";
+	main_buffer_name = "main";
+#else
+	/* When using catgets, we would initialize these through the catalog */	ae_help_file = catgetlocal(1, "/usr/share/aee/help.ae");
+	main_buffer_name = catgetlocal(2, "main");
+#endif
 
 
 	/*

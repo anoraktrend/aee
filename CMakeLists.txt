@@ -20,6 +20,19 @@ set(AEE_VERSION_MINOR 0)
 # Find required packages
 find_package(Curses REQUIRED)
 
+# Option to disable catgets support
+option(NO_CATGETS "Disable catgets message catalog support" OFF)
+if(NOT NO_CATGETS)
+    check_include_files(nl_types.h HAS_NL_TYPES)
+    if(HAS_NL_TYPES)
+        add_definitions(-DHAVE_NL_TYPES_H)
+    endif()
+else()
+    add_definitions(-DNO_CATGETS)
+    message(STATUS "Building without catgets support")
+endif()
+
+
 # Configure compiler flags
 include(CheckIncludeFiles)
 check_include_files(stdlib.h HAS_STDLIB)
@@ -29,8 +42,6 @@ check_include_files(ctype.h HAS_CTYPE)
 check_include_files("sys/ioctl.h" HAS_SYS_IOCTL)
 check_include_files("sys/wait.h" HAS_SYS_WAIT)
 check_include_files(locale.h HAS_LOCALE)
-check_include_files(nl_types.h HAS_NL_TYPES)
-
 # Common source files
 set(AEE_SOURCES
     aee.c

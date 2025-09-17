@@ -1,3 +1,10 @@
+version 2.2.25 (2025-09-17)
+- Fix help and initialization files to avoid hardcoded values
+- Update AEE package build configuration
+- Create new AEE package build system
+- Fix CMake build after cleaning up from xae version
+
+
 version 2.2.22
 Been awhile since this has been updated. :-(
 - a bunch of work to drag this into the 21st century. ;-)
@@ -61,7 +68,7 @@ version 2.2.12
 version 2.2.11
 - added code to check for the parent process going away, since otherwise aee
   will become a run-away process (xae is unaffected, so the changes are
-  ifdef'd for aee only)
+  ifdefed for aee only)
 
 version 2.2.10
 - modified aee.c to use a header file to specify the version number 
@@ -76,7 +83,7 @@ version 2.2.9
 
 version 2.2.8
 - fixed defect which caused aee and xae to crash when recovering from a 
-  journal where the session didn't have a file name associated with the 
+  journal where the session did not have a file name associated with the 
   journal
 - added ability to specify a file name with the 'save' command, 
   previously a name would be ignored and the name prompted for (unless 
