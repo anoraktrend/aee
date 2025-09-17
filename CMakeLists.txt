@@ -20,6 +20,9 @@ set(AEE_VERSION_MINOR 0)
 # Find required packages
 find_package(Curses REQUIRED)
 
+# Include CMake modules
+include(CheckIncludeFiles)
+
 # Option to disable catgets support
 option(NO_CATGETS "Disable catgets message catalog support" OFF)
 if(NOT NO_CATGETS)
