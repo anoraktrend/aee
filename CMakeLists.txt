@@ -73,9 +73,30 @@ if(DEFINED CMAKE_SYSROOT)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 endif()
 
-# Find Curses with ncurses support
+# Find Curses - try ncursesw first, then ncurses, then fall back to curses
+# First try ncursesw (wide character support)
 set(CURSES_NEED_NCURSES TRUE)
-find_package(Curses REQUIRED)
+set(CURSES_NEED_WIDE TRUE)
+find_package(Curses QUIET)
+
+if(NOT CURSES_FOUND)
+    # If ncursesw not found, try regular ncurses
+    set(CURSES_NEED_WIDE FALSE)
+    find_package(Curses QUIET)
+    
+    if(NOT CURSES_FOUND)
+        # If ncurses not found, try to find plain curses
+        set(CURSES_NEED_NCURSES FALSE)
+        find_package(Curses REQUIRED)
+        message(STATUS "Found Curses: ${CURSES_LIBRARIES}")
+    else()
+        message(STATUS "Found ncurses: ${CURSES_LIBRARIES}")
+    endif()
+else()
+    message(STATUS "Found ncursesw (wide character support): ${CURSES_LIBRARIES}")
+    add_definitions(-DHAVE_NCURSESW)
+endif()
+
 include_directories(${CURSES_INCLUDE_DIRS})
 
 # Include current source directory
