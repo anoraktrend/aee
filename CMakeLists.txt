@@ -64,6 +64,20 @@ set(AEE_SOURCES
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# Set up sysroot if specified
+if(DEFINED CMAKE_SYSROOT)
+    set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT} ${CMAKE_FIND_ROOT_PATH})
+    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+endif()
+
+# Find Curses with ncurses support
+set(CURSES_NEED_NCURSES TRUE)
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIRS})
+
 # Include current source directory
 include_directories(${CMAKE_SOURCE_DIR})
 
