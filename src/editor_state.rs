@@ -459,45 +459,68 @@ impl EditorState {
         // }
     }
 
+    /// Load `file_name` into the main buffer.
+    ///
+    /// * If the file exists its contents replace the initial empty line.
+    /// * If the file does **not** exist (or is empty) the buffer is left with
+    ///   one blank line so the user can start typing immediately – the name is
+    ///   still recorded so that Ctrl+S saves to the right path.
     pub fn load_file(&mut self, file_name: &str) {
-        if let Ok(contents) = crate::file_ops::get_file(file_name) {
-            let lines: Vec<String> = contents.lines().map(|s| s.to_string()).collect();
-            if lines.is_empty() {
-                return;
+        // Always record the target file name on the buffer so Ctrl+S knows
+        // where to write, even when opening a brand-new (not-yet-existing) file.
+        if let Some(ref buff_rc) = self.first_buff {
+            let mut buff = buff_rc.borrow_mut();
+            buff.file_name = Some(file_name.to_string());
+            buff.full_name = Some(crate::file_ops::get_full_path(file_name, ""));
+        }
+
+        // Attempt to read the file; on any error (file not found, permission
+        // denied, …) we simply keep the already-initialised empty buffer.
+        let contents = match crate::file_ops::get_file(file_name) {
+            Ok(c) => c,
+            Err(_) => return, // new / unreadable file – empty buffer is fine
+        };
+
+        let lines: Vec<String> = contents.lines().map(|s| s.to_string()).collect();
+
+        // Empty file on disk → keep the blank buffer line, nothing more to do.
+        if lines.is_empty() {
+            return;
+        }
+
+        if let Some(ref buff_rc) = self.first_buff {
+            let mut buff = buff_rc.borrow_mut();
+
+            // Overwrite the initial blank line with the first line of the file.
+            if let Some(ref line_rc) = buff.first_line {
+                let mut line = line_rc.borrow_mut();
+                line.line = lines[0].clone();
+                line.line_length = line.line.len() as i32;
+                line.max_length = line.line_length + 10;
+                line.line_number = 1;
             }
-            if let Some(ref mut buff) = self.first_buff {
-                let mut buff = buff.borrow_mut();
-                // Set first line
-                if let Some(ref mut line) = buff.first_line {
-                    let mut line = line.borrow_mut();
-                    line.line = lines[0].clone();
-                    line.line_length = line.line.len() as i32;
-                    line.max_length = line.line_length + 10;
-                    line.line_number = 1;
+
+            // Append remaining lines as a linked list.
+            let mut prev = buff.first_line.clone();
+            for (i, l) in lines.iter().enumerate().skip(1) {
+                let new_line = crate::text::txtalloc();
+                {
+                    let mut nl = new_line.borrow_mut();
+                    nl.line = l.clone();
+                    nl.line_length = nl.line.len() as i32;
+                    nl.max_length = nl.line_length + 10;
+                    nl.line_number = (i + 1) as i32;
+                    nl.prev_line = prev.clone();
                 }
-                // Add subsequent lines
-                let mut prev = buff.first_line.clone();
-                for (i, l) in lines.iter().enumerate().skip(1) {
-                    let new_line = crate::text::txtalloc();
-                    {
-                        let mut new_line = new_line.borrow_mut();
-                        new_line.line = l.clone();
-                        new_line.line_length = new_line.line.len() as i32;
-                        new_line.max_length = new_line.line_length + 10;
-                        new_line.line_number = (i + 1) as i32;
-                        new_line.prev_line = prev.clone();
-                    }
-                    if let Some(ref p) = prev {
-                        p.borrow_mut().next_line = Some(new_line.clone());
-                    }
-                    prev = Some(new_line);
+                if let Some(ref p) = prev {
+                    p.borrow_mut().next_line = Some(new_line.clone());
                 }
-                buff.num_of_lines = lines.len() as i32;
-                buff.absolute_lin = 1;
-                buff.file_name = Some(file_name.to_string());
-                buff.full_name = Some(crate::file_ops::get_full_path(file_name, ""));
-                buff.changed = false;
+                prev = Some(new_line);
             }
+
+            buff.num_of_lines = lines.len() as i32;
+            buff.absolute_lin = 1;
+            buff.changed = false;
         }
     }
 

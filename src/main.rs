@@ -38,11 +38,17 @@ async fn main() {
         return;
     }
 
-    // Load file if specified
+    // If a file was given on the command line, load it (or open a blank buffer
+    // for a brand-new path).  With no argument the editor starts with an
+    // empty, unnamed buffer – the user can save it later via Ctrl+S, which
+    // will prompt for a file name.
     if !editor.files.is_empty() {
         let file_name = editor.files[0].clone();
         editor.load_file(&file_name);
     }
+    // No-file case: initialize() already created a blank buffer with one
+    // empty line; curr_buff is Some(...) so draw_screen will render it and
+    // show "[No File]" in the status bar.
 
     // Main editing loop
     loop {
@@ -563,8 +569,27 @@ fn move_cursor_down(editor: &mut editor_state::EditorState) {
 }
 
 fn save_file(editor: &mut editor_state::EditorState) {
-    if let Some(buff) = &editor.curr_buff {
-        let buff = buff.borrow();
+    // If the buffer has no file name (opened without an argument), ask the
+    // user for one before writing.
+    let needs_name = editor.curr_buff
+        .as_ref()
+        .map(|b| b.borrow().file_name.is_none())
+        .unwrap_or(false);
+
+    if needs_name {
+        let name = get_user_input("Save as: ");
+        if name.is_empty() {
+            return; // user cancelled
+        }
+        if let Some(ref buff_rc) = editor.curr_buff {
+            let mut buff = buff_rc.borrow_mut();
+            buff.file_name  = Some(name.clone());
+            buff.full_name  = Some(crate::file_ops::get_full_path(&name, ""));
+        }
+    }
+
+    if let Some(buff_rc) = &editor.curr_buff {
+        let buff = buff_rc.borrow();
         if let Some(file_name) = &buff.file_name {
             let mut contents = String::new();
             let mut current_line = buff.first_line.clone();
@@ -574,18 +599,16 @@ fn save_file(editor: &mut editor_state::EditorState) {
                 contents.push('\n');
                 current_line = line_data.next_line.clone();
             }
-            // Remove the last newline if the last line is empty
+            // Remove trailing newline added after the last line
             if contents.ends_with('\n') && buff.num_of_lines > 0 {
                 contents.pop();
             }
-            if let Err(e) = std::fs::write(file_name, contents) {
+            let file_name = file_name.clone();
+            drop(buff); // release borrow before the mutable borrow below
+            if let Err(e) = std::fs::write(&file_name, contents) {
                 eprintln!("Failed to save file: {}", e);
             } else {
-                // Mark buffer as not changed
-                drop(buff); // Drop the immutable borrow
-                if let Some(buff_mut) = &editor.curr_buff {
-                    buff_mut.borrow_mut().changed = false;
-                }
+                buff_rc.borrow_mut().changed = false;
             }
         }
     }
