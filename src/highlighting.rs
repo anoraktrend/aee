@@ -71,6 +71,74 @@ pub fn lang_from_extension(path: &str) -> &'static str {
     }
 }
 
+// ── LSP semantic-token helpers ───────────────────────────────────────────────
+
+/// Map an LSP token-type name (from the server's legend) to a `TokenKind`.
+pub fn lsp_token_type_to_kind(type_name: &str) -> TokenKind {
+    match type_name {
+        "keyword" | "modifier"                          => TokenKind::Keyword,
+        "comment"                                       => TokenKind::Comment,
+        "string"                                        => TokenKind::StringLiteral,
+        "number"                                        => TokenKind::Number,
+        "operator"                                      => TokenKind::Operator,
+        "namespace" | "type" | "class" | "enum"
+        | "interface" | "struct" | "typeParameter"
+        | "enumMember" | "event" | "function"
+        | "method" | "macro"                            => TokenKind::Identifier,
+        _                                               => TokenKind::Identifier,
+    }
+}
+
+/// Build a complete span list for `line` using LSP semantic tokens.
+///
+/// `tokens` must already be filtered to only those on this line number and
+/// must be sorted by `start_char` ascending.  `legend` is the server's
+/// `tokenTypes` array (maps `token_type` index → type name).
+///
+/// The function returns owned `String` spans so that the caller is not
+/// constrained to the lifetime of `line`.  Gaps between tokens are emitted
+/// as `TokenKind::Identifier` (plain text).
+pub fn highlight_line_lsp(
+    line: &str,
+    tokens: &[crate::lsp::SemanticToken],
+    legend: &[String],
+) -> Vec<(String, TokenKind)> {
+    let mut spans: Vec<(String, TokenKind)> = Vec::new();
+    let chars: Vec<char> = line.chars().collect();
+    let char_len = chars.len();
+    let mut cursor = 0usize; // current char index
+
+    for tok in tokens {
+        let start = tok.start_char as usize;
+        let end   = (start + tok.length as usize).min(char_len);
+
+        // Gap before this token
+        if start > cursor {
+            let gap: String = chars[cursor..start].iter().collect();
+            spans.push((gap, TokenKind::Identifier));
+        }
+
+        if end > start {
+            let text: String = chars[start..end].iter().collect();
+            let type_name = legend
+                .get(tok.token_type as usize)
+                .map(|s| s.as_str())
+                .unwrap_or("");
+            spans.push((text, lsp_token_type_to_kind(type_name)));
+        }
+
+        cursor = end;
+    }
+
+    // Trailing text after the last token
+    if cursor < char_len {
+        let tail: String = chars[cursor..].iter().collect();
+        spans.push((tail, TokenKind::Identifier));
+    }
+
+    spans
+}
+
 /// Stateful highlighter that ports the C `highlight_syntax` state machine.
 ///
 /// `in_block_comment` – whether the previous line ended inside a `/* … */` comment.

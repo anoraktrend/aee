@@ -454,8 +454,20 @@ fn draw_screen(editor: &editor_state::EditorState) -> Result<(), Box<dyn std::er
             }
         }
 
+        // ── LSP semantic tokens for this file (if any) ──────────────────────
+        // Build a `file://` URI from the buffer's canonical path so we can
+        // look up cached semantic tokens produced by the language server.
+        let lsp_tokens_for_file: Option<(&Vec<lsp::SemanticToken>, &Vec<String>)> =
+            editor.lsp_client.as_ref().and_then(|lsp| {
+                let uri = buff.full_name.as_ref().map(|p| format!("file://{}", p))?;
+                let tokens = lsp.get_semantic_tokens(&uri)?;
+                Some((tokens, &lsp.token_type_legend))
+            });
+
         // Draw lines with stateful syntax highlighting (tracks /* */ block comments)
         let mut in_block_comment = false;
+        // LSP uses 0-based line numbers; our window_top is 1-based.
+        let mut lsp_line_idx = (buff.window_top as u32).saturating_sub(1);
         while let Some(line) = current_line {
             let line_data = line.borrow();
             let raw = &line_data.line;
@@ -468,16 +480,45 @@ fn draw_screen(editor: &editor_state::EditorState) -> Result<(), Box<dyn std::er
                 raw.as_str()
             };
 
-            if !editor.nohighlight && lang != "text" {
-                let (spans, new_state) =
-                    highlighting::highlight_line_with_state(display_text, lang, in_block_comment);
-                in_block_comment = new_state;
-                ui::print_highlighted(0, y, &spans)?;
+            if !editor.nohighlight {
+                if let Some((all_tokens, legend)) = lsp_tokens_for_file {
+                    // Filter semantic tokens that belong to this display line.
+                    let line_tokens: Vec<&lsp::SemanticToken> = all_tokens
+                        .iter()
+                        .filter(|t| t.line == lsp_line_idx)
+                        .collect();
+
+                    // Only use LSP path when the server actually provided tokens
+                    // for this line; otherwise fall through to the local highlighter
+                    // so the screen is never left blank.
+                    if !line_tokens.is_empty() {
+                        let owned_tokens: Vec<lsp::SemanticToken> =
+                            line_tokens.into_iter().cloned().collect();
+                        let spans =
+                            highlighting::highlight_line_lsp(display_text, &owned_tokens, legend);
+                        ui::print_highlighted_owned(0, y, &spans)?;
+                        y += 1u16;
+                        lsp_line_idx += 1;
+                        if y >= height { break; }
+                        current_line = line_data.next_line.clone();
+                        continue;
+                    }
+                }
+
+                if lang != "text" {
+                    let (spans, new_state) =
+                        highlighting::highlight_line_with_state(display_text, lang, in_block_comment);
+                    in_block_comment = new_state;
+                    ui::print_highlighted(0, y, &spans)?;
+                } else {
+                    ui::print_at(0, y, display_text)?;
+                }
             } else {
                 ui::print_at(0, y, display_text)?;
             }
 
             y += 1u16;
+            lsp_line_idx += 1;
             if y >= height { break; }
             current_line = line_data.next_line.clone();
         }

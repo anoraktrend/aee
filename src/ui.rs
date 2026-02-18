@@ -106,6 +106,20 @@ pub fn print_highlighted(
     Ok(())
 }
 
+/// Print a syntax-highlighted line from owned spans (e.g. produced by the
+/// LSP semantic-token highlighter which returns `Vec<(String, TokenKind)>`).
+pub fn print_highlighted_owned(
+    x: u16,
+    y: u16,
+    spans: &[(String, TokenKind)],
+) -> Result<(), Box<dyn std::error::Error>> {
+    let borrowed: Vec<(&str, TokenKind)> = spans
+        .iter()
+        .map(|(s, k)| (s.as_str(), k.clone()))
+        .collect();
+    print_highlighted(x, y, &borrowed)
+}
+
 /// Print the status / info bar with standout (inverted) colors.
 pub fn print_status_bar(y: u16, text: &str, width: u16) -> Result<(), Box<dyn std::error::Error>> {
     let mut out = stdout();
