@@ -343,12 +343,11 @@ pub fn recover_from_journal(
     buffer.num_of_lines = num_lines;
     buffer.curr_line    = buffer.first_line.clone();
 
-    if buffer.full_name.is_none() || buffer.full_name.as_deref() == Some("") {
-        if !stored_name.is_empty() {
+    if (buffer.full_name.is_none() || buffer.full_name.as_deref() == Some(""))
+        && !stored_name.is_empty() {
             buffer.full_name = Some(stored_name.clone());
             buffer.file_name = Some(ae_basename(&stored_name));
         }
-    }
     Ok(())
 }
 

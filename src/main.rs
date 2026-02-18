@@ -50,7 +50,7 @@ async fn main() {
         if editor.journ_on {
             let jpath = journal::journal_name(&file_name, None);
             if let Ok(jf) = editor.curr_buff.as_ref().map_or(
-                Err(std::io::Error::new(std::io::ErrorKind::Other, "no buffer")),
+                Err(std::io::Error::other("no buffer")),
                 |b| journal::open_journal_for_write(&mut b.borrow_mut(), &jpath, &file_name),
             ) {
                 let _ = journal::add_to_journal_db(Some(&file_name), &jpath);
@@ -93,7 +93,7 @@ async fn main() {
                     }
                     KeyCode::Char('t') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::top(&mut *buff_rc.borrow_mut()); // Ctrl+T – top of file
+                            motion::top(&mut buff_rc.borrow_mut()); // Ctrl+T – top of file
                         }
                     }
                     KeyCode::Char('b') if key.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -101,18 +101,18 @@ async fn main() {
                         if let Some(ref s) = editor.srch_str.clone() {
                             if let Some(buff_rc) = editor.curr_buff.clone() {
                                 search::search_backward(
-                                    &mut *buff_rc.borrow_mut(), s, editor.case_sen);
+                                    &mut buff_rc.borrow_mut(), s, editor.case_sen);
                             }
                         }
                     }
                     KeyCode::Char('w') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            delete_ops::del_word(&mut *buff_rc.borrow_mut()); // Ctrl+W – del word
+                            delete_ops::del_word(&mut buff_rc.borrow_mut()); // Ctrl+W – del word
                         }
                     }
                     KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            delete_ops::del_to_eol(&mut *buff_rc.borrow_mut()); // Ctrl+K – kill to eol
+                            delete_ops::del_to_eol(&mut buff_rc.borrow_mut()); // Ctrl+K – kill to eol
                         }
                     }
                     KeyCode::Char('f') if key.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -121,7 +121,7 @@ async fn main() {
                             editor.srch_str = Some(s.clone());
                             if let Some(buff_rc) = editor.curr_buff.clone() {
                                 search::search_forward(
-                                    &mut *buff_rc.borrow_mut(), &s, editor.case_sen);
+                                    &mut buff_rc.borrow_mut(), &s, editor.case_sen);
                             }
                         }
                     }
@@ -130,7 +130,7 @@ async fn main() {
                         if let Some(ref s) = editor.srch_str.clone() {
                             if let Some(buff_rc) = editor.curr_buff.clone() {
                                 search::search_forward(
-                                    &mut *buff_rc.borrow_mut(), s, editor.case_sen);
+                                    &mut buff_rc.borrow_mut(), s, editor.case_sen);
                             }
                         }
                     }
@@ -139,7 +139,7 @@ async fn main() {
                         let input = get_user_input("Goto line: ");
                         if let Ok(n) = input.trim().parse::<i32>() {
                             if let Some(buff_rc) = editor.curr_buff.clone() {
-                                motion::goto_line(&mut *buff_rc.borrow_mut(), n);
+                                motion::goto_line(&mut buff_rc.borrow_mut(), n);
                             }
                         }
                     }
@@ -147,7 +147,7 @@ async fn main() {
                         // Ctrl+J – format / reflow paragraph
                         if let Some(buff_rc) = editor.curr_buff.clone() {
                             format::format_paragraph(
-                                &mut *buff_rc.borrow_mut(),
+                                &mut buff_rc.borrow_mut(),
                                 editor.left_margin,
                                 editor.right_margin,
                                 false,
@@ -158,7 +158,7 @@ async fn main() {
                         // Ctrl+A – toggle auto-format (apply one auto_format pass)
                         if let Some(buff_rc) = editor.curr_buff.clone() {
                             format::auto_format(
-                                &mut *buff_rc.borrow_mut(),
+                                &mut buff_rc.borrow_mut(),
                                 editor.right_margin,
                             );
                         }
@@ -169,8 +169,8 @@ async fn main() {
                         // F1 – begin mark
                         if let Some(buff_rc) = editor.curr_buff.clone() {
                             let buff = buff_rc.borrow();
-                            mark::slct(&mut mark_state, &*buff, mark::MarkMode::Mark);
-                            mark_anchor = mark::MarkAnchor::from_buffer(&*buff);
+                            mark::slct(&mut mark_state, &buff, mark::MarkMode::Mark);
+                            mark_anchor = mark::MarkAnchor::from_buffer(&buff);
                         }
                     }
                     KeyCode::F(2) => {
@@ -183,7 +183,7 @@ async fn main() {
                             if let Some(anchor) = mark_anchor.take() {
                                 mark::cut(
                                     &mut mark_state,
-                                    &mut *buff_rc.borrow_mut(),
+                                    &mut buff_rc.borrow_mut(),
                                     anchor.line,
                                     anchor.pos,
                                 );
@@ -193,7 +193,7 @@ async fn main() {
                     KeyCode::F(4) => {
                         // F4 – paste
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            mark::paste(&mark_state, &mut *buff_rc.borrow_mut());
+                            mark::paste(&mark_state, &mut buff_rc.borrow_mut());
                         }
                     }
 
@@ -204,7 +204,7 @@ async fn main() {
                         if editor.right_margin > 0 && (c == ' ' || c == '\t') {
                             if let Some(buff_rc) = editor.curr_buff.clone() {
                                 format::auto_format(
-                                    &mut *buff_rc.borrow_mut(),
+                                    &mut buff_rc.borrow_mut(),
                                     editor.right_margin,
                                 );
                             }
@@ -236,25 +236,25 @@ async fn main() {
                                     }
                                 }
                             }
-                            delete_ops::backspace(&mut *buff_rc.borrow_mut());
+                            delete_ops::backspace(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::Delete => {
                         // Delete: delete character at cursor using delete_ops module
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            delete_ops::delete_forward(&mut *buff_rc.borrow_mut());
+                            delete_ops::delete_forward(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::Left => {
                         if key.modifiers.contains(KeyModifiers::CONTROL) {
                             // Ctrl+Left – previous word (motion module)
                             if let Some(buff_rc) = editor.curr_buff.clone() {
-                                motion::prev_word(&mut *buff_rc.borrow_mut());
+                                motion::prev_word(&mut buff_rc.borrow_mut());
                             }
                         } else {
                             // Left – move one char left (motion module)
                             if let Some(buff_rc) = editor.curr_buff.clone() {
-                                motion::move_left(&mut *buff_rc.borrow_mut());
+                                motion::move_left(&mut buff_rc.borrow_mut());
                             }
                         }
                     }
@@ -262,47 +262,47 @@ async fn main() {
                         if key.modifiers.contains(KeyModifiers::CONTROL) {
                             // Ctrl+Right – advance word (motion module)
                             if let Some(buff_rc) = editor.curr_buff.clone() {
-                                motion::adv_word(&mut *buff_rc.borrow_mut());
+                                motion::adv_word(&mut buff_rc.borrow_mut());
                             }
                         } else {
                             // Right – move one char right (motion module)
                             if let Some(buff_rc) = editor.curr_buff.clone() {
-                                motion::move_right(&mut *buff_rc.borrow_mut());
+                                motion::move_right(&mut buff_rc.borrow_mut());
                             }
                         }
                     }
                     KeyCode::Home => {
                         // Home – beginning of line (motion module)
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::bol(&mut *buff_rc.borrow_mut());
+                            motion::bol(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::End => {
                         // End – end of line (motion module)
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::eol(&mut *buff_rc.borrow_mut());
+                            motion::eol(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::Up => {
                         // Up – move cursor up (motion module)
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::move_up(&mut *buff_rc.borrow_mut());
+                            motion::move_up(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::Down => {
                         // Down – move cursor down (motion module)
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::move_down(&mut *buff_rc.borrow_mut());
+                            motion::move_down(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::PageUp => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::prev_page(&mut *buff_rc.borrow_mut());
+                            motion::prev_page(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::PageDown => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::next_page(&mut *buff_rc.borrow_mut());
+                            motion::next_page(&mut buff_rc.borrow_mut());
                         }
                     }
                     KeyCode::Esc => {
@@ -316,7 +316,7 @@ async fn main() {
                                         editor.srch_str = Some(search_str.clone());
                                         if let Some(buff_rc) = editor.curr_buff.clone() {
                                             search::search_forward(
-                                                &mut *buff_rc.borrow_mut(),
+                                                &mut buff_rc.borrow_mut(),
                                                 &search_str,
                                                 editor.case_sen,
                                             );
@@ -330,7 +330,7 @@ async fn main() {
                                         editor.srch_str = Some(search_str.clone());
                                         if let Some(buff_rc) = editor.curr_buff.clone() {
                                             search::replace_next(
-                                                &mut *buff_rc.borrow_mut(),
+                                                &mut buff_rc.borrow_mut(),
                                                 &search_str,
                                                 &replace_str,
                                                 editor.case_sen,
@@ -346,7 +346,7 @@ async fn main() {
                                         editor.srch_str = Some(search_str.clone());
                                         if let Some(buff_rc) = editor.curr_buff.clone() {
                                             let count = search::replace_all(
-                                                &mut *buff_rc.borrow_mut(),
+                                                &mut buff_rc.borrow_mut(),
                                                 &search_str,
                                                 &replace_str,
                                                 editor.case_sen,
@@ -739,7 +739,7 @@ fn undo(editor: &mut editor_state::EditorState) {
                         if Rc::ptr_eq(&line, &b.curr_line.clone().unwrap()) {
                             b.position = (pos + 1) as i32;
                             b.abs_pos = b.position;
-                            b.scr_horz = b.position as i32 - 1;
+                            b.scr_horz = b.position - 1;
                         }
                     }
                 }
@@ -749,14 +749,12 @@ fn undo(editor: &mut editor_state::EditorState) {
 }
 
 fn show_main_menu() -> Option<usize> {
-    let menu_items = vec![
-        "Save File       ^S",
+    let menu_items = ["Save File       ^S",
         "Quit            ^Q",
         "Search          ^F",
         "Replace next    ",
         "Replace all     ",
-        "Help            ",
-    ];
+        "Help            "];
 
     let (width, height) = ui::get_terminal_size();
     let menu_width = 30u16;
@@ -799,9 +797,7 @@ fn show_main_menu() -> Option<usize> {
         // Read key
         match ui::read_key().unwrap().code {
             KeyCode::Up => {
-                if selected > 0 {
-                    selected -= 1;
-                }
+                selected = selected.saturating_sub(1);
             }
             KeyCode::Down => {
                 if selected < menu_items.len() - 1 {

@@ -148,11 +148,11 @@ pub fn write_file(state: &mut EditorState, file_name: &str) -> bool {
             let line = line_rc.borrow();
             (line.line.clone(), line.next_line.clone())
         };
-        if let Err(_) = writer.write_all(content.as_bytes()) { return false; }
+        if writer.write_all(content.as_bytes()).is_err() { return false; }
         if dos_file {
-            if let Err(_) = writer.write_all(b"\r\n") { return false; }
+            if writer.write_all(b"\r\n").is_err() { return false; }
         } else {
-            if let Err(_) = writer.write_all(b"\n")   { return false; }
+            if writer.write_all(b"\n").is_err()   { return false; }
         }
         current = next;
     }

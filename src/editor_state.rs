@@ -348,15 +348,14 @@ impl EditorState {
         let mut count = 1;
         while count < args.len() {
             let arg = &args[count];
-            if arg.starts_with('-') {
-                let buff = &arg[1..];
+            if let Some(buff) = arg.strip_prefix('-') {
                 if buff == "text" {
                     self.text_only = true;
                 } else if buff == "binary" {
                     self.text_only = false;
                 } else if buff == "tab" {
                     self.expand = true;
-                } else if let Some(&b) = buff.as_bytes().get(0) {
+                } else if let Some(&b) = buff.as_bytes().first() {
                     match b {
                         b'j' => self.journ_on = false,
                         b'r' => self.recover = true,

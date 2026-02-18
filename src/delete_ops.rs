@@ -1,10 +1,8 @@
-#![allow(dead_code)]
-
-/// Delete operations – ported from src/delete.c
-///
-/// Functions operate on the Buffer directly, mirroring the C originals.
-/// The C code made heavy use of ncurses for redraw; here we only update
-/// the data model – the draw loop in main.rs handles all rendering.
+//! Delete operations – ported from src/delete.c
+//!
+//! Functions operate on the Buffer directly, mirroring the C originals.
+//! The C code made heavy use of ncurses for redraw; here we only update
+//! the data model – the draw loop in main.rs handles all rendering.
 
 use crate::editor_state::Buffer;
 

@@ -33,7 +33,7 @@ pub fn help(help_file: Option<&str>) {
     let mut reader = match file {
         Some(f) => BufReader::new(f),
         None => {
-            let _ = show_message("Help file not found.");
+            show_message("Help file not found.");
             return;
         }
     };
