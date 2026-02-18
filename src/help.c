@@ -8,8 +8,8 @@
  |	Copyright (c) 1986 - 1988, 1991 - 1995, 1999 Hugh Mahon.
  */
 
-#include "aee.h"
-
+#include "../include/aee.h"
+#include <stdlib.h>
 /* Add missing extern declarations */
 extern WINDOW *com_win;
 extern WINDOW *help_win;
@@ -23,13 +23,14 @@ char *help_file_list[1] = {
 	};
 
 void 
-help()		/* help function	*/
+help(void)		/* help function	*/
 {
 	int counter;
 	char *string;
 
 	go_on = TRUE;
-	if ((fp = fopen(ae_help_file, "r")) == NULL)
+	fp = fopen(ae_help_file, "r");
+	if (fp == NULL)
 	{
 		for (counter = 0; (counter < 4) && (fp == NULL); counter++)
 		{
@@ -84,7 +85,7 @@ help()		/* help function	*/
 }
 
 void 
-outfile()	/* output data from help file until a form-feed (separator of subjects)	*/
+outfile(void)	/* output data from help file until a form-feed (separator of subjects)	*/
 {
 	char *prompt;
 	int counter;
@@ -117,7 +118,7 @@ outfile()	/* output data from help file until a form-feed (separator of subjects
 }
 
 void 
-ask()	/* prompt user what help topic do they wish to learn about	*/
+ask(void)	/* prompt user what help topic do they wish to learn about	*/
 {
 	char *topic;
 	char *tline;
@@ -127,7 +128,7 @@ ask()	/* prompt user what help topic do they wish to learn about	*/
 		go_on = FALSE;
 	else if (*topic != 9)
 	{
-		rewind(fp);
+		fseek(fp, 0, SEEK_SET);
 		do
 		{
 			tline = sline = fgets(help_line, 512, fp);
@@ -138,7 +139,7 @@ ask()	/* prompt user what help topic do they wish to learn about	*/
 				*tline = '\0';
 			}
 		}
-		while ((sline != NULL) && (strncmp(sline, topic, strlen(topic))));
+		while ((sline != NULL) && (strncmp(sline, topic, strlen(topic)) != 0));
 		if (sline == NULL)
 		{
 			wmove(help_win, LINES -2, 0);
@@ -147,7 +148,7 @@ ask()	/* prompt user what help topic do they wish to learn about	*/
 			wprintw(help_win, topic_err_msg, topic);
 			wstandend(help_win);
 			wrefresh(help_win);
-			rewind(fp);
+			fseek(fp, 0, SEEK_SET);
 			free(topic);
 			topic = get_string(continue_prompt, TRUE);
 		}
@@ -155,7 +156,7 @@ ask()	/* prompt user what help topic do they wish to learn about	*/
 			tline = sline = fgets(help_line, 512, fp);
 	}
 	else if (*topic == '\t')
-		rewind(fp);
+		fseek(fp, 0, SEEK_SET);
 	free(topic);
 }
 

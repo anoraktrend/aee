@@ -1,0 +1,115 @@
+---
+Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,clang-analyzer-*,bugprone-*,modernize-use-trailing-return-type,-modernize-*,readability-simplify-boolean-expr'
+WarningsAsErrors: ''
+HeaderFileExtensions:
+  - ''
+  - h
+  - hh
+  - hpp
+  - hxx
+ImplementationFileExtensions:
+  - c
+  - cc
+  - cpp
+  - cxx
+HeaderFilterRegex: '.*'
+ExcludeHeaderFilterRegex: ''
+FormatStyle:     none
+User:            lucy
+CheckOptions:
+  bugprone-argument-comment.CommentBoolLiterals: '0'
+  bugprone-argument-comment.CommentCharacterLiterals: '0'
+  bugprone-argument-comment.CommentFloatLiterals: '0'
+  bugprone-argument-comment.CommentIntegerLiterals: '0'
+  bugprone-argument-comment.CommentNullPtrs: '0'
+  bugprone-argument-comment.CommentStringLiterals: '0'
+  bugprone-argument-comment.CommentUserDefinedLiterals: '0'
+  bugprone-argument-comment.IgnoreSingleArgument: '0'
+  bugprone-argument-comment.StrictMode: '0'
+  bugprone-assert-side-effect.AssertMacros: assert,NSAssert,NSCAssert
+  bugprone-assert-side-effect.CheckFunctionCalls: 'false'
+  bugprone-assert-side-effect.IgnoredFunctions: __builtin_expect
+  bugprone-capturing-this-in-member-variable.BindFunctions: '::std::bind;::boost::bind;::std::bind_front;::std::bind_back;::boost::compat::bind_front;::boost::compat::bind_back'
+  bugprone-capturing-this-in-member-variable.FunctionWrapperTypes: '::std::function;::std::move_only_function;::boost::function'
+  bugprone-dangling-handle.HandleClasses: 'std::basic_string_view;std::experimental::basic_string_view;std::span'
+  bugprone-easily-swappable-parameters.IgnoredParameterNames: '"";iterator;Iterator;begin;Begin;end;End;first;First;last;Last;lhs;LHS;rhs;RHS'
+  bugprone-easily-swappable-parameters.IgnoredParameterTypeSuffixes: 'bool;Bool;_Bool;it;It;iterator;Iterator;inputit;InputIt;forwardit;ForwardIt;bidirit;BidirIt;constiterator;const_iterator;Const_Iterator;Constiterator;ConstIterator;RandomIt;randomit;random_iterator;ReverseIt;reverse_iterator;reverse_const_iterator;ConstReverseIterator;Const_Reverse_Iterator;const_reverse_iterator;Constreverseiterator;constreverseiterator'
+  bugprone-easily-swappable-parameters.MinimumLength: '2'
+  bugprone-easily-swappable-parameters.ModelImplicitConversions: 'true'
+  bugprone-easily-swappable-parameters.NamePrefixSuffixSilenceDissimilarityTreshold: '1'
+  bugprone-easily-swappable-parameters.QualifiersMix: 'false'
+  bugprone-easily-swappable-parameters.SuppressParametersUsedTogether: 'true'
+  bugprone-empty-catch.AllowEmptyCatchForExceptions: ''
+  bugprone-empty-catch.IgnoreCatchWithKeywords: '@TODO;@FIXME'
+  bugprone-exception-escape.FunctionsThatShouldNotThrow: ''
+  bugprone-exception-escape.IgnoredExceptions: ''
+  bugprone-implicit-widening-of-multiplication-result.IgnoreConstantIntExpr: 'false'
+  bugprone-implicit-widening-of-multiplication-result.IncludeStyle: llvm
+  bugprone-implicit-widening-of-multiplication-result.UseCXXHeadersInCppSources: 'true'
+  bugprone-implicit-widening-of-multiplication-result.UseCXXStaticCastsInCppSources: 'true'
+  bugprone-lambda-function-name.IgnoreMacros: 'false'
+  bugprone-misplaced-widening-cast.CheckImplicitCasts: 'false'
+  bugprone-multi-level-implicit-pointer-conversion.EnableInC: 'true'
+  bugprone-narrowing-conversions.IgnoreConversionFromTypes: ''
+  bugprone-narrowing-conversions.PedanticMode: 'false'
+  bugprone-narrowing-conversions.WarnOnEquivalentBitWidth: 'true'
+  bugprone-narrowing-conversions.WarnOnFloatingPointNarrowingConversion: 'true'
+  bugprone-narrowing-conversions.WarnOnIntegerNarrowingConversion: 'true'
+  bugprone-narrowing-conversions.WarnOnIntegerToFloatingPointNarrowingConversion: 'true'
+  bugprone-narrowing-conversions.WarnWithinTemplateInstantiation: 'false'
+  bugprone-non-zero-enum-to-bool-conversion.EnumIgnoreList: ''
+  bugprone-not-null-terminated-result.WantToUseSafeFunctions: 'true'
+  bugprone-optional-value-conversion.OptionalTypes: '::std::optional;::absl::optional;::boost::optional'
+  bugprone-optional-value-conversion.ValueMethods: '::value$;::get$'
+  bugprone-pointer-arithmetic-on-polymorphic-object.IgnoreInheritedVirtualFunctions: 'false'
+  bugprone-reserved-identifier.AggressiveDependentMemberLookup: 'false'
+  bugprone-reserved-identifier.AllowedIdentifiers: ''
+  bugprone-reserved-identifier.Invert: 'false'
+  bugprone-signal-handler.AsyncSafeFunctionSet: POSIX
+  bugprone-signed-char-misuse.CharTypdefsToIgnore: ''
+  bugprone-signed-char-misuse.DiagnoseSignedUnsignedCharComparisons: 'true'
+  bugprone-sizeof-expression.WarnOnOffsetDividedBySizeOf: 'true'
+  bugprone-sizeof-expression.WarnOnSizeOfCompareToConstant: 'true'
+  bugprone-sizeof-expression.WarnOnSizeOfConstant: 'true'
+  bugprone-sizeof-expression.WarnOnSizeOfInLoopTermination: 'true'
+  bugprone-sizeof-expression.WarnOnSizeOfIntegerExpression: 'false'
+  bugprone-sizeof-expression.WarnOnSizeOfPointer: 'false'
+  bugprone-sizeof-expression.WarnOnSizeOfPointerToAggregate: 'true'
+  bugprone-sizeof-expression.WarnOnSizeOfThis: 'true'
+  bugprone-string-constructor.LargeLengthThreshold: '8388608'
+  bugprone-string-constructor.StringNames: '::std::basic_string;::std::basic_string_view'
+  bugprone-string-constructor.WarnOnLargeLength: 'true'
+  bugprone-stringview-nullptr.IncludeStyle: llvm
+  bugprone-suspicious-enum-usage.StrictMode: 'false'
+  bugprone-suspicious-missing-comma.MaxConcatenatedTokens: '5'
+  bugprone-suspicious-missing-comma.RatioThreshold: '0.200000'
+  bugprone-suspicious-missing-comma.SizeThreshold: '5'
+  bugprone-suspicious-string-compare.StringCompareLikeFunctions: ''
+  bugprone-suspicious-string-compare.WarnOnImplicitComparison: 'true'
+  bugprone-suspicious-string-compare.WarnOnLogicalNotComparison: 'false'
+  bugprone-suspicious-stringview-data-usage.AllowedCallees: ''
+  bugprone-suspicious-stringview-data-usage.StringViewTypes: '::std::basic_string_view;::llvm::StringRef'
+  bugprone-tagged-union-member-count.CountingEnumPrefixes: ''
+  bugprone-tagged-union-member-count.CountingEnumSuffixes: count
+  bugprone-tagged-union-member-count.EnableCountingEnumHeuristic: 'true'
+  bugprone-tagged-union-member-count.StrictMode: 'false'
+  bugprone-too-small-loop-variable.MagnitudeBitsUpperLimit: '16'
+  bugprone-unchecked-optional-access.IgnoreSmartPointerDereference: 'false'
+  bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField: 'true'
+  bugprone-unintended-char-ostream-output.AllowedTypes: 'unsigned char;signed char'
+  bugprone-unsafe-functions.CustomFunctions: ''
+  bugprone-unsafe-functions.ReportDefaultFunctions: 'true'
+  bugprone-unsafe-functions.ReportMoreUnsafeFunctions: 'true'
+  bugprone-unused-local-non-trivial-variable.ExcludeTypes: ''
+  bugprone-unused-local-non-trivial-variable.IncludeTypes: '::std::.*mutex;::std::future;::std::basic_string;::std::basic_regex;::std::basic_istringstream;::std::basic_stringstream;::std::bitset;::std::filesystem::path'
+  bugprone-unused-return-value.AllowCastToVoid: 'false'
+  bugprone-unused-return-value.CheckedFunctions: '^::std::async$;^::std::launder$;^::std::remove$;^::std::remove_if$;^::std::unique$;^::std::unique_ptr::release$;^::std::basic_string::empty$;^::std::vector::empty$;^::std::back_inserter$;^::std::distance$;^::std::find$;^::std::find_if$;^::std::inserter$;^::std::lower_bound$;^::std::make_pair$;^::std::map::count$;^::std::map::find$;^::std::map::lower_bound$;^::std::multimap::equal_range$;^::std::multimap::upper_bound$;^::std::set::count$;^::std::set::find$;^::std::setfill$;^::std::setprecision$;^::std::setw$;^::std::upper_bound$;^::std::vector::at$;^::bsearch$;^::ferror$;^::feof$;^::isalnum$;^::isalpha$;^::isblank$;^::iscntrl$;^::isdigit$;^::isgraph$;^::islower$;^::isprint$;^::ispunct$;^::isspace$;^::isupper$;^::iswalnum$;^::iswprint$;^::iswspace$;^::isxdigit$;^::memchr$;^::memcmp$;^::strcmp$;^::strcoll$;^::strncmp$;^::strpbrk$;^::strrchr$;^::strspn$;^::strstr$;^::wcscmp$;^::access$;^::bind$;^::connect$;^::difftime$;^::dlsym$;^::fnmatch$;^::getaddrinfo$;^::getopt$;^::htonl$;^::htons$;^::iconv_open$;^::inet_addr$;^::isascii$;^::isatty$;^::mmap$;^::newlocale$;^::openat$;^::pathconf$;^::pthread_equal$;^::pthread_getspecific$;^::pthread_mutex_trylock$;^::readdir$;^::readlink$;^::recvmsg$;^::regexec$;^::scandir$;^::semget$;^::setjmp$;^::shm_open$;^::shmget$;^::sigismember$;^::strcasecmp$;^::strsignal$;^::ttyname$'
+  bugprone-unused-return-value.CheckedReturnTypes: '^::std::error_code$;^::std::error_condition$;^::std::errc$;^::std::expected$;^::boost::system::error_code$'
+  readability-simplify-boolean-expr.ChainedConditionalAssignment: 'false'
+  readability-simplify-boolean-expr.ChainedConditionalReturn: 'false'
+  readability-simplify-boolean-expr.IgnoreMacros: 'false'
+  readability-simplify-boolean-expr.SimplifyDeMorgan: 'true'
+  readability-simplify-boolean-expr.SimplifyDeMorganRelaxed: 'false'
+SystemHeaders:   false
+...
+

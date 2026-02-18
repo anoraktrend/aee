@@ -10,8 +10,8 @@
  |
  */
 
-#include "aee.h"
-
+#include "../include/aee.h"
+#include <stdlib.h>
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;
 extern struct bufr *first_buff;
@@ -24,7 +24,7 @@ extern int num_of_bufs;
 extern int info_win_height;
 
 void 
-new_screen()		/* draw all of the new information on the screen */
+new_screen(void)		/* draw all of the new information on the screen */
 {
 	int i;
 	char *nchar;		/* temporary character pointer		*/
@@ -36,7 +36,7 @@ new_screen()		/* draw all of the new information on the screen */
 	if ((windows) && (num_of_bufs > 1))
 	{
 		buff_holder = curr_buff;
-		temp_mark = mark_text;
+		temp_mark = (int)(unsigned char)mark_text;
 		mark_text = FALSE;
 		tb = buf_alloc();
 		for (t_buff = first_buff; t_buff != NULL; t_buff = t_buff->next_buff)
@@ -47,7 +47,7 @@ new_screen()		/* draw all of the new information on the screen */
 			wstandout(t_buff->footer);
 			wprintw(t_buff->footer, "%c  ", CHNG_SYMBOL(t_buff->changed) );
 			name = (t_buff->file_name != NULL ? t_buff->file_name : t_buff->name);
-			for (i = 2, nchar = name; (i < COLS) && (*nchar != '\0'); i+=len_char(*nchar, i), nchar++)
+			for (i = 2, nchar = name; (i < COLS) && (*nchar != '\0'); i+=len_char(i, *nchar), nchar++)
 				waddch(t_buff->footer, *nchar);
 			for (; i < COLS; i++)
 				waddch(t_buff->footer, '-');
@@ -56,7 +56,7 @@ new_screen()		/* draw all of the new information on the screen */
 			werase(t_buff->win);
 			wrefresh(t_buff->win);
 			curr_buff = t_buff;
-			midscreen(curr_buff->scr_vert, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->scr_vert);
 			wrefresh(t_buff->win);
 		}
 		curr_buff = buff_holder;
@@ -66,28 +66,34 @@ new_screen()		/* draw all of the new information on the screen */
 		wstandend(curr_buff->footer);
 		wrefresh(curr_buff->footer);
 		free(tb);
-		mark_text = temp_mark;
+		mark_text = (char)temp_mark;
 		if (mark_text)
 		{
-			midscreen(curr_buff->scr_vert, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->scr_vert);
 		}
 	}
 	else
 	{
 		werase(curr_buff->win);
 		wrefresh(curr_buff->win);
-		midscreen(curr_buff->scr_vert, curr_buff->position);
+		midscreen(curr_buff->position, curr_buff->scr_vert);
 	}
 	wrefresh(curr_buff->win);
 }
 
-struct bufr *
-add_buf(ident)		/* add a new buffer to the list */
-char *ident;
+struct bufr *add_buf(char *ident) 		/* add a new buffer to the list */
 {
 	struct bufr *t;			/* temporary pointer		*/
 
-	t = NULL;
+	if (first_buff == NULL) {
+		first_buff = buf_alloc();
+		curr_buff = first_buff;
+		t = first_buff;
+	} else {
+		t = first_buff;
+		while (t->next_buff != NULL)
+			t = t->next_buff;
+	}
 	if (windows && (num_of_bufs >= ((LINES - 1)/2)))
 	{
 		no_windows();
@@ -100,14 +106,11 @@ char *ident;
 		wstandend(curr_buff->footer);
 		wrefresh(curr_buff->footer);
 	}
-	t = first_buff;
-	while (t->next_buff != NULL)
-		t = t->next_buff;
 	curr_buff = t->next_buff = buf_alloc();
 	curr_buff->num_of_lines = 1;
 	curr_buff->absolute_lin = 1;
 	t = t->next_buff;
-	t->name = xalloc(strlen(ident) + 1);
+	t->name = xalloc((int)(strlen(ident) + 1));
 	copy_str(ident, t->name);
 	curr_buff->curr_line = curr_buff->first_line = txtalloc();
 	t->next_buff = NULL;
@@ -136,9 +139,7 @@ char *ident;
 	return(t);
 }
 
-void 
-chng_buf(name)	/* move to the named buffer, if it doesn't exist, create it */
-char *name;
+void chng_buf(char *name) 	/* move to the named buffer, if it doesn't exist, create it */
 {
 	struct bufr *tmp;
 	char *test;
@@ -153,10 +154,10 @@ char *name;
 			write_journal(curr_buff, curr_buff->curr_line);
 
 		tmp = first_buff;
-		while ((tmp != NULL) && (strcmp(name, tmp->name)))
+		while ((tmp != NULL) && (strcmp(name, tmp->name) != 0))
 			tmp = tmp->next_buff;
 		if (tmp == NULL)
-			tmp = add_buf(name);
+			add_buf(name);
 		else
 		{
 			if ((windows) && (num_of_bufs > 1))
@@ -190,7 +191,7 @@ char *name;
 	{
 		wmove(com_win,0,0);
 		wclrtoeol(com_win);
-		wprintw(com_win, cant_chng_while_mark_msg);
+		wprintw(com_win, "%s", cant_chng_while_mark_msg);
 		wrefresh(com_win);
 		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 	}
@@ -198,14 +199,14 @@ char *name;
 	{
 		wmove(com_win,0,0);
 		wclrtoeol(com_win);
-		wprintw(com_win, too_many_parms_msg);
+		wprintw(com_win, "%s", too_many_parms_msg);
 		wrefresh(com_win);
 		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 	}
 }
 
 int 
-del_buf()			/* delete current buffer		*/
+del_buf(void)			/* delete current buffer		*/
 {
 	struct bufr *garb;
 	int choice;
@@ -256,7 +257,7 @@ del_buf()			/* delete current buffer		*/
 		new_screen();
 		wmove(com_win,0,0);
 		wclrtoeol(com_win);
-		wprintw(com_win, buff_is_main_msg);
+		wprintw(com_win, "%s", buff_is_main_msg);
 		wrefresh(com_win);
 		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 		clr_cmd_line = TRUE;
@@ -265,7 +266,7 @@ del_buf()			/* delete current buffer		*/
 	{
 		wmove(com_win, 0, 0);
 		werase(com_win);
-		wprintw(com_win, cant_del_while_mark);
+		wprintw(com_win, "%s", cant_del_while_mark);
 		wrefresh(com_win);
 		return(FALSE);
 	}
@@ -273,13 +274,8 @@ del_buf()			/* delete current buffer		*/
 }
 
 void 
-redo_win()	/* adjust windows to allow for new/deleted windows	*/
+redo_win(void)	/* adjust windows to allow for new/deleted windows	*/
 {
-	int total_lines;
-	int num_of_lines;		/* number of lines in windows	*/
-	int counter;			/* temporary counter		*/
-	int iter;			/* iteration counter		*/
-	int remainder;			/* remainder of lines		*/
 	int temp_mark;			/* temporary mark flag		*/
 	int offset;			/* offset from top		*/
 	struct bufr *tt;		/* temporary pointer		*/
@@ -378,8 +374,13 @@ redo_win()	/* adjust windows to allow for new/deleted windows	*/
 		return;
 	}
 
-	temp_mark = mark_text;
+	temp_mark = (int)mark_text;
 	mark_text = FALSE;
+
+	int total_lines;
+	int num_of_lines;		/* number of lines in windows	*/
+	int counter;			/* temporary counter		*/
+	int remainder;			/* remainder of lines		*/
 
 	{
 		if ((!info_window) && (info_win != 0))
@@ -389,12 +390,6 @@ redo_win()	/* adjust windows to allow for new/deleted windows	*/
 		}
 		else if ((info_window) && (info_win == 0))
 		{
-			info_win = newwin(info_win_height, COLS, 0, 0);
-			paint_information();
-		}
-		else if ((info_window) && (window_resize))
-		{
-			delwin(info_win);
 			info_win = newwin(info_win_height, COLS, 0, 0);
 			paint_information();
 		}
@@ -417,7 +412,8 @@ redo_win()	/* adjust windows to allow for new/deleted windows	*/
 		else
 			counter = 0;
 
-		for (iter=0, tt=first_buff; (tt != NULL) ; iter++)
+		tt = first_buff;
+		while (tt != NULL)
 		{
 			tt->last_col = COLS - 1;
 			tt->lines = num_of_lines;
@@ -473,12 +469,12 @@ redo_win()	/* adjust windows to allow for new/deleted windows	*/
 			tt = tt->next_buff;
 		}
 	}
-	mark_text = temp_mark;
+	mark_text = (char)temp_mark;
 	window_resize = FALSE;
 }
 
 void 
-resize_check()
+resize_check(void)
 {
 	/*
 	 |	if screen size has not changed, return immediately
@@ -509,9 +505,16 @@ resize_check()
 }
 
 void 
-set_up_term()		/* set up the terminal for operating with ae	*/
+set_up_term(void)		/* set up the terminal for operating with ae	*/
 {
+	assume_default_colors(COLOR_WHITE, COLOR_BLACK);
 	initscr();
+	if (has_colors()) {
+		start_color();
+		init_pair(1, COLOR_BLUE, -1);    // keywords
+		init_pair(2, COLOR_GREEN, -1);   // comments
+		init_pair(3, COLOR_YELLOW, -1);  // strings and chars
+	}
 	ae_init();
 	savetty();
 	saveterm();

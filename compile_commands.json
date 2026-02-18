@@ -1,0 +1,236 @@
+[
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/aee.c.o -c /home/lucy/git/aee/aee.c",
+  "file": "/home/lucy/git/aee/aee.c",
+  "output": "CMakeFiles/aee.dir/aee.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/control.c.o -c /home/lucy/git/aee/control.c",
+  "file": "/home/lucy/git/aee/control.c",
+  "output": "CMakeFiles/aee.dir/control.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/format.c.o -c /home/lucy/git/aee/format.c",
+  "file": "/home/lucy/git/aee/format.c",
+  "output": "CMakeFiles/aee.dir/format.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/localize.c.o -c /home/lucy/git/aee/localize.c",
+  "file": "/home/lucy/git/aee/localize.c",
+  "output": "CMakeFiles/aee.dir/localize.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/srch_rep.c.o -c /home/lucy/git/aee/srch_rep.c",
+  "file": "/home/lucy/git/aee/srch_rep.c",
+  "output": "CMakeFiles/aee.dir/srch_rep.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/delete.c.o -c /home/lucy/git/aee/delete.c",
+  "file": "/home/lucy/git/aee/delete.c",
+  "output": "CMakeFiles/aee.dir/delete.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/mark.c.o -c /home/lucy/git/aee/mark.c",
+  "file": "/home/lucy/git/aee/mark.c",
+  "output": "CMakeFiles/aee.dir/mark.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/motion.c.o -c /home/lucy/git/aee/motion.c",
+  "file": "/home/lucy/git/aee/motion.c",
+  "output": "CMakeFiles/aee.dir/motion.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/keys.c.o -c /home/lucy/git/aee/keys.c",
+  "file": "/home/lucy/git/aee/keys.c",
+  "output": "CMakeFiles/aee.dir/keys.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/help.c.o -c /home/lucy/git/aee/help.c",
+  "file": "/home/lucy/git/aee/help.c",
+  "output": "CMakeFiles/aee.dir/help.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/windows.c.o -c /home/lucy/git/aee/windows.c",
+  "file": "/home/lucy/git/aee/windows.c",
+  "output": "CMakeFiles/aee.dir/windows.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/journal.c.o -c /home/lucy/git/aee/journal.c",
+  "file": "/home/lucy/git/aee/journal.c",
+  "output": "CMakeFiles/aee.dir/journal.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/file.c.o -c /home/lucy/git/aee/file.c",
+  "file": "/home/lucy/git/aee/file.c",
+  "output": "CMakeFiles/aee.dir/file.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/curses_compat.c.o -c /home/lucy/git/aee/curses_compat.c",
+  "file": "/home/lucy/git/aee/curses_compat.c",
+  "output": "CMakeFiles/aee.dir/curses_compat.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/lsp.c.o -c /home/lucy/git/aee/lsp.c",
+  "file": "/home/lucy/git/aee/lsp.c",
+  "output": "CMakeFiles/aee.dir/lsp.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build",
+  "command": "/usr/bin/cc -DAEE_VERSION_MAJOR=1 -DAEE_VERSION_MINOR=0 -DBSD_SELECT -DHAS_CTYPE -DHAS_LOCALE -DHAS_NL_TYPES -DHAS_STDARG -DHAS_STDLIB -DHAS_SYS_IOCTL -DHAS_SYS_WAIT -DHAS_UNISTD -DNDEBUG -I/home/lucy/git/aee -I/home/lucy/git/aee/third_party/cJSON -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/aee.dir/highlighting.c.o -c /home/lucy/git/aee/highlighting.c",
+  "file": "/home/lucy/git/aee/highlighting.c",
+  "output": "CMakeFiles/aee.dir/highlighting.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG -Dcjson_EXPORTS   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -fPIC -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/cjson.dir/cJSON.c.o -c /home/lucy/git/aee/third_party/cJSON/cJSON.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/cJSON.c",
+  "output": "third_party/cJSON/CMakeFiles/cjson.dir/cJSON.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/cJSON_test.dir/test.c.o -c /home/lucy/git/aee/third_party/cJSON/test.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/test.c",
+  "output": "third_party/cJSON/CMakeFiles/cJSON_test.dir/test.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -Wno-error -fvisibility=default -Wno-switch-enum -o CMakeFiles/unity.dir/unity/src/unity.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/unity/src/unity.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/unity/src/unity.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/unity.dir/unity/src/unity.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_examples.dir/parse_examples.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_examples.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_examples.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_examples.dir/parse_examples.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_number.dir/parse_number.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_number.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_number.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_number.dir/parse_number.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_hex4.dir/parse_hex4.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_hex4.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_hex4.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_hex4.dir/parse_hex4.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_string.dir/parse_string.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_string.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_string.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_string.dir/parse_string.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_array.dir/parse_array.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_array.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_array.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_array.dir/parse_array.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_object.dir/parse_object.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_object.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_object.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_object.dir/parse_object.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_value.dir/parse_value.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_value.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_value.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_value.dir/parse_value.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/print_string.dir/print_string.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/print_string.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/print_string.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/print_string.dir/print_string.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/print_number.dir/print_number.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/print_number.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/print_number.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/print_number.dir/print_number.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/print_array.dir/print_array.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/print_array.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/print_array.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/print_array.dir/print_array.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/print_object.dir/print_object.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/print_object.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/print_object.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/print_object.dir/print_object.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/print_value.dir/print_value.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/print_value.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/print_value.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/print_value.dir/print_value.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/misc_tests.dir/misc_tests.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/misc_tests.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/misc_tests.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/misc_tests.dir/misc_tests.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/parse_with_opts.dir/parse_with_opts.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/parse_with_opts.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/parse_with_opts.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/parse_with_opts.dir/parse_with_opts.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/compare_tests.dir/compare_tests.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/compare_tests.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/compare_tests.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/compare_tests.dir/compare_tests.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/cjson_add.dir/cjson_add.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/cjson_add.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/cjson_add.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/cjson_add.dir/cjson_add.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/readme_examples.dir/readme_examples.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/readme_examples.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/readme_examples.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/readme_examples.dir/readme_examples.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/tests",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/minify_tests.dir/minify_tests.c.o -c /home/lucy/git/aee/third_party/cJSON/tests/minify_tests.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/tests/minify_tests.c",
+  "output": "third_party/cJSON/tests/CMakeFiles/minify_tests.dir/minify_tests.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/fuzzing",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/fuzz_main.dir/fuzz_main.c.o -c /home/lucy/git/aee/third_party/cJSON/fuzzing/fuzz_main.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/fuzzing/fuzz_main.c",
+  "output": "third_party/cJSON/fuzzing/CMakeFiles/fuzz_main.dir/fuzz_main.c.o"
+},
+{
+  "directory": "/home/lucy/git/aee/build/third_party/cJSON/fuzzing",
+  "command": "/usr/bin/cc -DCJSON_API_VISIBILITY -DCJSON_EXPORT_SYMBOLS -DENABLE_LOCALES -DNDEBUG   -std=c89 -pedantic -Wall -Wextra -Werror -Wstrict-prototypes -Wwrite-strings -Wshadow -Winit-self -Wcast-align -Wformat=2 -Wmissing-prototypes -Wstrict-overflow=2 -Wcast-qual -Wundef -Wswitch-default -Wconversion -Wc++-compat -fstack-protector-strong -Wdouble-promotion -Wparentheses -Wformat-overflow -Wunused-macros -Wmissing-variable-declarations -Wswitch-enum -fvisibility=hidden -O3 -DNDEBUG -std=gnu17 -Wall -Wextra -Wpedantic -O3 -march=native -o CMakeFiles/fuzz_main.dir/cjson_read_fuzzer.c.o -c /home/lucy/git/aee/third_party/cJSON/fuzzing/cjson_read_fuzzer.c",
+  "file": "/home/lucy/git/aee/third_party/cJSON/fuzzing/cjson_read_fuzzer.c",
+  "output": "third_party/cJSON/fuzzing/CMakeFiles/fuzz_main.dir/cjson_read_fuzzer.c.o"
+}
+]

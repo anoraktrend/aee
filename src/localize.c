@@ -8,50 +8,10 @@
  |	Copyright (c) 1994, 1995, 1996, 1998, 1999, 2001, 2002, 2010 Hugh Mahon.
  */
 
-#include "aee.h"
+#include <stdlib.h>
+#include "../include/aee.h"
 
-#ifdef NO_CATGETS
-/*
- * When NO_CATGETS is defined, simply return the default string
- * without any catalog lookup
- */
-#define catgetlocal(number, string) (string)
-#else
-
-#if defined(__STDC__) || defined(__cplusplus)
-#define P_(s) s
-#else
-#define P_(s) ()
-#endif
-
-char *catgetlocal P_((int number, char *string));
-
-#undef P_
-
-/*
- |	Get the catalog entry, and if it got it from the catalog, 
- |	make a copy, since the buffer will be overwritten by the 
- |	next call to catgets().
- */
-
-char *
-catgetlocal(number, string)
-int number;
-char *string;
-{
-	char *temp1;
-	char *temp2;
-
-	temp1 = catgets(catalog, 1, number, string);
-	if (temp1 != string)
-	{
-		temp2 = malloc(strlen(temp1) + 1);
-		strcpy(temp2, temp1);
-		temp1 = temp2;
-	}
-	return(temp1);
-}
-#endif /* NO_CATGETS */
+#define catgetlocal(number, string) string
 
 /*
  |	The following is to allow for using message catalogs which allow 
@@ -80,22 +40,12 @@ struct menu_entries file_modified_menu[] = {
 };
 
 void 
-strings_init()
+strings_init(void)
 {
 	int counter;
 
-#ifndef NO_CATGETS
-	setlocale(LC_ALL, "");
-	catalog = catopen("aee", 0);
-#endif /* NO_CATGETS */
-
-#ifdef NO_CATGETS
 	ae_help_file = "/usr/share/aee/help.ae";
 	main_buffer_name = "main";
-#else
-	/* When using catgets, we would initialize these through the catalog */	ae_help_file = catgetlocal(1, "/usr/share/aee/help.ae");
-	main_buffer_name = catgetlocal(2, "main");
-#endif
 
 
 	/*
@@ -727,7 +677,4 @@ strings_init()
 	init_strings[39] = ee_mode_str;
 	init_strings[40] = NULL;
 
-#ifndef NO_CATGETS
-	catclose(catalog);
-#endif /* NO_CATGETS */
 }

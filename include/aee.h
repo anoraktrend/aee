@@ -7,66 +7,39 @@
  |
  */
 
-#include <signal.h>
+#ifndef AEE_H
+#define AEE_H
+
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <string.h>
 #include <pwd.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <sys/wait.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <ctype.h>
 #include <termios.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <string.h>
+#include <ncurses.h>
+#include <ctype.h>
 
-
-extern int eightbit;		/* eight bit character flag		*/
-
-#ifdef NCURSE
-#include "curses_compat.h"
-#else
-#include <curses.h>
-#endif
-
-extern struct stat buf;			/* System V specific tty operations	*/
-extern struct termios old_term;
-extern struct termios new_term;
-#include <fcntl.h>
-
-
-#ifndef SIGCHLD
-#define SIGCHLD SIGCLD
-#endif
-
-#define TAB 9
-
-#ifdef NAME_MAX
-#define MAX_NAME_LEN NAME_MAX
-#else
-#define MAX_NAME_LEN 15
-#endif	/* NAME_MAX	*/
-
-#include <locale.h>
-#include <nl_types.h>
-
-extern nl_catd catalog;
 
 #ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
+#define max(a, b) ((size_t)(a) > (size_t)(b) ? (size_t)(a) : (size_t)(b))
 #endif /* max */
 
 #ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
+#define min(a, b) ((size_t)(a) < (size_t)(b) ? (size_t)(a) : (size_t)(b))
 #endif /* min */
 
 
-#define Mark 1	/* mark text (don't keep previous paste buffer contents)  */
-#define Append 2	/* place new text into paste buffer after contents  */
-#define Prefix 3	/* place new text into paste buffer before contents */
+enum {
+Mark = 1,	/* mark text (don't keep previous paste buffer contents)  */
+Append = 2,	/* place new text into paste buffer after contents  */
+Prefix = 3	/* place new text into paste buffer before contents */
+};
 
 extern int errno;
 
@@ -119,7 +92,7 @@ struct bufr {			/* structure for names of buffers	*/
 	int num_of_lines;	/* number of lines of text total in buffer  */
 	int absolute_lin;	/* number of lines from top		*/
 	int window_top;	/* # of lines top of window is from top of screen  */
-	int journ_fd;		/* file descriptor for journal file	*/
+	FILE *journ_fd;		/* file descriptor for journal file	*/
 	char journalling;	/* flag indicating if journalling active 
 							for this buffer */
 	char *journal_file;	/* name of journal file for this buffer	*/
@@ -159,7 +132,7 @@ struct journal_db {
 	struct journal_db *next;
 	};
 
-#define CHNG_SYMBOL(a) (a != 0 ? '+' : ' ')
+#define CHNG_SYMBOL(a) ((a) != 0 ? '+' : ' ')
 
 struct EditorState {
     // Text handling
@@ -255,16 +228,16 @@ extern int tab_spacing;	/* spacing for tabs				*/
 
 extern char journ_on;		/* flag for journaling			*/
 extern char input_file;		/* indicate to read input file		*/
-extern char recv_file;		/* indicate reading a file		*/
-extern char edit;		/* continue executing while true	*/
-extern char gold;		/* 'gold' function key pressed		*/
+extern char recv_file;			/* indicate reading a file		*/
+extern int edit;			/* continue executing while true	*/
+extern char gold;			/* 'gold' function key pressed		*/
 extern char recover;		/* set true if recover operation to occur */
 extern char case_sen;		/* case sensitive search flag		*/
 extern char change;		/* indicate changes have been made to file*/
 extern char go_on;		/* loop control for help function	*/
 extern char clr_cmd_line;	/* flag set to clear command line	*/
 extern char literal;		/* is search string to be interpreted literally? */
-extern char forward;	/* if TRUE, search after cursor, else search before cursor */
+extern int forward;	/* if TRUE, search after cursor, else search before cursor */
 extern char echo_flag;		/* allow/disallow echo in init file	*/
 extern char status_line;	/* place status info in the bottom line	*/
 extern char overstrike;		/* overstrike / insert mode flag	*/
@@ -292,6 +265,8 @@ extern char ee_mode_menu; 	/* make main menu look more like ee's	*/
 #define CHAR_BACKSPACE 2
 #define WORD_DELETED 3
 #define LINE_DELETED 4
+
+#define MAX_NAME_LEN 256
 
 extern long mask;		/* mask for sigblock			*/
 #ifdef XAE
@@ -323,6 +298,10 @@ extern char *tmp_file;		/* temporary file name			*/
 extern char d_char;		/* deleted character			*/
 extern char *d_word;		/* deleted word				*/
 extern char *d_line;		/* deleted line				*/
+extern int tab_spacing;	/* spacing for tabs				*/
+
+extern int eightbit;	/* flag for eight-bit character support		*/
+
 extern char *term_type;		/* type of terminal being used		*/
 extern char *help_line;		/* input line for help facility		*/
 extern char *sline;		/* temporary line pointer for help fac	*/
@@ -409,7 +388,7 @@ struct menu_entries {
 	struct menu_entries *ptr_argument;
 	int (*iprocedure)P_((int));
 	void (*nprocedure)P_((void));
-	unsigned int argument;
+	int argument;
 	};
 
 #undef P_
@@ -571,24 +550,24 @@ int scanline P_((struct text *m_line, int pos));
 void tab_insert P_((void));
 void unset_tab P_((char *string));
 void tab_set P_((char *string));
-int tabshift P_((int temp_int));
-int out_char P_((WINDOW *window, int character, int abscolumn, int row, int offset));
+unsigned int tabshift(unsigned int temp_int);
+int out_char(WINDOW *window, int character, unsigned int abscolumn, int row, unsigned int offset);
 void draw_line P_((int vertical, int horiz, char *ptr, int t_pos, struct text *dr_l));
 void insert_line P_((int disp));
 struct text *txtalloc P_((void));
 struct files *name_alloc P_((void));
 struct bufr *buf_alloc P_((void));
 char *next_word P_((char *string));
-int scan P_((char *line, int offset, int column));
+int scan(char *line, unsigned int offset, unsigned int column);
 char *get_string P_((char *prompt, int advance));
-int len_char P_((int character, int column));
+int len_char P_((int character, unsigned int column));
 void ascii P_((void));
 void print_buffer P_((void));
 int compare P_((char *string1, char *string2, int sensitive));
 void goto_line P_((char *cmd_str));
 void make_win P_((void));
 void no_windows P_((void));
-void midscreen P_((int line, int count));
+void midscreen(int line_number, unsigned int position);
 void get_options P_((int numargs, char *arguments[]));
 void show_pwd P_((void));
 char *get_full_path P_((char *path, char *orig_path));
@@ -616,7 +595,7 @@ char *resolve_name P_((char *name));
 int file_write_success P_((void));
 
 int menu_op P_((struct menu_entries menu_list[]));
-void paint_menu P_((struct menu_entries menu_list[], int max_width, int max_height, int list_size, int top_offset, WINDOW *menu_win, int off_start, int vert_size));
+void paint_menu P_((struct menu_entries menu_list[], WINDOW *menu_win, int max_width, int max_height, int off_start, int top_offset, unsigned int list_size, unsigned int vert_size, int current));
 void shell_op P_((void));
 void leave_op P_((void));
 void spell_op P_((void));
@@ -637,6 +616,13 @@ void init_keys P_((void));
 void parse P_((char *string));
 int restrict_mode P_((void));
 void dump_aee_conf P_((void));
+
+int parse_define(char *str1);
+int parse_display_settings(char *str1);
+int parse_editing_settings(char *str1);
+int parse_tab_settings(char *str1);
+int parse_file_settings(char *str1);
+int parse_special_settings(char *str1);
 
 void del_char P_((int save_flag));
 void undel_char P_((void));
@@ -717,13 +703,12 @@ void adv_line P_((void));
 void next_page P_((void));
 void prev_page P_((void));
 
-int search P_((int move_cursor, struct text *start_line, int offset, char *pointer, int s_str_off, int srch_short, int disp));
 int upper P_((int value));
 int search_prompt P_((int flag));
 void replace P_((void));
 int repl_prompt P_((int flag));
 void match P_((void));
-
+extern int search P_((int move_cursor, struct text *start_line, unsigned int offset, char *pointer, int disp, int s_str_off, int srch_short));
 void new_screen P_((void));
 struct bufr *add_buf P_((char *ident));
 void chng_buf P_((char *name));
@@ -743,42 +728,47 @@ void raise_window P_((void));
 void set_window_name P_((char *name));
 #endif /* XAE */
 
-extern struct _line *top_of_win;
-
-// mark.c functions
-extern void cut_text P_((void)); 
-extern void mark_operation P_((void));
-
-// motion.c functions
-extern void move_rel P_((char* direction, int lines));
-extern void eol P_((void));
-extern void bol P_((void));
-
-// keys.c functions
-extern void keyboard P_((void));
-extern void control P_((void));
-extern void function_key P_((void)); 
-extern void gold_func P_((void));
-
-// format.c functions
-extern void Format P_((void));
-extern void Auto_Format P_((void));
-extern int first_word_len P_((struct text *test_line));
-
-// windows.c functions
-extern void new_screen P_((void));
-extern void raise_window P_((void));
-extern void set_window_name P_((char *name));
-extern struct bufr* add_buf P_((char *ident));
-extern void chng_buf P_((char *name));
-extern int del_buf P_((void));
-extern void redo_win P_((void));
-extern void resize_check P_((void));
-
-// search functions
-extern int search P_((int move_cursor, struct text *start_line, int offset, 
-                     char *pointer, int s_str_off, int srch_short, int disp));
-extern void replace P_((void));
-extern void match P_((void));
+extern struct line *top_of_win;
 
 
+
+// Small ctype functions
+static inline int aee_toupper(int c) {
+    return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c;
+}
+
+static inline int aee_tolower(int c) {
+    return (c >= 'A' && c <= 'Z') ? c - 'A' + 'a' : c;
+}
+
+static inline int aee_isalpha(int c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+static inline int aee_isspace(int c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
+// Small string functions
+static inline size_t aee_strlen(const char *s) {
+    size_t len = 0;
+    while (*s++) len++;
+    return len;
+}
+
+static inline int aee_strcmp(const char *s1, const char *s2) {
+    while (*s1 && *s1 == *s2) {
+        s1++;
+        s2++;
+    }
+    return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+}
+
+static inline char *aee_strcpy(char *dest, const char *src) {
+    char *d = dest;
+    while ((*d++ = *src++)) ;
+    return dest;
+}
+
+
+#endif

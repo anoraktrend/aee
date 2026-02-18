@@ -1,3 +1,4 @@
+#include <stdio.h>
 /*
 	+---------------------------------------------------------------+
 	|								|
@@ -34,10 +35,6 @@
  |	the quality of the materials inferior to
  |	supported materials.
  |
- |	This software is not a product of Hewlett-Packard, Co., or any 
- |	other company.  No support is implied or offered with this software.
- |	You've got the source, and you're on your own.
- |
  |	This software may be distributed under the terms of Larry Wall's 
  |	Artistic license, a copy of which is included in this distribution. 
  |
@@ -56,11 +53,18 @@ char *long_notice[] = {
 	"copyright.  All rights are reserved."
 	};
 
-#include "aee_version.h"
+#include "../include/aee_version.h"
 
 char *version_string = "@(#) aee (another easy editor) version "  AEE_VERSION  " " DATE_STRING " $Revision: 1.82 $";
 
-#include "aee.h"
+#include "../include/aee.h"
+#include "../include/highlighting.h"
+
+#include <stdlib.h>
+
+#include <nl_types.h>
+
+
 
 int eightbit;			/* eight bit character flag		*/
 
@@ -99,7 +103,7 @@ int windows;			/* flag for windows or no windows	*/
 WINDOW *info_win;
 
 /* Add the actual definition */
-struct _line *top_of_win;
+struct line *top_of_win;
 
 int lines_moved;		/* number of lines moved in search	*/
 int d_wrd_len;			/* length of deleted word		*/
@@ -137,7 +141,7 @@ char mark_text;			/* flag to indicate if MARK is active	*/
 char journ_on;			/* flag for journaling			*/
 char input_file;		/* indicate to read input file		*/
 char recv_file;			/* indicate reading a file		*/
-char edit;			/* continue executing while true	*/
+int edit;			/* continue executing while true	*/
 char gold;			/* 'gold' function key pressed		*/
 char recover;			/* set true if recover operation to occur */
 char case_sen;			/* case sensitive search flag		*/
@@ -145,7 +149,7 @@ char change;			/* indicate changes have been made to file*/
 char go_on;			/* loop control for help function	*/
 char clr_cmd_line;		/* flag set to clear command line	*/
 char literal;		/* is search string to be interpreted literally? */
-char forward;	/* if TRUE, search after cursor, else search before cursor */
+int forward;	/* if TRUE, search after cursor, else search before cursor */
 char echo_flag;			/* allow/disallow echo in init file	*/
 char status_line;		/* place status info in the bottom line	*/
 char overstrike;		/* overstrike / insert mode flag	*/
@@ -238,7 +242,7 @@ FILE *write_fp;			/* write file pointer			*/
 
 char info_data[MAX_HELP_LINES][MAX_HELP_COLS];
 
-struct edit_keys assignment[] = {
+struct edit_keys assignment[67] = {
 { "", "",  0, 0, 0, 0 },
 { "", "",  0, 0, 0, 0 }, 
 { "", "",  0, 0, 0, 0 },
@@ -514,10 +518,7 @@ char *DIFF_str;
 char *ee_mode_str;
 char *journal_str, *journal_err_str;
 
-int 
-main(argc, argv)		/* beginning of main program		*/
-int argc;
-char *argv[];
+int main(int argc, char *argv[])
 {
 #ifdef DEBUG
 	error_fp = fopen("/tmp/ae.mem_debug", "w");
@@ -631,7 +632,7 @@ char *argv[];
 	curr_buff->scr_vert = 0;
 	curr_buff->scr_horz = 0;
 	bit_bucket = open("/dev/null", O_WRONLY);
-	forward = windows = edit = TRUE;
+	forward = windows = edit = (char)TRUE;
 	observ_margins = literal = FALSE;
 	expand = indent = overstrike = FALSE;
 	clr_cmd_line = change = mark_text = gold = case_sen = FALSE;
@@ -650,6 +651,7 @@ char *argv[];
 	undel_init();
 	init_keys();
 	ae_init();
+	strings_init();
 	get_options(argc, argv);
 	set_up_term();		/* initialize terminal		*/
 	get_key_assgn();
@@ -712,7 +714,7 @@ char *argv[];
 	wstandend(curr_buff->win);
 	wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 	wrefresh(curr_buff->win);
-	midscreen(curr_buff->scr_vert, curr_buff->position);
+	midscreen(curr_buff->scr_vert, 1);
 
 	while (edit) 
 	{
@@ -731,11 +733,8 @@ char *argv[];
 	exit(0);
 }
 
-void 
-get_input(win_ptr)
-WINDOW *win_ptr;
+void get_input(WINDOW *win_ptr)
 {
-	int value;
 #ifndef XAE
 	static int counter = 0;
 	pid_t parent_pid;
@@ -748,7 +747,7 @@ WINDOW *win_ptr;
 #endif /* XAE */
 
 	in = wgetch(win_ptr);
-	value = alarm(0);
+	value = (int)alarm(0);
 	signal(SIGALRM, dummy);
 
 	if (in == EOF)		/* somehow lost contact with input	*/
@@ -778,7 +777,7 @@ WINDOW *win_ptr;
 }
 
 void 
-status_display()	/* display status line			*/
+status_display(void)	/* display status line			*/
 {
 	if ((status_line) && (!clr_cmd_line))
 	{
@@ -808,29 +807,29 @@ status_display()	/* display status line			*/
 		wprintw(com_win, SL_col_str, curr_buff->scr_pos);
 		wmove(com_win, 0, 40);
 		if (literal)
-			wprintw(com_win, SL_lit_str);
+			wprintw(com_win, "%s", SL_lit_str);
 		else
-			wprintw(com_win, SL_nolit_str);
+			wprintw(com_win, "%s", SL_nolit_str);
 		if (forward)
-			wprintw(com_win, SL_fwd_str);
+			wprintw(com_win, "%s", SL_fwd_str);
 		else
-			wprintw(com_win, SL_rev_str);
+			wprintw(com_win, "%s", SL_rev_str);
 		if (overstrike)
-			wprintw(com_win, SL_over_str);
+			wprintw(com_win, "%s", SL_over_str);
 		else
-			wprintw(com_win, SL_insrt_str);
+			wprintw(com_win, "%s", SL_insrt_str);
 		if (indent)
-			wprintw(com_win, SL_indent_str);
+			wprintw(com_win, "%s", SL_indent_str);
 		else
-			wprintw(com_win, SL_noindnt_str);
+			wprintw(com_win, "%s", SL_noindnt_str);
 		if (observ_margins)
-			wprintw(com_win, SL_marg_str);
+			wprintw(com_win, "%s", SL_marg_str);
 		else
-			wprintw(com_win, SL_nomarg_str);
+			wprintw(com_win, "%s", SL_nomarg_str);
 		if (mark_text)
 		{
 			wstandout(com_win);
-			wprintw(com_win, SL_mark_str);
+			wprintw(com_win, "%s", SL_mark_str);
 			wstandend(com_win);
 		}
 		else if (text_only)
@@ -853,12 +852,9 @@ status_display()	/* display status line			*/
 
 char *
 #ifndef DEBUG
-xalloc(size)	/* allocate memory, report if errors	*/
-int size;	/* size of memory to allocate		*/
+xalloc(int size)	/* allocate memory, report if errors	*/
 #else
-dxalloc(size, line_num)
-int size;
-int line_num;
+dxalloc(int size, int line_num)
 #endif /* DEBUG */
 {
 	int counter;
@@ -871,7 +867,8 @@ int line_num;
 
 	if (size == 0)
 		size++;
-	if ((memory = malloc(size)) == NULL)
+	memory = malloc(size);
+	if (memory == NULL)
 	{
 		counter = 0;
 		werase(com_win);
@@ -892,16 +889,9 @@ int line_num;
 
 char *
 #ifndef DEBUG
-resiz_line(factor, rline, rpos)	/* resize the line to length + factor*/
-int factor;		/* resize factor				*/
-struct text *rline;	/* pointer to line structure			*/
-int rpos;		/* position in line				*/
+resiz_line(int factor, struct text *rline, int rpos)
 #else
-dresiz_line(factor, rline, rpos, line_num) 
-int factor;		/* resize factor				*/
-struct text *rline;	/* pointer to line structure			*/
-int rpos;		/* position in line				*/
-int line_num;
+dresiz_line(int factor, struct text *rline, int rpos, int line_num)
 #endif
 {
 	char *rpoint;
@@ -921,15 +911,12 @@ int line_num;
 	return(rpoint);
 }
 
-void 
-dummy(foo)
-int foo;
+void dummy(int foo)
 {/*this is a dummy function to eliminate any unresolved signals		*/
+	(void)foo;
 }
 
-void 
-insert(character)		/* insert character into line		*/
-int character;			/* new character			*/
+void insert(int character)
 {
 	int counter;
 	char *temp;		/* temporary pointer			*/
@@ -938,14 +925,14 @@ int character;			/* new character			*/
 
 	if ((observ_margins) && (curr_buff->scr_pos < left_margin))
 	{
-		temp_overstrike = overstrike;
+		temp_overstrike = (unsigned char)overstrike;
 		overstrike = FALSE;
 		counter = left_margin;
 		left_margin = 0;
 		while (curr_buff->scr_pos < counter)
 			insert(' ');
 		left_margin = counter;
-		overstrike = temp_overstrike;
+		overstrike = (char)temp_overstrike;
 	}
 	change = TRUE;
 	curr_buff->curr_line->changed = TRUE;
@@ -970,11 +957,11 @@ int character;			/* new character			*/
 			temp--;
 		}
 	}
-	*curr_buff->pointer = character;	/* insert new character			*/
+	*curr_buff->pointer = (char)character;        /* insert new character                 */
 	if (curr_buff->position != (curr_buff->curr_line->line_length - 1))
 		counter = (scanline(curr_buff->curr_line, curr_buff->curr_line->line_length) / COLS) + 1;
 	else
-		counter = ((curr_buff->scr_pos + len_char(*curr_buff->pointer, curr_buff->scr_pos)) / COLS) + 1;
+		counter = ((curr_buff->scr_pos + len_char(curr_buff->scr_pos, *curr_buff->pointer)) / COLS) + 1;
 	if (counter > curr_buff->curr_line->vert_len)
 	{
 		curr_buff->curr_line->vert_len = counter;
@@ -990,7 +977,7 @@ int character;			/* new character			*/
 		right(TRUE);
 	else
 	{
-		counter = curr_buff->scr_horz + len_char(character, curr_buff->scr_pos);
+		counter = curr_buff->scr_horz + len_char(curr_buff->scr_pos, character);
 		if (counter > curr_buff->last_col)
 		{
 			counter = curr_buff->scr_vert + 1;
@@ -1002,13 +989,13 @@ int character;			/* new character			*/
 			}
 		}
 		if ((character < 32) || (character > 126))
-			curr_buff->scr_horz += out_char(curr_buff->win, character, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+			curr_buff->scr_horz += out_char(curr_buff->win, curr_buff->scr_pos, (unsigned char)*curr_buff->pointer, curr_buff->scr_vert, 0);
 		else
 		{
 			waddch(curr_buff->win, character);
 			curr_buff->scr_horz++;
 		}
-		curr_buff->abs_pos = curr_buff->scr_pos += len_char(*curr_buff->pointer, curr_buff->scr_pos);
+		curr_buff->abs_pos = curr_buff->scr_pos += len_char(curr_buff->scr_pos, *curr_buff->pointer);
 		curr_buff->pointer++;
 		curr_buff->position++;
 		if (curr_buff->scr_horz > curr_buff->last_col)
@@ -1044,10 +1031,7 @@ int character;			/* new character			*/
 		formatted = FALSE;
 }
 
-int 
-scanline(m_line, pos)	/* find the proper horizontal position for the current position in the line */
-struct text *m_line;
-int pos;
+int scanline(struct text *m_line, int pos)
 {
 	int temp;
 	int count;
@@ -1058,20 +1042,18 @@ int pos;
 	temp = 0;
 	while (count < pos)
 	{
-		if ((*ptr >= 0) && (*ptr <= 8))
+		if (((*ptr >= 0) && (*ptr <= 31) && (*ptr != 9)) || (*ptr == 127))
 			temp += 2;
 		else if (*ptr == 9)
 			temp += tabshift(temp);
-		else if ((*ptr >= 10) && (*ptr <= 31))
-			temp += 2;
 		else if ((*ptr >= 32) && (*ptr < 127))
 			temp++;
-		else if (*ptr == 127)
-			temp += 2;
-		else if (!eightbit)
-			temp += 5;
-		else
-			temp++;
+		else {
+			if (!eightbit)
+				temp += 5;
+			else
+				temp++;
+		}
 		ptr++;
 		count++;
 	}
@@ -1079,14 +1061,14 @@ int pos;
 }
 
 void 
-tab_insert()	/* insert a tab or spaces according to value of 'expand' */
+tab_insert(void)	/* insert a tab or spaces according to value of 'expand' */
 {
 	int temp;
 	int counter;
 
 	if (expand)
 	{
-		counter = tabshift(curr_buff->scr_pos);
+		counter = (int)tabshift((unsigned int)curr_buff->scr_pos);
 		for (temp = 0; temp < counter; temp++)
 			insert(' ');
 		if (auto_format)
@@ -1096,9 +1078,7 @@ tab_insert()	/* insert a tab or spaces according to value of 'expand' */
 		insert('\t');
 }
 
-void 
-unset_tab(string)	/* remove tab setting			*/
-char *string;
+void unset_tab(char *string)
 {
 	char *pointer;
 	int column;
@@ -1135,9 +1115,7 @@ char *string;
 	}
 }
 
-void 
-tab_set(string)	/* get tab settings from the string (columns)	*/
-char *string;
+void tab_set(char *string)
 {
 	char *pointer;
 	int column;
@@ -1175,50 +1153,42 @@ char *string;
 	}
 }
 
-int 
-tabshift(temp_int)	/* give the number of spaces to shift to the next 
-			   tab stop					*/
-int temp_int;	/* current column	*/
+unsigned int tabshift(unsigned int temp_int)
 {
 	int leftover;
 	struct tab_stops *stack_point;
 
 	stack_point = tabs;
-	while ((stack_point != NULL) && (stack_point->column <= temp_int))
+	while ((stack_point != NULL) && (stack_point->column <= (int)temp_int))
 		stack_point = stack_point->next_stop;
 	if (stack_point != NULL)
 	{
-		leftover = (stack_point->column - temp_int);
-		return(leftover);
+		leftover = (stack_point->column - (int)temp_int);
+		return((unsigned int)leftover);
 	}
-	leftover = ((temp_int + 1) % tab_spacing);
+	leftover = (((int)temp_int + 1) % tab_spacing);
 	if (leftover == 0)
-		return (1);
+		return(1U);
 	else
-		return ((tab_spacing + 1) - leftover);
+		return((unsigned int)((tab_spacing + 1) - leftover));
 }
 
-int 
-out_char(window, character, abscolumn, row, offset)	/* output non-printing character */
-WINDOW *window;
-char character;
-int abscolumn;
-int row;
-int offset;
+int out_char(WINDOW *window, int character, unsigned int abscolumn, int row, unsigned int offset)
 {
-	int i1, i2, iter;
+	int i1, i2;
+	unsigned int iter;
 	int column;
 	int space;
-	char *string;
+	char *string = NULL;
 	char *tmp;
 
-	column = abscolumn % COLS;
+	column = (int)(abscolumn % COLS);
 	space = FALSE;
 	if ((character >= 0) && (character < 32))
 	{
 		if (character == '\t')
 		{
-			i1 = tabshift(abscolumn);
+			i1 = tabshift((int)abscolumn);
 			for (i2=1; (i2 <= i1)&&((((i2+column)<=curr_buff->last_col)&&(row==curr_buff->last_line))||(row<curr_buff->last_line)); i2++)
 				waddch(window, ' ');
 			return(i1);
@@ -1236,18 +1206,19 @@ int offset;
 			tmp = string = xalloc(6);
 			*tmp = '<';
 			tmp++;
-			if ((i1=character) < 0)
+			i1 = character;
+			if (i1 < 0)
 				i1 = 256 + character;
 			i2 = i1 / 100;
 			i1 -=i2 * 100;
-			*tmp = i2 + '0';
+			*tmp = (char)(i2 + '0');
 			tmp++;
 			i2 = i1 / 10;
 			i1 -= i2 * 10;
-			*tmp = i2 + '0';
+			*tmp = (char)(i2 + '0');
 			tmp++;
 			i2 = i1;
-			*tmp = i2 + '0';
+			*tmp = (char)(i2 + '0');
 			tmp++;
 			*tmp = '>';
 			tmp++;
@@ -1256,15 +1227,15 @@ int offset;
 		else
 		{
 			waddch(window, (unsigned char) character);
-			return(1);
+			return(1U);
 		}
 	}
 	tmp = string;
 	for (iter=0; (iter < offset) && (tmp != NULL) && (character != '\t'); iter++)
 		tmp++;
 	for (iter = column;
-	     (((iter <= curr_buff->last_col) && (row == curr_buff->last_line)) || 
-	     (row < curr_buff->last_line)) && (*tmp != '\0'); iter++, tmp++)
+	     (((int)iter <= curr_buff->last_col) && (row == curr_buff->last_line)) || 
+	     ((row < curr_buff->last_line) && ((*tmp != '\0') )) ; iter++, tmp++) 
 		waddch(window, *tmp);
 	iter -= column;
 	if (space)
@@ -1272,13 +1243,7 @@ int offset;
 	return(iter);
 }
 
-void 
-draw_line(vertical, horiz, ptr, t_pos, dr_l)	/* redraw line from current position */
-int vertical;
-int horiz;
-char *ptr;
-int t_pos;
-struct text *dr_l;
+void draw_line(int vertical, int horiz, char *ptr, int t_pos, struct text *dr_l)
 {
 	int d;
 	char *temp;
@@ -1288,7 +1253,6 @@ struct text *dr_l;
 	int tp_pos;
 	int posit;
 	int highlight;
-	int offset;
 
 	highlight = FALSE;
 	abs_column = horiz;
@@ -1301,7 +1265,7 @@ struct text *dr_l;
 	{
 		while (row < 0)
 		{
-			abs_column += d =  len_char(*temp, abs_column);
+			abs_column += d = len_char(*temp, abs_column);
 			column += d;
 			if (column > curr_buff->last_col)
 			{
@@ -1329,58 +1293,59 @@ struct text *dr_l;
 	}
 	wmove(curr_buff->win, row, column);
 	wclrtoeol(curr_buff->win);
-	if ((mark_text) && (pst_pos == 1) && (curr_buff->pointer == ptr) && 
+	if (curr_buff->file_name && (strstr(curr_buff->file_name, ".c") || strstr(curr_buff->file_name, ".h"))) {
+    highlight_syntax(curr_buff->win, ptr, dr_l->line_length);
+    wstandend(curr_buff->win);
+} else {
+if ((mark_text) && (pst_pos == 1) && (curr_buff->pointer == ptr) && (cpste_line != NULL) && 
 			(cpste_line->line_length > 1))
-	{
-		highlight = TRUE;
-		tp_pos = pst_pos;
-	}
-	else if (mark_text)
-		wstandend(curr_buff->win);
-	while ((posit < dr_l->line_length) && (((column <= curr_buff->last_col) && 
-			(row == curr_buff->last_line)) || (row < curr_buff->last_line)))
-	{
-		if ((mark_text) && (pst_pos == 1) && (curr_buff->pointer == ptr) && (highlight))
-		{
-			if (tp_pos < cpste_line->line_length)
-				wstandout(curr_buff->win);
-			else
-				wstandend(curr_buff->win);
-			tp_pos++;
-		}
-		if ((*temp < 32) || (*temp > 126))
-		{
-			offset = out_char(curr_buff->win, *temp, abs_column, row, d);
-			column += offset;
-			abs_column += offset;
-			d = 0;
-		}
-		else
-		{
-			abs_column++;
-			column++;
-			waddch(curr_buff->win, *temp);
-		}
-		if (column > curr_buff->last_col)
-		{
-			column = column % COLS;
-			row++;
-		}
-		posit++;
-		temp++;
-	}
-	if (((column < curr_buff->last_col) && (row == curr_buff->last_line)) || (row < curr_buff->last_line))
-		wclrtoeol(curr_buff->win);
+{
+	highlight = TRUE;
+	tp_pos = pst_pos;
+}
+else if (mark_text)
 	wstandend(curr_buff->win);
+while ((posit < dr_l->line_length) && (((column <= curr_buff->last_col) && 
+			(row == curr_buff->last_line)) || (row < curr_buff->last_line)))
+{
+	if ((mark_text) && (pst_pos == 1) && (curr_buff->pointer == ptr) && (highlight))
+	{
+		if (tp_pos < cpste_line->line_length)
+			wstandout(curr_buff->win);
+		else
+			wstandend(curr_buff->win);
+		tp_pos++;
+	}
+	if ((*temp < 32) || (*temp > 126))
+	{
+		value = out_char(curr_buff->win, *temp, abs_column, row, (unsigned int)d);
+		column += value;
+		abs_column += value;
+		d = 0;
+	}
+	else
+	{
+		abs_column++;
+		column++;
+		waddch(curr_buff->win, *temp);
+	}
+	if (column > curr_buff->last_col)
+	{
+		column = column % COLS;
+		row++;
+	}
+	posit++;
+	temp++;
+}
+if (((column < curr_buff->last_col) && (row == curr_buff->last_line)) || (row < curr_buff->last_line))
+	wclrtoeol(curr_buff->win);
+wstandend(curr_buff->win);
+}
 	wmove(curr_buff->win, vertical, horiz);
 }
 
-void 
-insert_line(disp)	/* insert new line into file and if disp=TRUE, 
-			reorganize screen accordingly	*/
-int disp;
+void insert_line(int disp)
 {
-	int temp_pos;
 	int temp_pos2;
 	int i;
 	char *temp;
@@ -1410,10 +1375,8 @@ int disp;
 	temp = curr_buff->pointer;
 	if (temp_pos2 != curr_buff->curr_line->line_length)
 	{
-		temp_pos = 1;
 		while (temp_pos2 < curr_buff->curr_line->line_length)
 		{
-			temp_pos++;
 			temp_pos2++;
 			*extra= *temp;
 			extra++;
@@ -1468,10 +1431,10 @@ int disp;
 	curr_buff->abs_pos = curr_buff->scr_pos = curr_buff->scr_horz = 0;
 	if ((mark_text) && (cpste_line->line_length == pst_pos))
 	{
-		i = mark_text;
+		i = (unsigned char)mark_text;
 		mark_text = FALSE;
 		left(TRUE);
-		mark_text = i;
+		mark_text = (char)i;
 		right(TRUE);
 	}
 	if (indent)
@@ -1482,31 +1445,31 @@ int disp;
 		if (curr_buff->curr_line->prev_line != NULL)
 		{
 			temp = curr_buff->curr_line->prev_line->line;
-			i = overstrike;
+			i = (unsigned char)overstrike;
 			overstrike = FALSE;
-			while ((*temp == ' ') || (*temp == '\t'))
+			while (((unsigned char)*temp == ' ') || ((unsigned char)*temp == '\t'))
 			{
-				insert(*temp);
+				insert((unsigned char)*temp);
 				temp++;
 			}
-			overstrike = i;
+			overstrike = (char)i;
 		}
 		left_margin = temp_lm;
 	}
 	if ((observ_margins) && (left_margin != 0) && (curr_buff->scr_pos < left_margin))
 	{
-		temp_overstrike = overstrike;
+		temp_overstrike = (unsigned char)overstrike;
 		overstrike = FALSE;
 		i = left_margin;
 		left_margin = 0;
 		while (curr_buff->scr_pos < i)
 			insert(' ');
 		left_margin = i;
-		overstrike = temp_overstrike;
+		overstrike = (char)temp_overstrike;
 	}
 }
 
-struct text *txtalloc()		/* allocate space for line structure	*/
+struct text *txtalloc(void)
 {
 	struct text *txt_tmp;
 
@@ -1518,7 +1481,7 @@ struct text *txtalloc()		/* allocate space for line structure	*/
 	return(txt_tmp);
 }
 
-struct files *name_alloc()	/* allocate space for file name list node */
+struct files *name_alloc(void)	/* allocate space for file name list node */
 {
 	struct files *temp_name;
 
@@ -1526,7 +1489,7 @@ struct files *name_alloc()	/* allocate space for file name list node */
 	return(temp_name);
 }
 
-struct bufr *buf_alloc()	/* allocate space for buffers		*/
+struct bufr *buf_alloc(void)	/* allocate space for buffers		*/
 {
 	struct bufr *temp_buf;
 
@@ -1540,12 +1503,11 @@ struct bufr *buf_alloc()	/* allocate space for buffers		*/
 	temp_buf->main_buffer = FALSE;
 	temp_buf->edit_buffer = FALSE;
 	temp_buf->dos_file = FALSE;
-	temp_buf->journ_fd = '\0';
+	temp_buf->journ_fd = 0;
 	return (temp_buf);
 }
 
-char *next_word(string)		/* move to next word in string		*/
-char *string;
+char *next_word(char *string)
 {
 	while ((*string != '\0') && ((*string != 32) && (*string != 9)))
 		string++;
@@ -1554,15 +1516,11 @@ char *string;
 	return(string);
 }
 
-int 
-scan(line, offset, column)	/* determine horizontal position for get_string	*/
-char *line;
-int offset;
-int column;
+int scan(char *line, unsigned int offset, unsigned int column)
 {
 	char *stemp;
-	int i;
-	int j;
+	unsigned int i;
+	unsigned int j;
 
 	stemp = line;
 	i = 0;
@@ -1573,12 +1531,10 @@ int column;
 		j += len_char(*stemp, j);
 		stemp++;
 	}
-	return(j);
+	return((int)j);
 }
 
-char *get_string(prompt, advance)	/* read string from input on command line */
-char *prompt;		/* string containing user prompt message	*/
-int advance;		/* if true, skip leading spaces and tabs	*/
+char *get_string(char *prompt, int advance)
 {
 	char *string;
 	char *tmp_string;
@@ -1595,7 +1551,7 @@ int advance;		/* if true, skip leading spaces and tabs	*/
 	wrefresh(com_win);
 	nam_str = tmp_string;
 	clr_cmd_line = TRUE;
-	g_horz = g_position = scan(prompt, strlen(prompt), 0);
+	g_horz = g_position = scan(prompt, (unsigned int)strlen(prompt), 0U);
 	g_pos = 0;
 	do
 	{
@@ -1605,7 +1561,7 @@ int advance;		/* if true, skip leading spaces and tabs	*/
 		{
 			tmp_int = g_horz;
 			g_pos--;
-			g_horz = scan(g_point, g_pos, g_position);
+			g_horz = scan(g_point, (unsigned int)g_pos, (unsigned int)g_position);
 				tmp_int = tmp_int - g_horz;
 			for (; 0 < tmp_int; tmp_int--)
 			{
@@ -1625,10 +1581,10 @@ int advance;		/* if true, skip leading spaces and tabs	*/
 				esc_flag = TRUE;
 				get_input(com_win);
 			}
-			*nam_str = in;
+			*nam_str = (char)in;
 			g_pos++;
 			if (((in < 32) || (in > 126)) && (g_horz < (curr_buff->last_col - 1)))
-				g_horz += out_char(com_win, in, g_horz, curr_buff->last_line, 0);
+				g_horz += out_char(com_win, in, (unsigned int)g_horz, curr_buff->last_line, 0U);
 			else
 			{
 				g_horz++;
@@ -1645,38 +1601,35 @@ int advance;		/* if true, skip leading spaces and tabs	*/
 	nam_str = tmp_string;
 	if (((*nam_str == ' ') || (*nam_str == 9)) && (advance))
 		nam_str = next_word(nam_str);
-	string = xalloc(strlen(nam_str) + 1);
+	string = xalloc((int)(strlen(nam_str) + 1));
 	copy_str(nam_str, string);
 	free(tmp_string);
 	wrefresh(com_win);
 	return(string);
 }
 
-int 
-len_char(character, column)	/* return the length of the character	*/
-char character;
-int column;	/* the column must be known to provide spacing for tabs	*/
+int len_char(int character, unsigned int column)
 {
 	int length;
 
-	if (character == '\t')
-		length = tabshift(column);
-	else if ((character >= 0) && (character < 32))
+	if (((character >= 0) && (character < 32) && (character != '\t')) || (character == 127))
 		length = 2;
+	else if (character == '\t')
+		length = (int)tabshift(column);
 	else if ((character >= 32) && (character <= 126))
 		length = 1;
-	else if (character == 127)
-		length = 2;
-	else if (((character > 126) || (character < 0)) && (!eightbit))
-		length = 5;
-	else
-		length = 1;
+	else {
+		if (!eightbit)
+			length = 5;
+		else
+			length = 1;
+	}
 
 	return(length);
 }
 
 void 
-ascii()		/* get ascii code from user and insert into file	*/
+ascii(void)		/* get ascii code from user and insert into file	*/
 {
 	int i;
 	char *string, *t;
@@ -1698,11 +1651,11 @@ ascii()		/* get ascii code from user and insert into file	*/
 }
 
 void 
-print_buffer()
+print_buffer(void)
 {
 	char buffer[256];
 
-	sprintf(buffer, ">!%s", print_command);
+	snprintf(buffer, sizeof(buffer), ">!%s", print_command);
 	wmove(com_win, 0, 0);
 	wclrtoeol(com_win);
 	wprintw(com_win, printing_msg, curr_buff->name, print_command);
@@ -1710,20 +1663,14 @@ print_buffer()
 	command(buffer);
 }
 
-int 
-compare(string1, string2, sensitive)	/* compare two strings	*/
-char *string1;
-char *string2;
-int sensitive;
+int compare(char *string1, char *string2, int sensitive)
 {
 	char *strng1;
 	char *strng2;
-	int tmp;
 	int equal;
 
 	strng1 = string1;
 	strng2 = string2;
-	tmp = 0;
 	if ((strng1 == NULL) || (strng2 == NULL) || (*strng1 == '\0') || (*strng2 == '\0'))
 		return(FALSE);
 	equal = TRUE;
@@ -1743,14 +1690,11 @@ int sensitive;
 		strng2++;
 		if ((*strng1 == '\0') || (*strng2 == '\0') || (*strng1 == ' ') || (*strng2 == ' '))
 			break;
-		tmp++;
 	}
 	return(equal);
 }
 
-void 
-goto_line(cmd_str)	/* goto first line with the given number	*/
-char *cmd_str;
+void goto_line(char *cmd_str)
 {
 	int number;
 	int i;
@@ -1794,7 +1738,7 @@ char *cmd_str;
 }
 
 void 
-make_win()		/* allow windows		*/
+make_win(void)		/* allow windows		*/
 {
 	if (((!windows) && (!mark_text)) && (num_of_bufs <= ((LINES - 1)/2)))
 	{
@@ -1818,7 +1762,7 @@ make_win()		/* allow windows		*/
 }
 
 void 
-no_windows()		/* disallow windows		*/
+no_windows(void)		/* disallow windows		*/
 {
 	int temp;
 
@@ -1875,10 +1819,7 @@ no_windows()		/* disallow windows		*/
 	}
 }
 
-void 
-midscreen(line, count)	/* repaint window with current line at the specified line	*/
-int line;
-int count;
+void midscreen(int line_number, unsigned int position)
 {
 	struct text *mid_line;
 	struct text *a_line;
@@ -1898,7 +1839,7 @@ int count;
 	 */
 
 	i = (curr_buff->scr_pos / COLS);
-	while ((i < line) && (curr_buff->curr_line->prev_line != NULL) && (i < curr_buff->last_line))
+	while ((i < line_number) && (curr_buff->curr_line->prev_line != NULL) && (i < curr_buff->last_line))
 	{
 		curr_buff->curr_line = curr_buff->curr_line->prev_line;
 		i += curr_buff->curr_line->vert_len;
@@ -1914,8 +1855,8 @@ int count;
 	curr_buff->scr_vert = curr_buff->scr_horz = 0;
 	wmove(curr_buff->win, 0, 0);
 	a_line = curr_buff->curr_line;
-	if (i > line)
-		ti = line - i;
+	if (i > line_number)
+		ti = line_number - i;
 	else
 		ti = 0;
 
@@ -1932,8 +1873,8 @@ int count;
 		if (a_line != NULL)
 			tp = a_line->line;
 	}
-	if (i > line)
-		curr_buff->scr_vert = line;
+	if (i > line_number)
+		curr_buff->scr_vert = line_number;
 	else
 		curr_buff->scr_vert = i;
 	curr_buff->curr_line = mid_line;
@@ -1962,12 +1903,13 @@ int count;
 
 			if (cpste_line->prev_line != NULL)
 			{
-				i = scanline(curr_buff->curr_line, count) / COLS;
+				i = scanline(curr_buff->curr_line, (int)position) / COLS;
 				while ((i <= curr_buff->scr_vert) && (cpste_line->prev_line!= NULL))
 				{
 					curr_buff->curr_line = curr_buff->curr_line->prev_line;
 					cpste_line = cpste_line->prev_line;
-					i += curr_buff->curr_line->vert_len;
+					if (curr_buff->curr_line != NULL)
+						i += curr_buff->curr_line->vert_len;
 				}
 			}
 			else
@@ -2057,23 +1999,18 @@ int count;
 		cpste_line = b_line;
 	}
 	curr_buff->pointer = curr_buff->curr_line->line;
-	for (value = 1; value < count; value++)
+	for (value = 1; value < (int)position; value++)
 		curr_buff->pointer ++;
-	curr_buff->abs_pos = curr_buff->scr_pos = scanline(curr_buff->curr_line, count);
+	curr_buff->abs_pos = curr_buff->scr_pos = scanline(curr_buff->curr_line, position);
 	curr_buff->scr_horz = curr_buff->scr_pos % COLS;
 	wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 }
 
-#ifndef xae11
-void 
-get_options(numargs, arguments)	/* get arguments from original command line	*/
-int numargs;
-char *arguments[];
-{
+void get_options(int numargs, char *arguments[]) {
 	char *buff;
 	char *extens;
 	int count;
-	struct files *temp_names;
+	struct files *temp_names = NULL;
 
 	buff = ae_basename(arguments[0]);
 	if (!strcmp(buff, "rae"))
@@ -2144,11 +2081,12 @@ char *arguments[];
 				temp_names = top_of_stack = name_alloc();
 			else
 			{
-				temp_names->next_name = name_alloc();
+				if (temp_names != NULL)
+					temp_names->next_name = name_alloc();
 				temp_names = temp_names->next_name;
 			}
 			temp_names->next_name = NULL;
-			extens = temp_names->name = xalloc(strlen(buff) + 1);
+			extens = temp_names->name = xalloc((int)(strlen(buff) + 1));
 			while (*buff != '\0')
 			{
 				*extens = *buff;
@@ -2162,11 +2100,9 @@ char *arguments[];
 		count++;
 	}
 }
-#endif /* xae11	*/
 
 void 
-finish(string)	/* prepare to EXIT edit session, write out file	*/
-char *string;
+finish(char *string)	/* prepare to EXIT edit session, write out file	*/
 {
 	char *query;
 	int leave;
@@ -2181,7 +2117,7 @@ char *string;
 	{
 		do
 			query = get_string(other_buffs_exist_msg, TRUE);
-		while ((toupper(*query) != toupper(*yes_char)) && 
+		while ((*query != '\0') && (toupper(*query) != toupper(*yes_char)) && 
 			(toupper(*query) != toupper(*no_char)));
 		if (toupper(*query) != toupper(*yes_char))
 			leave = FALSE;
@@ -2205,7 +2141,7 @@ char *string;
 }
 
 int 
-delete_all_buffers()
+delete_all_buffers(void)
 {
 	int success = TRUE;
 
@@ -2220,20 +2156,16 @@ delete_all_buffers()
 }
 
 void 
-quit(string)		/* leave editor, or if other files specified in invoking command line, edit next in sequence	*/
-char *string;
+quit(char *string)		/* leave editor, or if other files specified in invoking command line, edit next in sequence	*/
 {
 	char *query;
 	char *ans;
-	int editable_buffs = 0;
 
 	if (num_of_bufs > 1)
 	{
 		t_buff = first_buff;
 		while (t_buff != NULL)
 		{
-			if (t_buff->edit_buffer)
-				editable_buffs++;
 			t_buff = t_buff->next_buff;
 		}
 	}
@@ -2333,23 +2265,14 @@ char *string;
 }
 
 void 
-abort_edit(foo)	/* handle interrupt signal (break key) gracefully	*/
-int foo;
+abort_edit(int foo)	/* handle interrupt signal (break key) gracefully	*/
 {
-	wrefresh(com_win);
-	echo();
-	nl();
-	resetty();
-	resetterm();
-	noraw();
-	endwin();
-	putchar('\n');
-	exit(0);
+	(void)foo;
+	_exit(0);
 }
 
 void 
-sh_command(string)	/* execute shell command			*/
-char *string;		/* string containing user command		*/
+sh_command(char *string)	/* execute shell command			*/
 {
 	char *temp_point;
 	char *last_slash;
@@ -2363,7 +2286,8 @@ char *string;		/* string containing user command		*/
 		return;
 	}
 
-	if (!(path = getenv("SHELL")))
+	path = getenv("SHELL");
+	if (!path)
 		path = "/bin/sh";
 	last_slash = temp_point = path;
 	while (*temp_point != '\0')
@@ -2394,13 +2318,13 @@ char *string;		/* string containing user command		*/
  */
 			temp_stdout = dup(1);
 			close(1);
-			dup(pipe_in[1]);
+			dup2(pipe_in[1],1);
 /*
  |  redirect stderr to pipe
  */
 			temp_stderr = dup(2);
 			close(2);
-			dup(pipe_in[1]);
+			dup2(pipe_in[1],2);
 			close(pipe_in[1]);
 		}
 		else  /* if the parent	*/
@@ -2452,7 +2376,7 @@ char *string;		/* string containing user command		*/
  |  pipe (which will be output from the editor's buffer)
  */
 				close(0);
-				dup(pipe_out[0]);
+				dup2(pipe_out[0],0);
 				close(pipe_out[0]);
 				close(pipe_out[1]);
 			}
@@ -2472,7 +2396,7 @@ char *string;		/* string containing user command		*/
  */
 				close(pipe_out[0]);
 				tmp = first_buff;
-				while ((tmp != NULL) && (strcmp(out_buff_name, tmp->name)))
+				while ((tmp != NULL) && (strcmp(out_buff_name, tmp->name) != 0))
 					tmp = tmp->next_buff;
 				if (tmp != NULL)
 				{
@@ -2525,13 +2449,13 @@ char *string;		/* string containing user command		*/
 }
 
 void 
-redraw()		/* redraw screen			*/
+redraw(void)		/* redraw screen			*/
 {
 	repaint_screen();
 }
 
 void 
-repaint_screen()
+repaint_screen(void)
 {
 	struct bufr *t_buff;	/* temporary buffer	*/
 
@@ -2553,8 +2477,7 @@ repaint_screen()
 }
 
 void 
-copy_str(str1, str2)	/* copy string1 to string2			*/
-char *str1, *str2;
+copy_str(char *str1, char *str2)	/* copy string1 to string2			*/
 {
 	char *t1, *t2;
 
@@ -2570,8 +2493,7 @@ char *str1, *str2;
 }
 
 void 
-echo_string(string)	/* echo the given string	*/
-char *string;
+echo_string(char *string)	/* echo the given string	*/
 {
 	char *temp;
 	int Counter;
@@ -2623,6 +2545,319 @@ char *string;
 	fflush(stdout);
 }
 
+int 
+parse_define(char *str1)
+{
+	if (compare(str1, DEFINE_str, FALSE))
+	{
+		str1 = next_word(str1);
+		def_key(str1);
+		return 1;
+	}
+	return 0;
+}
+
+int 
+parse_display_settings(char *str1)
+{
+	if (compare(str1, WINDOWS_str, FALSE))
+	{
+		windows = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOWINDOWS_str, FALSE))
+	{
+		windows = FALSE;
+		return 1;
+	}
+	else if (compare(str1, STATUS_str, FALSE))
+	{
+		status_line = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOSTATUS_str, FALSE))
+	{
+		status_line = FALSE;
+		return 1;
+	}
+	else if (compare(str1, INFO_str, FALSE))
+	{
+		info_window = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOINFO_str, FALSE))
+	{
+		info_window = FALSE;
+		return 1;
+	}
+	else if (compare(str1, info_win_height_cmd_str, FALSE))
+	{
+		char *tmp = next_word(str1);
+		if ((*tmp >= '0') && (*tmp <= '9'))
+		{
+			int c_int = atoi(tmp);
+			if ((c_int > 0) && (c_int <= MAX_HELP_LINES))
+				info_win_height = c_int + 1;
+		}
+		return 1;
+	}
+	return 0;
+}
+
+int 
+parse_editing_settings(char *str1)
+{
+	if (compare(str1, CASE_str, FALSE))
+	{
+		case_sen = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOCASE_str, FALSE))
+	{
+		case_sen = FALSE;
+		return 1;
+	}
+	else if (compare(str1, EXPAND_str, FALSE))
+	{
+		expand = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOEXPAND_str, FALSE))
+	{
+		expand = FALSE;
+		return 1;
+	}
+	else if (compare(str1, SPACING_str, FALSE))
+	{
+		char *tmp = next_word(str1);
+		if (*tmp != '\0')
+			tab_spacing = atoi(tmp);
+		return 1;
+	}
+	else if (compare(str1, JUSTIFY_str, FALSE))
+	{
+		right_justify = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOJUSTIFY_str, FALSE))
+	{
+		right_justify = FALSE;
+		return 1;
+	}
+	else if (compare(str1, LITERAL_str, FALSE))
+	{
+		literal = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOLITERAL_str, FALSE))
+	{
+		literal = FALSE;
+		return 1;
+	}
+	else if (compare(str1, INDENT_str, FALSE))
+	{
+		indent = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOINDENT_str, FALSE))
+	{
+		indent = FALSE;
+		return 1;
+	}
+	else if (compare(str1, OVERSTRIKE_str, FALSE))
+	{
+		overstrike = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOOVERSTRIKE_str, FALSE))
+	{
+		overstrike = FALSE;
+		return 1;
+	}
+	else if (compare(str1, AUTOFORMAT_str, FALSE))
+	{
+		auto_format = TRUE;
+		observ_margins = TRUE;
+		indent = FALSE;
+		return 1;
+	}
+	else if (compare(str1, NOAUTOFORMAT_str, FALSE))
+	{
+		auto_format = FALSE;
+		return 1;
+	}
+	else if (compare(str1, EIGHT_str, FALSE))
+	{
+		eightbit = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOEIGHT_str, FALSE))
+	{
+		eightbit = FALSE;
+		return 1;
+	}
+	else if (compare(str1, MARGINS_str, FALSE))
+	{
+		observ_margins = TRUE;
+		return 1;
+	}
+	else if (compare(str1, NOMARGINS_str, FALSE))
+	{
+		observ_margins = FALSE;
+		return 1;
+	}
+	else if ((compare(str1, LEFTMARGIN_str, FALSE)) || (compare(str1, RIGHTMARGIN_str, FALSE)))
+	{
+		char *tmp = next_word(str1);
+		if ((*tmp >= '0') && (*tmp <= '9'))
+		{
+			int c_int = atoi(tmp);
+			if (compare(str1, LEFTMARGIN_str, FALSE))
+				left_margin = c_int;
+			else if (compare(str1, RIGHTMARGIN_str, FALSE))
+				right_margin = c_int;
+		}
+		return 1;
+	}
+	return 0;
+}
+
+int 
+parse_tab_settings(char *str1)
+{
+	if (compare(str1, TABS_str, FALSE))
+	{
+		tab_set(str1);
+		return 1;
+	}
+	else if (compare(str1, UNTABS_str, FALSE))
+	{
+		unset_tab(str1);
+		return 1;
+	}
+	return 0;
+}
+
+int 
+parse_file_settings(char *str1)
+{
+	if (compare(str1, PRINTCOMMAND_str, FALSE))
+	{
+		str1 = next_word(str1);
+		print_command = xalloc((int)strlen(str1)+1);
+		copy_str(str1, print_command);
+		return 1;
+	}
+	else if (compare(str1, HIGHLIGHT_str, FALSE))
+	{
+		nohighlight = FALSE;
+		return 1;
+	}
+	else if (compare(str1, NOHIGHLIGHT_str, FALSE))
+	{
+		nohighlight = TRUE;
+		return 1;
+	}
+	else if (compare(str1, jrnl_dir, FALSE))
+	{
+		str1 = next_word(str1);
+		char *tmp = str1;
+		while ((*tmp != ' ') && (*tmp != '\t') && (*tmp != '\0'))
+			tmp++;
+		*tmp = '\0';
+		journal_dir = resolve_name(str1);
+		if (str1 == journal_dir)
+		{
+			journal_dir = xalloc((int)strlen(str1) + 1);
+			strcpy(journal_dir, str1);
+		}
+		int value = create_dir(journal_dir);
+		if (value == -1)
+		{
+			free(journal_dir);
+			journal_dir = NULL;
+		}
+		return 1;
+	}
+	else if (compare(str1, text_cmd, FALSE))
+	{
+		text_only = TRUE;
+		return 1;
+	}
+	else if (compare(str1, binary_cmd, FALSE))
+	{
+		text_only = FALSE;
+		return 1;
+	}
+	else if (compare(str1, help_file_str, FALSE))
+	{
+		str1 = next_word(str1);
+		char *tmp = str1;
+		while ((*tmp != ' ') && (*tmp != '\t') && (*tmp != '\0'))
+			tmp++;
+		*tmp = '\0';
+		ae_help_file = resolve_name(str1);
+		if (str1 == ae_help_file)
+		{
+			ae_help_file = xalloc((int)strlen(str1) + 1);
+			strcpy(ae_help_file, str1);
+		}
+		return 1;
+	}
+	return 0;
+}
+
+int 
+parse_special_settings(char *str1)
+{
+	if (compare(str1, ee_mode_str, FALSE))
+	{
+		ee_mode_menu = TRUE;
+		main_menu[0].item_string = ee_mode_main_menu_strings[0];
+		main_menu[1].item_string = ee_mode_main_menu_strings[1];
+		main_menu[2].item_string = ee_mode_main_menu_strings[2];
+		main_menu[3].item_string = ee_mode_main_menu_strings[3];
+		main_menu[4].item_string = ee_mode_main_menu_strings[4];
+		main_menu[5].item_string = ee_mode_main_menu_strings[5];
+		main_menu[6].item_string = ee_mode_main_menu_strings[6];
+		main_menu[7].item_string = ee_mode_main_menu_strings[7];
+		main_menu[8].item_string = ee_mode_main_menu_strings[8];
+		main_menu[3].procedure = menu_op;
+		main_menu[3].ptr_argument = file_menu;
+		main_menu[4].procedure = NULL;
+		main_menu[4].ptr_argument = NULL;
+		main_menu[4].iprocedure = NULL;
+		main_menu[4].nprocedure = redraw;
+		main_menu[5].procedure = NULL;
+		main_menu[5].ptr_argument = NULL;
+		main_menu[5].iprocedure = NULL;
+		main_menu[5].nprocedure = modes_op;
+		main_menu[6].procedure = menu_op;
+		main_menu[6].ptr_argument = search_menu;
+		main_menu[6].iprocedure = NULL;
+		main_menu[6].nprocedure = NULL;
+		main_menu[7].procedure = menu_op;
+		main_menu[7].ptr_argument = misc_menu;
+		main_menu[7].iprocedure = NULL;
+		main_menu[7].nprocedure = NULL;
+		main_menu[8].procedure = menu_op;
+		main_menu[8].ptr_argument = edit_menu;
+		main_menu[8].iprocedure = NULL;
+		main_menu[8].nprocedure = NULL;
+		return 1;
+	}
+	else if (compare(str1, ECHO_str, FALSE))
+	{
+#ifndef XAE
+		str1 = next_word(str1);
+		if (*str1 != '\0')
+			echo_string(str1);
+#endif
+		return 1;
+	}
+	return 0;
+}
+
 char *init_name[6] = {
 	"/etc/aee/init.ae", 
 	NULL,                           /* to be ~/.init.ae */
@@ -2632,16 +2867,13 @@ char *init_name[6] = {
 	};
 
 void 
-ae_init()	/* check for init file and read it if it exists	*/
+ae_init(void)	/* check for init file and read it if it exists	*/
 {
 	FILE *init_file;
 	char *string;
+	char *home;
 	char *str1;
 	char *str2;
-	char *home;
-	char *tmp;
-	int c_int;
-	int lines;
 	int counter;
 
 	home = xalloc(11);
@@ -2659,7 +2891,6 @@ ae_init()	/* check for init file and read it if it exists	*/
 	string = xalloc(512);
 	for (counter = 0; counter < 6; counter++)
 	{
-		lines = 1;
 		if (!(access(init_name[counter], 4)))
 		{
 			init_file = fopen(init_name[counter], "r");
@@ -2673,196 +2904,7 @@ ae_init()	/* check for init file and read it if it exists	*/
 				if (unique_test(string, init_strings) != 1)
 					continue;
 
-				if (compare(str1, DEFINE_str, FALSE))
-				{
-					str1 = next_word(str1);
-					def_key(str1);
-				}
-				else if (compare(str1, WINDOWS_str,  FALSE))
-					windows = TRUE;
-				else if (compare(str1, NOWINDOWS_str,  FALSE))
-					windows = FALSE;
-				else if (compare(str1, CASE_str,  FALSE))
-					case_sen = TRUE;
-				else if (compare(str1, NOCASE_str,  FALSE))
-					case_sen = FALSE;
-				else if (compare(str1, TABS_str,  FALSE))
-					tab_set(str1);
-				else if (compare(str1, UNTABS_str,  FALSE))
-					unset_tab(str1);
-				else if (compare(str1, EXPAND_str,  FALSE))
-					expand = TRUE;
-				else if (compare(str1, SPACING_str, FALSE))
-				{
-					str1 = next_word(str1);
-					if (*str1 != '\0')
-						tab_spacing = atoi(str1);
-				}
-				else if (compare(str1, NOEXPAND_str,  FALSE))
-					expand = FALSE;
-				else if (compare(str1, NOJUSTIFY_str,  FALSE))
-					right_justify = FALSE;
-				else if (compare(str1, JUSTIFY_str,  FALSE))
-					right_justify = TRUE;
-				else if (compare(str1, LITERAL_str,  FALSE))
-					literal = TRUE;
-				else if (compare(str1, NOLITERAL_str,  FALSE))
-					literal = FALSE;
-				else if (compare(str1, STATUS_str,  FALSE))
-					status_line = TRUE;
-				else if (compare(str1, NOSTATUS_str,  FALSE))
-					status_line = FALSE;
-				else if (compare(str1, INDENT_str,  FALSE))
-					indent = TRUE;
-				else if (compare(str1, NOINDENT_str,  FALSE))
-					indent = FALSE;
-				else if (compare(str1, OVERSTRIKE_str,  FALSE))
-					overstrike = TRUE;
-				else if (compare(str1, NOOVERSTRIKE_str,  FALSE))
-					overstrike = FALSE;
-				else if (compare(str1, AUTOFORMAT_str,  FALSE))
-				{
-					auto_format = TRUE;
-					observ_margins = TRUE;
-					indent = FALSE;
-				}
-				else if (compare(str1, NOAUTOFORMAT_str,  FALSE))
-					auto_format = FALSE;
-				else if (compare(str1, EIGHT_str,  FALSE))
-					eightbit = TRUE;
-				else if (compare(str1, NOEIGHT_str,  FALSE))
-					eightbit = FALSE;
-				else if (compare(str1, MARGINS_str,  FALSE))
-					observ_margins = TRUE;
-				else if (compare(str1, NOMARGINS_str,  FALSE))
-					observ_margins = FALSE;
-				else if (compare(str1, ee_mode_str,  FALSE))
-				{
-					ee_mode_menu = TRUE;
-					main_menu[0].item_string = ee_mode_main_menu_strings[0];
-					main_menu[1].item_string = ee_mode_main_menu_strings[1];
-					main_menu[2].item_string = ee_mode_main_menu_strings[2];
-					main_menu[3].item_string = ee_mode_main_menu_strings[3];
-					main_menu[4].item_string = ee_mode_main_menu_strings[4];
-					main_menu[5].item_string = ee_mode_main_menu_strings[5];
-					main_menu[6].item_string = ee_mode_main_menu_strings[6];
-					main_menu[7].item_string = ee_mode_main_menu_strings[7];
-					main_menu[8].item_string = ee_mode_main_menu_strings[8];
-					main_menu[3].procedure = menu_op;
-					main_menu[3].ptr_argument = file_menu;
-					main_menu[4].procedure = NULL;
-					main_menu[4].ptr_argument = NULL;
-					main_menu[4].iprocedure = NULL;
-					main_menu[4].nprocedure = redraw;
-					main_menu[5].procedure = NULL;
-					main_menu[5].ptr_argument = NULL;
-					main_menu[5].iprocedure = NULL;
-					main_menu[5].nprocedure = modes_op;
-					main_menu[6].procedure = menu_op;
-					main_menu[6].ptr_argument = search_menu;
-					main_menu[6].iprocedure = NULL;
-					main_menu[6].nprocedure = NULL;
-					main_menu[7].procedure = menu_op;
-					main_menu[7].ptr_argument = misc_menu;
-					main_menu[7].iprocedure = NULL;
-					main_menu[7].nprocedure = NULL;
-					main_menu[8].procedure = menu_op;
-					main_menu[8].ptr_argument = edit_menu;
-					main_menu[8].iprocedure = NULL;
-					main_menu[8].nprocedure = NULL;
-				}
-				else if ((compare(str1, LEFTMARGIN_str,  FALSE)) || (compare(str1, RIGHTMARGIN_str,  FALSE)))
-				{
-					tmp = next_word(str1);
-					if ((*tmp >= '0') && (*tmp <= '9'))
-					{
-						c_int = atoi(tmp);
-						if (compare(str1, LEFTMARGIN_str,  FALSE))
-							left_margin = c_int;
-						else if (compare(str1, RIGHTMARGIN_str,  FALSE))
-							right_margin = c_int;
-					}
-				}
-				else if (compare(str1, info_win_height_cmd_str,  FALSE))
-				{
-					tmp = next_word(str1);
-					if ((*tmp >= '0') && (*tmp <= '9'))
-					{
-						c_int = atoi(tmp);
-						if ((c_int > 0) && (c_int <= MAX_HELP_LINES))
-							info_win_height = c_int + 1;
-					}
-				}
-				else if (compare(str1, ECHO_str,  FALSE))
-				{
-#ifndef XAE
-					str1 = next_word(str1);
-					if (*str1 != '\0')
-						echo_string(str1);
-#endif
-				}
-				else if (compare(str1, PRINTCOMMAND_str, FALSE))
-				{
-					str1 = next_word(str1);
-					print_command = xalloc(strlen(str1)+1);
-					copy_str(str1, print_command);
-				}
-				else if (compare(str1, INFO_str,  FALSE))
-					info_window = TRUE;
-				else if (compare(str1, NOINFO_str,  FALSE))
-					info_window = FALSE;   
-				else if (compare(str1, HIGHLIGHT_str,  FALSE))
-					nohighlight = FALSE;
-				else if (compare(str1, NOHIGHLIGHT_str,  FALSE))
-					nohighlight = TRUE;
-				else if (compare(str1, jrnl_dir,  FALSE))
-				{
-					str1 = next_word(str1);
-					tmp = str1;
-					while ((*tmp != ' ') && 
-					       (*tmp != '\t') && 
-					       (*tmp != '\0'))
-						tmp++;
-					*tmp = '\0';
-					journal_dir = resolve_name(str1);
-					if (str1 == journal_dir)
-					{
-						journal_dir = 
-						   xalloc(strlen(str1) + 1);
-						strcpy(journal_dir, str1);
-					}
-					value = create_dir(journal_dir);
-					if (value == -1)
-					{
-						/*
-						 |  journal dir doesn't exist
-						 */
-						free(journal_dir);
-						journal_dir = NULL;
-					}
-				}
-				else if (compare(str1, text_cmd,  FALSE))
-					text_only = TRUE;
-				else if (compare(str1, binary_cmd,  FALSE))
-					text_only = FALSE;
-				else if (compare(str1, help_file_str,  FALSE))
-				{
-					str1 = next_word(str1);
-					tmp = str1;
-					while ((*tmp != ' ') && 
-					       (*tmp != '\t') && 
-					       (*tmp != '\0'))
-						tmp++;
-					*tmp = '\0';
-					ae_help_file = resolve_name(str1);
-					if (str1 == ae_help_file)
-					{
-						ae_help_file = 
-						   xalloc(strlen(str1) + 1);
-						strcpy(ae_help_file, str1);
-					}
-				}
-				lines++;
+				if (parse_define(str1) || parse_display_settings(str1) || parse_editing_settings(str1) || parse_tab_settings(str1) || parse_file_settings(str1) || parse_special_settings(str1)) {}
 			}
 			fclose(init_file);
 			if (!compare(curr_buff->name, main_buffer_name, TRUE))
@@ -2871,4 +2913,3 @@ ae_init()	/* check for init file and read it if it exists	*/
 	}
 	free(string);
 }
-

@@ -8,8 +8,8 @@
  |	Copyright (c) 1986 - 1988, 1991 - 1996, 2009, 2010 Hugh Mahon.
  */
 
-#include "aee.h"
-
+#include "../include/aee.h"
+#include <stdlib.h>
 /* Add missing external declarations */
 extern struct bufr *curr_buff;
 extern WINDOW *com_win;
@@ -25,19 +25,14 @@ extern int pst_pos;
 extern char *pste1;
 extern char *pste2;
 
-/* Constants for mark_text values */
-#define Mark 1
-#define Append 2  
-#define Prefix 3
-
 void 
-copy()			/* copy selected (marked) text into paste buffer */
+copy(void)			/* copy selected (marked) text into paste buffer */
 {
 	struct text *tmp_pste;
 
 	if (mark_text)
 	{
-		if ((paste_buff != NULL) && (mark_text == Mark))
+		if ((paste_buff != NULL) && (mark_text == 1))
 		{
 			tmp_pste = paste_buff;
 			while (tmp_pste->next_line != NULL)
@@ -69,20 +64,20 @@ copy()			/* copy selected (marked) text into paste buffer */
 			paste_buff = fpste_line;
 		}
 		mark_text = FALSE;
-		midscreen(curr_buff->scr_vert, curr_buff->position);
+		midscreen(curr_buff->position, curr_buff->scr_vert);
 	}
 	else
 	{
 		wmove(com_win, 0, 0);
 		werase(com_win);
-		wprintw(com_win, mark_not_actv_str);
+		wprintw(com_win, "%s", mark_not_actv_str);
 		wrefresh(com_win);
 		clr_cmd_line = TRUE;
 	}
 }
 
 void 
-paste()		/* insert text from paste buffer into current buffer	*/
+paste(void)		/* insert text from paste buffer into current buffer	*/
 {
 	int vert;
 	int tposit;
@@ -93,8 +88,8 @@ paste()		/* insert text from paste buffer into current buffer	*/
 	int temp_left_margin;
 
 	temp_abs_line = curr_buff->absolute_lin;
-	temp_flag1 = overstrike;
-	temp_flag2 = indent;
+	temp_flag1 = (int)(unsigned char)overstrike;
+	temp_flag2 = (int)(unsigned char)indent;
 	temp_left_margin = left_margin;
 	overstrike = FALSE;
 	indent = FALSE;
@@ -144,24 +139,24 @@ paste()		/* insert text from paste buffer into current buffer	*/
 			curr_buff->position++;
 		}
 /*		curr_buff->scr_pos = curr_buff->abs_pos = scanline(curr_buff->curr_line, curr_buff->curr_line->line_length);*/
-		midscreen(curr_buff->scr_vert, curr_buff->position);
+		midscreen(curr_buff->position, curr_buff->scr_vert);
 	}
 	else if (mark_text)
 	{
 		wmove(com_win, 0, 0);
 		wclrtoeol(com_win);
-		wprintw(com_win, mark_active_str);
+		wprintw(com_win, "%s", mark_active_str);
 		wrefresh(com_win);
 		clr_cmd_line = TRUE;
 		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 	}
-	overstrike = temp_flag1;
-	indent = temp_flag2;
+	overstrike = (char)temp_flag1;
+	indent = (char)temp_flag2;
 	left_margin = temp_left_margin;
 }
 
 void 
-unmark_text()	/* unmark text and do not change contents of paste buffer */
+unmark_text(void)	/* unmark text and do not change contents of paste buffer */
 {
     if (mark_text)
     {
@@ -187,13 +182,13 @@ unmark_text()	/* unmark text and do not change contents of paste buffer */
         wclrtoeol(com_win);
         wprintw(com_win, "Mark mode disabled");
         wrefresh(com_win);
-        midscreen(curr_buff->scr_vert, curr_buff->position);
+        midscreen(curr_buff->position, curr_buff->scr_vert);
     }
     else
     {
         wmove(com_win,0,0);
         wclrtoeol(com_win);
-        wprintw(com_win, mark_not_actv_str);
+        wprintw(com_win, "%s", mark_not_actv_str);
         wrefresh(com_win);
         wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
         clr_cmd_line = TRUE;
@@ -201,7 +196,7 @@ unmark_text()	/* unmark text and do not change contents of paste buffer */
 }
 
 void 
-cut()	/* cut selected (marked) text out of current buffer	*/
+cut(void)	/* cut selected (marked) text out of current buffer	*/
 {
 	int vert;
 	int temp_slct;
@@ -209,7 +204,7 @@ cut()	/* cut selected (marked) text out of current buffer	*/
 
 	if (mark_text)
 	{
-		temp_slct = mark_text;
+		temp_slct = (int)(unsigned char)mark_text;
 		mark_text = FALSE;
 		tmp_char = d_char;
 		vert = curr_buff->scr_vert;
@@ -234,16 +229,16 @@ cut()	/* cut selected (marked) text out of current buffer	*/
 			cpste_line = cpste_line->next_line;
 		}
 		curr_buff->scr_vert = vert;
-		midscreen(curr_buff->scr_vert, curr_buff->position);
+		midscreen(curr_buff->position, curr_buff->scr_vert);
 		d_char = tmp_char;
-		mark_text = temp_slct;
+		mark_text = (char)temp_slct;
 		copy();
 	}
 	else
 	{
 		wmove(com_win,0,0);
 		wclrtoeol(com_win);
-		wprintw(com_win, mark_not_actv_str);
+		wprintw(com_win, "%s", mark_not_actv_str);
 		wrefresh(com_win);
 		wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 		clr_cmd_line = TRUE;
@@ -252,7 +247,7 @@ cut()	/* cut selected (marked) text out of current buffer	*/
 	
 
 void 
-cut_up()	/* cut text above current cursor position	*/
+cut_up(void)	/* cut text above current cursor position	*/
 {
 	cut_line();
 	left(FALSE);
@@ -278,7 +273,7 @@ cut_up()	/* cut text above current cursor position	*/
 }
 
 void 
-cut_down()		/* cut text below current cursor position	*/
+cut_down(void)		/* cut text below current cursor position	*/
 {
 	if (((pst_pos == 1) && (pst_pos < cpste_line->line_length)) ||
 	 ((pst_pos != 1) && (pst_pos == cpste_line->line_length)))
@@ -305,7 +300,7 @@ cut_down()		/* cut text below current cursor position	*/
 }
 
 void 
-cut_line()		/* cut text in current line			*/
+cut_line(void)		/* cut text in current line			*/
 {
 	if (((pst_pos == 1) && (pst_pos < cpste_line->line_length)) || ((pst_pos != 1) && (pst_pos == cpste_line->line_length)))
 	{
@@ -330,7 +325,7 @@ cut_line()		/* cut text in current line			*/
 }
 
 void 
-fast_left()	/* move left one character while selecting (marking) text but not displaying on screen	*/
+fast_left(void)	/* move left one character while selecting (marking) text but not displaying on screen	*/
 {
 	int tpst_pos;
 
@@ -355,7 +350,7 @@ fast_left()	/* move left one character while selecting (marking) text but not di
 		if (*curr_buff->pointer == '\t')
 			curr_buff->scr_pos = scanline(curr_buff->curr_line, curr_buff->position);
 		else
-			curr_buff->scr_pos -= len_char(*curr_buff->pointer, curr_buff->scr_pos);
+			curr_buff->scr_pos -= len_char(curr_buff->scr_pos, *curr_buff->pointer);
 	}
 	if (pst_pos != 1)
 		slct_dlt();
@@ -383,7 +378,7 @@ fast_left()	/* move left one character while selecting (marking) text but not di
 }
 
 void 
-fast_right()	/* move right one character and select (mark) but do not display	*/
+fast_right(void)	/* move right one character and select (mark) but do not display	*/
 {
 	if (curr_buff->position < curr_buff->curr_line->line_length)
 	{
@@ -399,7 +394,7 @@ fast_right()	/* move right one character and select (mark) but do not display	*/
 		}
 		else if (curr_buff->position < curr_buff->curr_line->line_length)
 			slct_dlt();
-		curr_buff->scr_pos += len_char(*curr_buff->pointer, curr_buff->scr_pos);
+		curr_buff->scr_pos += len_char(curr_buff->scr_pos, *curr_buff->pointer);
 		curr_buff->pointer++;
 		curr_buff->position++;
 	}
@@ -492,7 +487,7 @@ slct(int flag)	/* initiate process for selecting (marking) text	*/
     }
 
     // Otherwise enable mark mode
-    mark_text = flag;
+    mark_text = (char)flag;
     
     // Initialize paste buffer structures
     cpste_line = fpste_line = txtalloc();
@@ -534,10 +529,8 @@ slct(int flag)	/* initiate process for selecting (marking) text	*/
 }
 
 void 
-slct_dlt()	/* delete character in buffer	*/
+slct_dlt(void)	/* delete character in buffer	*/
 {
-    int tmpi;  // Declare tmpi variable
-    
     // Add bounds checking at the start
     if (!mark_text || cpste_line == NULL || pst_pnt == NULL) {
         wmove(com_win, 0, 0);
@@ -562,7 +555,7 @@ slct_dlt()	/* delete character in buffer	*/
             wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
             wstandout(curr_buff->win);
             if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
-                tmpi = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+                (void)out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_vert, 0, curr_buff->scr_pos);
             else
                 waddch(curr_buff->win, *curr_buff->pointer);
             wstandend(curr_buff->win);
@@ -573,7 +566,7 @@ slct_dlt()	/* delete character in buffer	*/
             pste1 = curr_buff->pointer;
             wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
             if ((*pste1 < 32) || (*pste1 > 126))
-                tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+                (void)out_char(curr_buff->win, *pste1, curr_buff->scr_vert, 0, curr_buff->scr_pos);
             else
                 waddch(curr_buff->win, *pste1);
         }
@@ -582,7 +575,7 @@ slct_dlt()	/* delete character in buffer	*/
 }
 
 void 
-slct_left()	/* select text while moving left and display	*/
+slct_left(void)	/* select text while moving left and display	*/
 {
 	int tmpi;
 
@@ -602,7 +595,7 @@ slct_left()	/* select text while moving left and display	*/
 			pste1 = curr_buff->pointer;
 			wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 			if ((*pste1 < 32) || (*pste1 > 126))
-				tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+				tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_vert, 0, curr_buff->scr_pos);
 			else
 				waddch(curr_buff->win, *pste1);
 		}
@@ -630,7 +623,7 @@ slct_left()	/* select text while moving left and display	*/
 			cpste_line->line_length++;
 			wstandout(curr_buff->win);
 			if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
-				tmpi += out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+				tmpi += out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_vert, 0, curr_buff->scr_pos);
 			else
 				waddch(curr_buff->win, *pste1);
 			wstandend(curr_buff->win);
@@ -640,10 +633,8 @@ slct_left()	/* select text while moving left and display	*/
 }
 
 void 
-slct_right()    /* select text while moving right and display */
+slct_right(void)    /* select text while moving right and display */
 {
-    int tmpi;
-
     // Add null check and bounds check at start
     if (cpste_line == NULL || curr_buff == NULL) {
         wmove(com_win, 0, 0);
@@ -668,7 +659,7 @@ slct_right()    /* select text while moving right and display */
                 wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
                 wstandout(curr_buff->win);
                 if ((*curr_buff->pointer < 32) || (*curr_buff->pointer > 126))
-                    tmpi = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+                    (void)out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_vert, 0, curr_buff->scr_pos);
                 else
                     waddch(curr_buff->win, *curr_buff->pointer);
                 wstandend(curr_buff->win);
@@ -680,7 +671,7 @@ slct_right()    /* select text while moving right and display */
             pste1 = curr_buff->pointer;
             wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
             if ((*pste1 < 32) || (*pste1 > 126))
-                tmpi = out_char(curr_buff->win, *pste1, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+                (void)out_char(curr_buff->win, *pste1, curr_buff->scr_vert, 0, curr_buff->scr_pos);
             else
                 waddch(curr_buff->win, *pste1);
         }

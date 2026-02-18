@@ -67,9 +67,9 @@
  |
  */
 
-#include "aee.h"
+#include "../include/aee.h"
 #include <time.h> // Add include for time functions
-
+#include <stdlib.h>
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;
 extern WINDOW *com_win;
@@ -82,21 +82,22 @@ char *jrn_vers_str = "@(#)                           journal.c $Revision: 1.41 $
  */
 
 void 
-write_journal(buffer, line)
-struct bufr *buffer;
-struct text *line;
+write_journal(struct bufr *buffer, struct text *line)
 {
-	int counter;
-	int ret_val = 0;
+	size_t counter;
+	size_t ret_val;
 
-	ret_val = line->file_info.line_location = 
-				lseek(buffer->journ_fd, 0, SEEK_END);
+	fseek(buffer->journ_fd, 0, SEEK_END);
+	line->file_info.line_location = (unsigned long)ftell(buffer->journ_fd);
 
-	for (counter = 0; (counter < line->line_length) && (ret_val != -1); 
-			counter += min(1024, (line->line_length - counter)))
+	for (counter = 0; counter < (size_t)line->line_length; 
+			counter += min(1024, (size_t)(line->line_length - (int)counter)))
 	{
-		ret_val = write(buffer->journ_fd, &(line->line[counter]), 
-			min(1024, (line->line_length - counter)));
+		size_t to_write = min(1024, (size_t)(line->line_length - (int)counter));
+		ret_val = fwrite(&(line->line[counter]), 1, to_write, buffer->journ_fd);
+		if (ret_val != to_write) {
+			/* error handling, but continue for now */
+		}
 	}
 
 	update_journal_entry(buffer, line);
@@ -111,11 +112,8 @@ struct text *line;
  */
 
 void 
-update_journal_entry(buffer, line)
-struct bufr *buffer;
-struct text *line;
+update_journal_entry(struct bufr *buffer, struct text *line)
 {
-	int ret_val;
 
 	if (line->file_info.info_location == NO_FURTHER_LINES)
 	{
@@ -124,17 +122,14 @@ struct text *line;
 	}
 
 
-	ret_val = lseek(buffer->journ_fd, line->file_info.info_location, 
+	fseek(buffer->journ_fd, (long)line->file_info.info_location, 
 								SEEK_SET);
-	ret_val |= write(buffer->journ_fd, 
-		  (char *)&(line->file_info.prev_info), sizeof(unsigned long));
-	ret_val |= write(buffer->journ_fd, 
-		  (char *)&(line->file_info.next_info), sizeof(unsigned long));
-	ret_val |= write(buffer->journ_fd, 
-		  (char *)&(line->file_info.line_location), 
-		  	sizeof(unsigned long));
-	ret_val |= write(buffer->journ_fd, (char *)&(line->line_length), 
-						sizeof(int));
+	fwrite((char *)&(line->file_info.prev_info), 1, sizeof(unsigned long), buffer->journ_fd);
+	fwrite((char *)&(line->file_info.next_info), 1, sizeof(unsigned long), buffer->journ_fd);
+	fwrite((char *)&(line->file_info.line_location), 1, 
+		  	sizeof(unsigned long), buffer->journ_fd);
+	fwrite((char *)&(line->line_length), 1, 
+						sizeof(int), buffer->journ_fd);
 }
 
 /*
@@ -143,9 +138,7 @@ struct text *line;
  */
 
 void 
-remove_journ_line(buffer, line)
-struct bufr *buffer;
-struct text *line;
+remove_journ_line(struct bufr *buffer, struct text *line)
 {
 	if (line->prev_line == NULL)
 	{
@@ -206,19 +199,17 @@ struct text *line;
  */
 
 void 
-journ_info_init(buffer, line)
-struct bufr *buffer;
-struct text *line;
+journ_info_init(struct bufr *buffer, struct text *line)
 {
-	int ret_val;
+	int ret_val = 0;
 
-	ret_val = line->file_info.info_location = 
-					lseek(buffer->journ_fd, 0, SEEK_END);
+	ret_val = fseek(buffer->journ_fd, 0, SEEK_END);
+	line->file_info.info_location = (unsigned long)ftell(buffer->journ_fd);
 	if (ret_val == -1)
 	{
 		wmove(com_win, 0, 0);
 		wstandout(com_win);
-		wprintw(com_win, journal_err_str);
+		wprintw(com_win, "%s", journal_err_str);
 		wstandend(com_win);
 		wrefresh(com_win);
 		return;
@@ -257,31 +248,24 @@ struct text *line;
  */
 
 void 
-read_journal_entry(buffer, line)
-struct bufr *buffer;
-struct text *line;
+read_journal_entry(struct bufr *buffer, struct text *line)
 {
-	int counter;
+	size_t counter;
 
-	lseek(buffer->journ_fd, line->file_info.info_location, SEEK_SET);
-	read(buffer->journ_fd, (char *)&(line->file_info.prev_info), 
-						sizeof(unsigned long));
-	read(buffer->journ_fd, (char *)&(line->file_info.next_info), 
-						sizeof(unsigned long));
-	read(buffer->journ_fd, (char *)&(line->file_info.line_location), 
-						sizeof(unsigned long));
-	read(buffer->journ_fd, (char *)&(line->line_length), 
-						sizeof(unsigned int));
+	fseek(buffer->journ_fd, (long)line->file_info.info_location, SEEK_SET);
+	fread((char *)&(line->file_info.prev_info), 1, sizeof(unsigned long), buffer->journ_fd);
+	fread((char *)&(line->file_info.next_info), 1, sizeof(unsigned long), buffer->journ_fd);
+	fread((char *)&(line->file_info.line_location), 1, sizeof(unsigned long), buffer->journ_fd);
+	fread((char *)&(line->line_length), 1, sizeof(unsigned int), buffer->journ_fd);
 
-	lseek(buffer->journ_fd, line->file_info.line_location, SEEK_SET);
+	fseek(buffer->journ_fd, (long)line->file_info.line_location, SEEK_SET);
 
 	line->line = malloc(line->line_length);
 
-	for (counter = 0; counter < line->line_length; 
-			counter += min(1024, (line->line_length - counter)))
+	for (counter = 0; counter < (size_t)line->line_length; 
+			counter += min(1024, (size_t)(line->line_length - (int)counter)))
 	{
-		read(buffer->journ_fd, &(line->line[counter]), 
-			min(1024, (line->line_length - counter)));
+		fread(&(line->line[counter]), 1, min(1024, (size_t)(line->line_length - (int)counter)), buffer->journ_fd);
 	}
 }
 
@@ -296,9 +280,7 @@ struct text *line;
  */
 
 int 
-recover_from_journal(buffer, file_name)
-struct bufr *buffer;
-char *file_name;
+recover_from_journal(struct bufr *buffer, char *file_name)
 {
 	int counter = 0;
 	struct text *line;
@@ -307,13 +289,14 @@ char *file_name;
 	char name[1024]; /* name of file stored in journal file */
 	ssize_t len = 0;
 
-	if ((buffer->journ_fd = open(file_name, O_RDONLY)) == -1)
+	buffer->journ_fd = fopen(file_name, "rb");
+	if (buffer->journ_fd == NULL)
 	{
 		/*
 		 |	Unable to open journal file.
 		 */
 
-		buffer->journ_fd = '\0';
+		buffer->journ_fd = NULL;
 		return(1);
 	}
 
@@ -325,7 +308,7 @@ char *file_name;
 
 	do
 	{
-		len = read(buffer->journ_fd, &temp, 1);
+		len = (ssize_t)fread(&temp, 1, 1, buffer->journ_fd);
 		if (len == 0)
 		{
 			/*
@@ -371,7 +354,7 @@ char *file_name;
 	while (!done);
 
 	curr_buff->pointer = buffer->first_line->line;
-	close(buffer->journ_fd);
+	fclose(buffer->journ_fd);
 
 	change = TRUE;
 	buffer->changed = TRUE;
@@ -382,10 +365,10 @@ char *file_name;
 
 	if (buffer->journalling)
 	{
-		if ((buffer->journ_fd = 
-			open(buffer->journal_file, O_WRONLY)) == -1)
+		buffer->journ_fd = fopen(buffer->journal_file, "ab");
+		if (buffer->journ_fd == NULL)
 		{
-			wprintw(com_win, cant_opn_rcvr_fil_msg);
+			wprintw(com_win, "%s", cant_opn_rcvr_fil_msg);
 			buffer->journalling = FALSE;
 		}
 	}
@@ -403,7 +386,7 @@ char *file_name;
 		if ((buffer->full_name != NULL) && (*buffer->full_name != '\0'))
 		{
 			buffer->file_name = ae_basename(buffer->full_name);
-			if (strcmp(main_buffer_name, buffer->name))
+			if (strcmp(main_buffer_name, buffer->name) != 0)
 				buffer->name = strdup(buffer->file_name);
 		}
 	}
@@ -432,10 +415,10 @@ static char *db_file_name = NULL;
  */
 
 int 
-lock_journal_fd()
+lock_journal_fd(void)
 {
 	int counter = 0;
-	int ret_val;
+	int ret_val = 0;
 
 	if (lock_file_name == NULL)
 		lock_file_name = resolve_name("~/.aeeinfo.L");
@@ -443,7 +426,6 @@ lock_journal_fd()
 	/*
 	 |	At some point may want to put in a check for an old lock file.
 	 */
-
 
 	while (((ret_val = open(lock_file_name, (O_CREAT | O_EXCL), 0700)) == -1) && (counter < 3))
 	{
@@ -460,7 +442,7 @@ lock_journal_fd()
  */
 
 void 
-unlock_journal_fd()
+unlock_journal_fd(void)
 {
 	unlink(lock_file_name);
 }
@@ -471,8 +453,7 @@ unlock_journal_fd()
  */
 
 void 
-free_db_list(list)
-struct journal_db *list;
+free_db_list(struct journal_db *list)
 {
 	if (list->next != NULL)
 		free_db_list(list->next);
@@ -488,7 +469,7 @@ struct journal_db *list;
  */
 
 struct journal_db *
-read_journal_db()
+read_journal_db(void)
 {
 	char buffer[4092];
 	char *tmp;
@@ -554,8 +535,7 @@ read_journal_db()
  */
 
 void 
-write_db_file(list)
-struct journal_db *list;
+write_db_file(struct journal_db *list)
 {
 	struct journal_db *tmp;
 	FILE *db_fp;
@@ -595,8 +575,7 @@ struct journal_db *list;
  */
 
 void 
-add_to_journal_db(buffer)
-struct bufr *buffer;
+add_to_journal_db(struct bufr *buffer)
 {
 	struct journal_db *top_of_list;
 	struct journal_db *list;
@@ -640,8 +619,7 @@ struct bufr *buffer;
  */
 
 void 
-rm_journal_db_entry(buffer)
-struct bufr *buffer;
+rm_journal_db_entry(struct bufr *buffer)
 {
 	struct journal_db *top_of_list;
 	struct journal_db *list;
@@ -710,12 +688,11 @@ struct bufr *buffer;
  */
 
 int
-create_dir(name)
-char *name;
+create_dir(char *name)
 {
 	char *path;
 	struct stat buf;
-	int ret_val;
+	int ret_val = 0;
 
 	if ((name == (char *)NULL) || (*name == '\0'))
 		return(-1);
@@ -739,18 +716,15 @@ char *name;
  */
 
 void 
-journal_name(buffer, file_name)
-struct bufr *buffer;
-char *file_name;
+journal_name(struct bufr *buffer, char *file_name)
 {
-	char *temp, *buff, *name;
+	char *temp, *name;
 	int count;
 
 	if (*file_name == '\0')
 	{
 		struct tm *time_info;
 		time_t t;
-		int ret_val;
 
 		/*
 		 |	create a file name based on the date, e.g., 
@@ -761,14 +735,14 @@ char *file_name;
 		file_name = (char *)malloc(14);
 		t = time(NULL);
 		time_info = gmtime(&t);
-		ret_val = strftime(file_name, 13, "%y%m%d%H%M%S", time_info);
+		strftime(file_name, 13, "%y%m%d%H%M%S", time_info);
 	}
 
 	if ((journal_dir != NULL) && (*journal_dir != '\0'))
 	{
 		name = ae_basename(file_name);
 		buffer->journal_file = temp = 
-			xalloc(strlen(name) + 5 + strlen(journal_dir));
+			xalloc((int)(strlen(name) + 5 + strlen(journal_dir)));
 		strcpy(temp, journal_dir);
 		strcat(temp, "/");
 		strcat(temp, name);
@@ -776,15 +750,13 @@ char *file_name;
 
 	if (buffer->journal_file == NULL)
 	{
-		buffer->journal_file = temp = xalloc(strlen(file_name) + 4);
+		buffer->journal_file = temp = xalloc((int)(strlen(file_name) + 4));
 		strcpy(temp, file_name);
 	}
 
-	buff = ae_basename(temp);
+	temp = buffer->journal_file;
 
-	temp = buff;
-
-	if (strlen(temp) >= (MAX_NAME_LEN - 3))
+	if ((size_t)strlen(temp) >= (size_t)(MAX_NAME_LEN - 3))
 	{
 		for (count = 1; count < (MAX_NAME_LEN - 3); count++)
 			temp++;
@@ -803,67 +775,15 @@ char *file_name;
  */
 
 void 
-open_journal_for_write(buffer)
-struct bufr *buffer;
+open_journal_for_write(struct bufr *buffer)
 {
-	int ret_val;
-	int length;
-	int counter;
-	char *temp;
-	struct tm *time_info;
-	time_t t;
 
-	if (((buffer->journ_fd = 
-		open(buffer->journal_file, (O_CREAT | O_EXCL | O_WRONLY), 0600)) == -1) && 
-				(errno == EEXIST))
+	buffer->journ_fd = fopen(buffer->journal_file, "wb");
+	if (buffer->journ_fd == NULL)
 	{
-		/*
-		 |	file already exists
-		 */
-		buffer->journal_file = realloc(buffer->journal_file, 
-					(strlen(buffer->journal_file) + 17));
-		/*
-		 |	find the last '/'
-		 */
-		temp = strrchr(buffer->journal_file, '/');
-
-		if (temp != NULL)
-			temp++;
-		else
-			temp = buffer->journal_file;
-
-		/*
-		 |	create a file name based on the date, e.g., 
-		 |	950913221206.rv
-		 |	Not a guarantee of uniqueness, but certainly not 
-		 |	likely to be repeated.
-		 */
-		t = time(NULL);
-		time_info = gmtime(&t);
-		ret_val = strftime(temp, 16, "%y%m%d%H%M%S.rv", time_info);
-
-		/*
-		 |	For some extra paranoia, check this one, and append 
-		 |	a character (a-z) to get uniqueness.
-		 */
-
-		counter = 'a';
-		length = strlen (buffer->journal_file);
-		while (((buffer->journ_fd = 
-			open(buffer->journal_file, (O_CREAT | O_EXCL | O_WRONLY), 0600)) == -1) 
-				&& (errno == EEXIST) && (counter <= 'z'))
-		{
-			buffer->journal_file[length] = counter;
-			buffer->journal_file[length + 1] = '\0';
-			counter++;
-		}
-	}
-
-	if (buffer->journ_fd == -1)
-	{
-		wprintw(com_win, cant_opn_rcvr_fil_msg);
+		wprintw(com_win, "%s", cant_opn_rcvr_fil_msg);
 		buffer->journalling = FALSE;
-		buffer->journ_fd = '\0';
+		buffer->journ_fd = NULL;
 		return;
 	}
 
@@ -871,10 +791,10 @@ struct bufr *buffer;
 
 	if (*buffer->full_name != '\0')
 	{
-		ret_val = write(buffer->journ_fd, buffer->full_name, 
-					strlen(buffer->full_name));
+		fwrite(buffer->full_name, 1, strlen(buffer->full_name), buffer->journ_fd);
+		fwrite("\n", 1, 1, buffer->journ_fd);
 	}
-	ret_val |= write(buffer->journ_fd, "\n", 1);
+	fwrite("\n", 1, 1, buffer->journ_fd);
 
 	journ_info_init(buffer, buffer->first_line);
 }
@@ -884,10 +804,9 @@ struct bufr *buffer;
  */
 
 void 
-remove_journal_file(buffer)
-struct bufr *buffer;
+remove_journal_file(struct bufr *buffer)
 {
-	close(buffer->journ_fd);
+	fclose(buffer->journ_fd);
 	unlink(buffer->journal_file);
 	rm_journal_db_entry(buffer);
 }

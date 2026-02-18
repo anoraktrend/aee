@@ -8,7 +8,9 @@
  |	Copyright (c) 1986 - 1988, 1991 - 2000 - 2002, 2009, 2010 Hugh Mahon.
  */
 
-#include "aee.h"
+#include "../include/aee.h"
+#include <string.h>
+#include <stdlib.h>
 
 // Add extern declarations for global variables
 extern WINDOW *com_win;
@@ -24,11 +26,12 @@ extern int num_of_bufs;
 
 static char item_alpha[] = "abcdefghijklmnopqrstuvwxyz0123456789 ";
 
-#define max_alpha_char 36
+enum {
+max_alpha_char = 36
+};
 
 int 
-menu_op(menu_list)
-struct menu_entries menu_list[];
+menu_op(struct menu_entries menu_list[])
 {
 	WINDOW *temp_win;
 	int max_width, max_height;
@@ -39,7 +42,6 @@ struct menu_entries menu_list[];
 	int temp;
 	int list_size;
 	int top_offset;		/* offset from top where menu items start */
-	int vert_pos;		/* vertical position			  */
 	int vert_size;		/* vertical size for menu list item display */
 	int off_start = 1;	/* offset from start of menu items to start display */
 
@@ -54,11 +56,13 @@ struct menu_entries menu_list[];
 	max_width = 0;
 	for (counter = 0; counter <= list_size; counter++)
 	{
-		if ((length = strlen(menu_list[counter].item_string)) > max_width)
+		length = (int)strlen(menu_list[counter].item_string);
+		if (length > max_width)
 			max_width = length;
 	}
 	max_width += 3;
-	max_width = max(max_width, strlen(cancel_string));
+	max_width = max(max_width, (int)strlen(cancel_string));
+	max_width = max(max_width, max((int)strlen(more_above_str), (int)strlen(more_below_str)));
 	max_width = max(max_width, max(strlen(more_above_str), strlen(more_below_str)));
 	max_width += 6;
 
@@ -71,7 +75,7 @@ struct menu_entries menu_list[];
 	{
 		wmove(com_win, 0, 0);
 		werase(com_win);
-		wprintw(com_win, menu_too_lrg_msg);
+		waddstr(com_win, menu_too_lrg_msg);
 		wrefresh(com_win);
 		clr_cmd_line = TRUE;
 		return(0);
@@ -106,10 +110,9 @@ struct menu_entries menu_list[];
 	temp_win = newwin(max_height, max_width, y_off, x_off);
 	keypad(temp_win, TRUE);
 
-	paint_menu(menu_list, max_width, max_height, list_size, top_offset, temp_win, off_start, vert_size);
+	paint_menu(menu_list, temp_win, max_width, max_height, off_start, top_offset, list_size, vert_size, 1);
 
 	counter = 1;
-	vert_pos = 0;
 	do
 	{
 		if (off_start > 2)
@@ -169,41 +172,37 @@ struct menu_entries menu_list[];
 					break;
 				case '\014':	/* ^l       	*/
 				case '\022':	/* ^r, redraw	*/
-					paint_menu(menu_list, max_width, max_height, 
-						list_size, top_offset, temp_win, 
-						off_start, vert_size);
+					paint_menu(menu_list, temp_win, max_width, max_height, off_start, top_offset, list_size, vert_size, counter);
 					break;
 				default:
 					break;
 			}
 		}
 	
+		paint_menu(menu_list, temp_win, max_width, max_height, off_start, top_offset, list_size, vert_size, counter);
+	
 		if (((list_size - off_start) >= (vert_size - 1)) && 
 			(counter > (off_start + vert_size - 3)) && 
 				(off_start > 1))
 		{
-			if (counter == list_size)
+			if (counter == (int)list_size)
 				off_start = (list_size - vert_size) + 2;
 			else
 				off_start++;
 
-			paint_menu(menu_list, max_width, max_height, 
-				   list_size, top_offset, temp_win, off_start, 
-				   vert_size);
+			paint_menu(menu_list, temp_win, max_width, max_height, list_size, off_start, top_offset, vert_size, counter);
 		}
 		else if ((list_size != vert_size) && 
 				(counter > (off_start + vert_size - 2)))
 		{
-			if (counter == list_size)
+			if (counter == (int)list_size)
 				off_start = 2 + (list_size - vert_size);
 			else if (off_start == 1)
 				off_start = 3;
 			else
 				off_start++;
 
-			paint_menu(menu_list, max_width, max_height, 
-				   list_size, top_offset, temp_win, off_start, 
-				   vert_size);
+			paint_menu(menu_list, temp_win, max_width, max_height, off_start, top_offset, list_size, vert_size, counter);
 		}
 		else if (counter < off_start)
 		{
@@ -212,9 +211,8 @@ struct menu_entries menu_list[];
 			else
 				off_start = counter;
 
-			paint_menu(menu_list, max_width, max_height, 
-				   list_size, top_offset, temp_win, off_start, 
-				   vert_size);
+			paint_menu(menu_list, temp_win, max_width, max_height, 
+				   off_start, list_size, top_offset, vert_size, counter);
 		}
 	}
 	while ((input != '\r') && (input != '\n') && (counter != 0));
@@ -227,7 +225,7 @@ struct menu_entries menu_list[];
 	    (menu_list[counter].iprocedure != NULL) || 
 	    (menu_list[counter].nprocedure != NULL))
 	{
-		if (menu_list[counter].argument != -1)
+		if ((int)menu_list[counter].argument != -1)
 			(*menu_list[counter].iprocedure)(menu_list[counter].argument);
 		else if (menu_list[counter].ptr_argument != NULL)
 			(*menu_list[counter].procedure)(menu_list[counter].ptr_argument);
@@ -242,13 +240,7 @@ struct menu_entries menu_list[];
 	return(counter);
 }
 
-void 
-paint_menu(menu_list, max_width, max_height, list_size, top_offset, menu_win, 
-	   off_start, vert_size)
-struct menu_entries menu_list[];
-int max_width, max_height, list_size, top_offset;
-WINDOW *menu_win;
-int off_start, vert_size;
+void paint_menu(struct menu_entries menu_list[], WINDOW *menu_win, int max_width, int max_height, int off_start, int top_offset, unsigned int list_size, unsigned int vert_size, int current)
 {
 	int counter, temp_int;
 
@@ -259,7 +251,7 @@ int off_start, vert_size;
 	 |	large enough 
 	 */
 
-	if (max_height > vert_size)
+	if (max_height > (int)vert_size)
 	{
 		wmove(menu_win, 1, 1);
 		if (!nohighlight)
@@ -284,7 +276,7 @@ int off_start, vert_size;
 	if (!nohighlight)
 		wstandout(menu_win);
 
-	for (counter = 0; counter < (vert_size + top_offset); counter++)
+	for (counter = 0; counter < ((int)vert_size + top_offset); counter++)
 	{
 		if (top_offset == 4)
 		{
@@ -312,46 +304,52 @@ int off_start, vert_size;
 			temp_int = 0;
 
 		for (counter = off_start; 
-			((temp_int + counter - off_start) < (vert_size - 1));
+			((temp_int + counter - off_start) < ((int)vert_size - 1));
 				counter++)
 		{
 			wmove(menu_win, (top_offset + temp_int + 
 						(counter - off_start)), 3);
 			if (list_size > 1)
 				wprintw(menu_win, "%c) ", item_alpha[min((counter - 1), max_alpha_char)]);
+			if (counter == current) wstandout(menu_win);
 			waddstr(menu_win, menu_list[counter].item_string);
+			if (counter == current) wstandend(menu_win);
 		}
 
-		wmove(menu_win, (top_offset + (vert_size - 1)), 3);
+		wmove(menu_win, (top_offset + ((int)vert_size - 1)), 3);
 
-		if (counter == list_size)
+		if (counter == (int)list_size)
 		{
 			if (list_size > 1)
 				wprintw(menu_win, "%c) ", item_alpha[min((counter - 1), max_alpha_char)]);
-			wprintw(menu_win, menu_list[counter].item_string);
+			if (counter == current) wstandout(menu_win);
+			waddstr(menu_win, menu_list[counter].item_string);
+			if (counter == current) wstandend(menu_win);
 		}
 		else
-			wprintw(menu_win, more_below_str);
+			waddstr(menu_win, more_below_str);
 	}
 	else
 	{
-		for (counter = 1; counter <= list_size; counter++)
+		for (counter = 1; counter <= (int)list_size; counter++)
 		{
 			wmove(menu_win, (top_offset + counter - 1), 3);
 			if (list_size > 1)
 				wprintw(menu_win, "%c) ", item_alpha[min((counter - 1), max_alpha_char)]);
+			if (counter == current) wstandout(menu_win);
 			waddstr(menu_win, menu_list[counter].item_string);
+			if (counter == current) wstandend(menu_win);
 		}
 	}
 }
 
 void 
-shell_op()
+shell_op(void)
 {
 	char *string;
 
-	if (((string = get_string(shell_cmd_prompt, TRUE)) != NULL) && 
-			(*string != '\0'))
+	string = get_string(shell_cmd_prompt, TRUE);
+	if (string != NULL && *string != '\0')
 	{
 		sh_command(string);
 		free(string);
@@ -359,7 +357,7 @@ shell_op()
 }
 
 void 
-leave_op()
+leave_op(void)
 {
 	int index;
 
@@ -400,7 +398,7 @@ leave_op()
 }
 
 void 
-spell_op()	/* check spelling of words in the editor	*/
+spell_op(void)	/* check spelling of words in the editor	*/
 {
 	if (restrict_mode())
 	{
@@ -414,14 +412,14 @@ spell_op()	/* check spelling of words in the editor	*/
 	command(shell_echo_msg);
 	adv_line();
 	wmove(com_win, 0, 0);
-	wprintw(com_win, spell_in_prog_msg);
+	waddstr(com_win, spell_in_prog_msg);
 	wrefresh(com_win);
 	command("<>!spell");	/* send contents of buffer to command 'spell' 
 				   and read the results back into the editor */
 }
 
 void 
-ispell_op()
+ispell_op(void)
 {
 	char name[128];
 	char string[256];
@@ -447,7 +445,7 @@ ispell_op()
 }
 
 void 
-modes_op()
+modes_op(void)
 {
 	int ret_value;
 	int counter;
@@ -496,34 +494,34 @@ modes_op()
 		switch (ret_value) 
 		{
 			case 1:
-				expand = !expand;
+				expand = (char)!expand;
 				break;
 			case 2:
-				case_sen = !case_sen;
+				case_sen = (char)!case_sen;
 				break;
 			case 3:
-				literal = !literal;
+				literal = (char)!literal;
 				break;
 			case 4:
 				forward = !forward;
 				break;
 			case 5:
-				observ_margins = !observ_margins;
+				observ_margins = (char)!observ_margins;
 				break;
 			case 6:
 				info_op();
 				break;
 			case 7:
-				status_line = !status_line;
+				status_line = (char)!status_line;
 				break;
 			case 8:
-				indent = !indent;
+				indent = (char)!indent;
 				break;
 			case 9:
-				overstrike = !overstrike;
+				overstrike = (char)!overstrike;
 				break;
 			case 10:
-				auto_format = !auto_format;
+				auto_format = (char)!auto_format;
 				if (auto_format)
 				{
 					observ_margins = TRUE;
@@ -547,7 +545,7 @@ modes_op()
 					{
 						wmove(com_win, 0, 0);
 						werase(com_win);
-						wprintw(com_win, left_mrgn_err_msg);
+						waddstr(com_win, left_mrgn_err_msg);
 						wrefresh(com_win);
 					}
 					free(string);
@@ -564,7 +562,7 @@ modes_op()
 					{
 						wmove(com_win, 0, 0);
 						werase(com_win);
-						wprintw(com_win, right_mrgn_err_msg);
+						waddstr(com_win, right_mrgn_err_msg);
 						wrefresh(com_win);
 					}
 					free(string);
@@ -582,7 +580,7 @@ modes_op()
 					{
 						wmove(com_win, 0, 0);
 						werase(com_win);
-						wprintw(com_win, info_win_height_err);
+						waddstr(com_win, info_win_height_err);
 						wrefresh(com_win);
 					}
 					free(string);
@@ -597,11 +595,11 @@ modes_op()
 				}
 				break;
 			case 15:
-				text_only = !text_only;
+				text_only = (char)!text_only;
 				break;
 			case 16:
 				if (text_only)
-					curr_buff->dos_file = !curr_buff->dos_file;
+					curr_buff->dos_file = (char)!curr_buff->dos_file;
 				break;
 			case 17:
 				dump_aee_conf();
@@ -614,15 +612,14 @@ modes_op()
 }
 
 void 
-search_op()
+search_op(void)
 {
 	search(TRUE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, 0, FALSE, TRUE);
 }
 
 
 int 
-file_op(arg)
-int arg;
+file_op(int arg)
 {
 	char *string;
 	int flag;
@@ -669,7 +666,7 @@ int arg;
 		if (!curr_buff->changed)
 		{
 			wmove(com_win, 0, 0);
-			wprintw(com_win, no_chng_no_save );
+			waddstr(com_win, no_chng_no_save );
 			wclrtoeol(com_win);
 			wrefresh(com_win);
 			return(0);
@@ -694,7 +691,7 @@ int arg;
 		if ((string == NULL) || (*string == '\0'))
 		{
 			wmove(com_win, 0, 0);
-			wprintw(com_win, file_not_saved_msg );
+			waddstr(com_win, file_not_saved_msg );
 			wclrtoeol(com_win);
 			wrefresh(com_win);
 			clr_cmd_line = TRUE;
@@ -734,9 +731,9 @@ int arg;
 }
 
 void 
-info_op()
+info_op(void)
 {
-	info_window = !info_window;
+	info_window = (char)!info_window;
 	redo_win();
 	curr_buff->last_line = curr_buff->lines - 1;
 	new_screen();
@@ -746,9 +743,7 @@ info_op()
 }
 
 int 
-macro_assign(keys, macro_string)
-char *keys[];
-char *macro_string;
+macro_assign(char *keys[], char *macro_string)
 {
 	int counter;
 	char *temp;
@@ -767,34 +762,37 @@ char *macro_string;
 }
 
 void 
-get_key_assgn()
+get_key_assgn(void)
 {
 	int counter;
 	int local_index;
 
 	assignment[gold_key_index].ckey = 0;
-	if ((local_index = macro_assign(ctr, assignment[gold_key_index].macro)) != -1)
+	local_index = macro_assign(ctr, assignment[gold_key_index].macro);
+	if (local_index != -1)
 	{
-		assignment[gold_key_index].ckey = local_index;
+		assignment[gold_key_index].ckey = (short) local_index;
 	}
 	for (counter = 1; counter < gold_key_index; counter++)
 	{
 		assignment[counter].ckey = -1;
 		assignment[counter].gckey = -1;
-		if ((local_index = macro_assign(ctr, assignment[counter].macro)) != -1)
+		local_index = macro_assign(ctr, assignment[counter].macro);
+		if (local_index != -1)
 		{
-			assignment[counter].ckey = local_index;
+			assignment[counter].ckey = (short) local_index;
 		}
-		if (((local_index = macro_assign(g_ctr, assignment[counter].macro)) != -1) && (assignment[gold_key_index].ckey))
+		local_index = macro_assign(g_ctr, assignment[counter].macro);
+		if ((local_index != -1) && (assignment[gold_key_index].ckey))
 		{
-			assignment[counter].gckey = local_index;
+			assignment[counter].gckey = (short) local_index;
 		}
 	}
 	paint_information();
 }
 
 void 
-paint_information()
+paint_information(void)
 {
 	int counter;
 	int local_index;
@@ -810,7 +808,7 @@ paint_information()
 	width = 0;
 	column = 0;
 	for (counter = 0, local_index = 1; 
-		((width + column) <= min(COLS, MAX_HELP_COLS)) && 
+		((width + column) <= (int)min(COLS, MAX_HELP_COLS)) && 
 			(local_index < (gold_key_index + 1)) &&
 			(assignment[local_index].macro != NULL); 
 						counter++, local_index++)
@@ -839,16 +837,16 @@ paint_information()
 			sprintf(buffer, "^%c^%c %s ", 
 				(assignment[gold_key_index].ckey + 'A'), 
 				(assignment[local_index].gckey + 'A'), 
-				assignment[local_index].description);
+				(assignment[local_index].description));
 
 		width = max(width, strlen(buffer));
-		if ((width + column) <= min(COLS, MAX_HELP_COLS))
+		if ((width + column) <= (int)min(COLS, MAX_HELP_COLS))
 			strcat(info_data[line_index], buffer);
 	}
 }
 
 void 
-paint_info_win()
+paint_info_win(void)
 {
 	int counter;
 	int width, column;
@@ -894,9 +892,9 @@ paint_info_win()
 	if (!nohighlight)
 		wstandout(info_win);
 
-	wprintw(info_win, info_help_msg);
+	waddstr(info_win, info_help_msg);
 
-	for (counter = strlen(info_help_msg); counter < COLS; counter++)
+	for (counter = (int)strlen(info_help_msg); counter < COLS; counter++)
 		waddch(info_win, '=');
 
 	wstandend(info_win);
@@ -910,9 +908,7 @@ paint_info_win()
  */
 
 int 
-unique_test(string, list)
-char *string;
-char *list[];
+unique_test(char *string, char *list[])
 {
 	int counter;
 	int num_match;
@@ -931,7 +927,7 @@ char *list[];
 }
 
 void 
-command_prompt()
+command_prompt(void)
 {
 	char *cmd_str;
 	int result;
@@ -939,14 +935,15 @@ command_prompt()
 	info_type = COMMANDS;
 	paint_info_win();
 	cmd_str = get_string(cmd_prompt, TRUE);
-	if ((result = unique_test(cmd_str, commands)) != 1)
+	result = unique_test(cmd_str, commands);
+	if (result != 1)
 	{
 		werase(com_win);
 		wmove(com_win, 0, 0);
 		if (result == 0)
 			wprintw(com_win, unkn_cmd_msg, cmd_str);
 		else
-			wprintw(com_win, non_unique_cmd_msg);
+			waddstr(com_win, non_unique_cmd_msg);
 
 		wrefresh(com_win);
 
@@ -972,7 +969,7 @@ command_prompt()
  */
 
 void 
-tab_resize()
+tab_resize(void)
 {
 	struct bufr *tt;		/* temporary pointer		*/
 	struct text *tmp_tx;		/* temporary text pointer	*/
@@ -992,11 +989,10 @@ tab_resize()
 }
 
 void 
-command(cmd_str)	/* process commands from command line	*/
-char *cmd_str;
+command(char *cmd_str)	/* process commands from command line	*/
 {
 	char *cmd_str2;
-	char *c_temp;
+	char *c_temp = NULL;
 	char *name;
 	char *tmp;
 	char dir;
@@ -1054,7 +1050,7 @@ char *cmd_str;
 			temp_stack = tabs->next_stop;
 			werase(com_win);
 			wmove(com_win, 0, 0);
-			wprintw(com_win, tab_msg);
+			wprintw(com_win, "%s", tab_msg);
 			while (temp_stack != NULL)
 			{
 				wprintw(com_win, "%d ", temp_stack->column);
@@ -1075,7 +1071,7 @@ char *cmd_str;
 		{
 			tab_spacing = atoi(cmd_str2);
 			tab_resize();
-			midscreen(curr_buff->scr_vert, curr_buff->position);
+			midscreen(curr_buff->scr_vert, (unsigned int)curr_buff->position);
 		}
 		else
 		{
@@ -1139,9 +1135,10 @@ char *cmd_str;
 		 */
 
 		cmd_str2 = next_word(cmd_str);
-		if (!curr_buff->edit_buffer)
+
+		if (!curr_buff->edit_buffer || !((*cmd_str2 != '\0') && (curr_buff->file_name == NULL)))
 			file_op(SAVE_FILE);
-		else if ((*cmd_str2 != '\0') && (curr_buff->file_name == NULL))
+		else
 		{
 			tmp_file = resolve_name(cmd_str2);
 			if (tmp_file != cmd_str2)
@@ -1154,10 +1151,8 @@ char *cmd_str;
 			{
 				if (curr_buff->file_name == NULL)
 				{
-					curr_buff->full_name = get_full_path(cmd_str2, 
-								NULL);
-					curr_buff->file_name = 
-						ae_basename(curr_buff->full_name);
+					curr_buff->full_name = get_full_path(cmd_str2, NULL);
+					curr_buff->file_name = ae_basename(curr_buff->full_name);
 				}
 				curr_buff->changed = FALSE;
 				change = FALSE;
@@ -1171,11 +1166,6 @@ char *cmd_str;
 				return;
 			}
 		}
-		else
-		{
-			file_op(SAVE_FILE);
-		}
-
 	}
 	else if (compare(cmd_str, LITERAL_str, FALSE))
 		literal = TRUE;
@@ -1214,7 +1204,7 @@ char *cmd_str;
 			{
 				wmove(com_win, 0, 0);
 				werase(com_win);
-				wprintw(com_win, info_win_height_err);
+				wprintw(com_win, "%s", info_win_height_err);
 				wrefresh(com_win);
 			}
 			if ((info_win_height != temp_int) && (info_window))
@@ -1246,7 +1236,7 @@ char *cmd_str;
 				{
 					wmove(com_win, 0, 0);
 					wclrtoeol(com_win);
-					wprintw(com_win, left_mrg_err_msg);
+					wprintw(com_win, "%s", left_mrgn_err_msg);
 				}
 				else
 					left_margin = c_int;
@@ -1257,7 +1247,7 @@ char *cmd_str;
 				{
 					wmove(com_win, 0, 0);
 					wclrtoeol(com_win);
-					wprintw(com_win, right_mrg_err_msg);
+					wprintw(com_win, "%s", right_mrgn_err_msg);
 				}
 				else
 					right_margin = c_int;
@@ -1370,7 +1360,7 @@ char *cmd_str;
 	{
 		wmove(com_win,0,0);
 		wclrtoeol(com_win);
-		wprintw(com_win, version_string);
+		wprintw(com_win, "%s", version_string);
 	}
 	else if (compare(cmd_str, CASE_str, FALSE))
 		case_sen = TRUE;
@@ -1589,13 +1579,13 @@ char *cmd_str;
 		{
 			wmove(com_win,0,0);
 			wclrtoeol(com_win);
-			wprintw(com_win, no_chng_dir_msg);
+			wprintw(com_win, "%s", no_chng_dir_msg);
 		}
 		else if ((curr_buff->orig_dir == NULL) && (*cmd_str == '\0'))
 		{
 			wmove(com_win,0,0);
 			wclrtoeol(com_win);
-			wprintw(com_win, no_dir_entered_msg);
+			wprintw(com_win, "%s", no_dir_entered_msg);
 		}
 		else
 		{
@@ -1616,11 +1606,11 @@ char *cmd_str;
 				werase(com_win);
 				wmove(com_win, 0, 0);
 				if (errno == ENOTDIR)
-					wprintw(com_win, path_not_dir_msg);
+					wprintw(com_win, "%s", path_not_dir_msg);
 				else if (errno == EACCES)
-					wprintw(com_win, path_not_permitted_msg);
+					wprintw(com_win, "%s", path_not_permitted_msg);
 				else 
-					wprintw(com_win, path_chng_failed_msg);
+					wprintw(com_win, "%s", path_chng_failed_msg);
 			}
 		}
 	}
@@ -1668,7 +1658,7 @@ char *cmd_str;
 
 
 void 
-init_keys()		/* initialize control keys and function keys	*/
+init_keys(void)		/* initialize control keys and function keys	*/
 {
 	int counter;
 
@@ -1792,8 +1782,7 @@ init_keys()		/* initialize control keys and function keys	*/
 }
 
 void 
-parse(string)		/* parse commands in string		*/
-char *string;
+parse(char *string)
 {
 	char *temp;
 	char dir;
@@ -1895,7 +1884,7 @@ char *string;
 			forward = TRUE;
 			wmove(com_win, 0,0);
 			wclrtoeol(com_win);
-			wprintw(com_win, fwd_mode_str);
+			wprintw(com_win, "%s", fwd_mode_str);
 			wrefresh(com_win);
 			clr_cmd_line = TRUE;
 		}
@@ -1904,7 +1893,7 @@ char *string;
 			forward = FALSE;
 			wmove(com_win, 0,0);
 			wclrtoeol(com_win);
-			wprintw(com_win, rev_mode_str);
+			wprintw(com_win, "%s", rev_mode_str);
 			wrefresh(com_win);
 			clr_cmd_line = TRUE;
 		}
@@ -2035,7 +2024,7 @@ char *string;
 			     ((*temp >= 'A') && (*temp <= 'Z')) || 
 			     ((*temp >= '0') && (*temp <= '9'))) )
 		{
-			delim = *temp;
+			delim = (unsigned char)*temp;
 			temp++;
 			while ((*temp != delim) && (*temp != '\0'))
 			{
@@ -2058,13 +2047,13 @@ char *string;
 }
 
 int
-restrict_mode()
+restrict_mode(void)
 {
 	if (!restricted)
 		return(FALSE);
 
 	wmove(com_win, 0, 0);
-	wprintw(com_win, restricted_msg);
+	wprintw(com_win, "%s", restricted_msg);
 	wclrtoeol(com_win);
 	wrefresh(com_win);
 	clr_cmd_line = TRUE;
@@ -2076,7 +2065,7 @@ restrict_mode()
  */
 
 void 
-dump_aee_conf()	
+dump_aee_conf(void)	
 {
 	FILE *init_file;
 	FILE *old_init_file = NULL;
@@ -2102,7 +2091,7 @@ dump_aee_conf()
 
 	if (option == 0)
 	{
-		wprintw(com_win, conf_not_saved_msg);
+		wprintw(com_win, "%s", conf_not_saved_msg);
 		wrefresh(com_win);
 		return;
 	}
@@ -2125,7 +2114,7 @@ dump_aee_conf()
 	init_file = fopen(file_name, "w");
 	if (init_file == NULL)
 	{
-		wprintw(com_win, conf_dump_err_msg);
+		wprintw(com_win, "%s", conf_dump_err_msg);
 		wrefresh(com_win);
 		return;
 	}
@@ -2137,7 +2126,7 @@ dump_aee_conf()
 		 */
 		while ((string = fgets(buffer, 512, old_init_file)) != NULL)
 		{
-			length = strlen(string);
+			length = (int)strlen(string);
 			string[length - 1] = '\0';
 
 			if (unique_test(string, init_strings) == 1)

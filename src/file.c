@@ -11,7 +11,8 @@
  |	get the full path the the named file
  */
 
-#include "aee.h"
+#include "../include/aee.h"
+#include "../include/lsp.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -76,9 +77,7 @@ show_pwd()
  */
 
 char *
-get_full_path(path, orig_path)
-char *path;
-char *orig_path;
+get_full_path(char *path, char *orig_path)
 {
 	char *buff = path;
 	char long_buffer[1024];
@@ -86,7 +85,6 @@ char *orig_path;
 	char base_name[256];
 	char *tmp;
 	char *tmp2;
-	char *tmp3;
 
 		if (orig_path != NULL)
 		{
@@ -117,7 +115,7 @@ char *orig_path;
 				{
 					strcpy(base_name, ae_basename(buff));
 					chdir(tmp2);
-					tmp3 = getcwd(long_buffer, 1024);
+					getcwd(long_buffer, 1024);
 					chdir(tmp);
 					free(tmp2);
 					strcpy(buff, long_buffer);
@@ -133,8 +131,7 @@ char *orig_path;
 }
 
 char *
-ae_basename(name)
-char *name;
+ae_basename(char *name)
 {
 	char *buff, *base;
 
@@ -151,8 +148,7 @@ char *name;
 }
 
 char *
-ae_dirname(path)
-char *path;
+ae_dirname(char *path)
 {
 	char *tmp = NULL;
 	char buffer[1024];
@@ -217,8 +213,7 @@ buff_name_generator()
 }
 
 int 
-open_for_edit(string)
-char *string;
+open_for_edit(char *string)
 {
 	struct bufr *tmp_buff;
 	char *short_name;
@@ -549,6 +544,10 @@ check_fp()	/* open or close files according to flags recv_file,
 		curr_buff->file_name = short_file_name;
 		curr_buff->full_name = in_file_name;
 
+		if (strstr(short_file_name, ".c") || strstr(short_file_name, ".h")) {
+			lsp_init("clangd");
+		}
+
 		journal_name(curr_buff, in_file_name);
 
 		if (recover_from_journal(curr_buff, 
@@ -569,7 +568,7 @@ check_fp()	/* open or close files according to flags recv_file,
 
 			curr_buff->curr_line = curr_buff->first_line;
 			curr_buff->pointer = curr_buff->curr_line->line;
-			midscreen(curr_buff->scr_vert, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->scr_vert);
 			wmove(com_win,0,0);
 			wclrtoeol(com_win);
 			wprintw(com_win, rcvr_op_comp_msg);
@@ -696,9 +695,9 @@ check_fp()	/* open or close files according to flags recv_file,
 		}
 		wmove(com_win,0,0);
 		wclrtoeol(com_win);
-		value = stat(tmp_file, &buf);
-		buf.st_mode &= ~07777;
-		if ((value != -1) && (buf.st_mode != 0100000) && (buf.st_mode != 0))
+		value = stat(tmp_file, &curr_buff->fileinfo);
+		curr_buff->fileinfo.st_mode &= ~07777;
+		if ((value != -1) && (curr_buff->fileinfo.st_mode != 0100000) && (curr_buff->fileinfo.st_mode != 0))
 		{
 
 			if (input_file)
@@ -773,7 +772,28 @@ check_fp()	/* open or close files according to flags recv_file,
 			else
 				curr_buff->curr_line = tmp_line;
 			curr_buff->pointer = curr_buff->curr_line->line;
-			midscreen(curr_buff->scr_vert, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->scr_vert);
+			if (input_file && (strstr(curr_buff->file_name, ".c") || strstr(curr_buff->file_name, ".h"))) {
+				size_t text_len = 0;
+				struct text *line = curr_buff->first_line;
+				while (line) {
+					text_len += line->line_length - 1;
+					line = line->next_line;
+				}
+				char *text = malloc(text_len + 1);
+				char *p = text;
+				line = curr_buff->first_line;
+				while (line) {
+					memcpy(p, line->line, line->line_length - 1);
+					p += line->line_length - 1;
+					line = line->next_line;
+				}
+				*p = '\0';
+				char uri[1024];
+				sprintf(uri, "file://%s", curr_buff->full_name);
+				lsp_did_open(uri, "c", text);
+				free(text);
+			}
 			if (input_file)	/* get the file on the command line */
 			{
 				if (access(in_file_name, 2))
@@ -820,8 +840,7 @@ check_fp()	/* open or close files according to flags recv_file,
  */
 
 void 
-get_file(file_name)	/* read specified file into current buffer	*/
-char *file_name;
+get_file(char *file_name)	/* read specified file into current buffer	*/
 {
 	int can_write;		/* file mode allows write		*/
 	int can_read;		/* file has at least one character	*/
@@ -879,10 +898,7 @@ char *file_name;
 }
 
 void 
-get_line(length, in_string, append)	/* read string and split into lines */
-int length;		/* length of string read by read		*/
-char *in_string;	/* string read by read				*/
-int *append;	/* TRUE if must append more text to end of current line	*/
+get_line(int length, char *in_string, int *append)	/* read string and split into lines */
 {
 	char *str1;
 	char *str2;
@@ -980,10 +996,8 @@ int *append;	/* TRUE if must append more text to end of current line	*/
 	}
 }
 
-char *
-is_in_string(string, substring)	/* a strstr() look-alike for systems without
-				   strstr() */
-char * string, *substring;
+char *is_in_string(char *string, char *substring)	/* a strstr() look-alike for systems without
+			   strstr() */
 {
 	char *full, *sub;
 
@@ -1005,8 +1019,7 @@ char * string, *substring;
  */
 
 char *
-resolve_name(name)
-char *name;
+resolve_name(char *name)
 {
 	char long_buffer[1024];
 	char short_buffer[128];
@@ -1133,8 +1146,7 @@ char *name;
 }
 
 int 
-write_file(file_name)	/* write current buffer to specified file	*/
-char *file_name;
+write_file(char *file_name)	/* write current buffer to specified file	*/
 {
 	char cr, lf;
 	char *tmp_point;
@@ -1153,7 +1165,7 @@ char *file_name;
 	clr_cmd_line = TRUE;
 	charac = lines = 0;
 	aee_write_status = FALSE;
-	if ((curr_buff->full_name == NULL) || (strcmp(curr_buff->full_name, file_name)))
+	if ((curr_buff->full_name == NULL) || (strcmp(curr_buff->full_name, file_name) != 0))
 	{
 		wmove(com_win, 0, 0);
 		wclrtoeol(com_win);
@@ -1336,7 +1348,7 @@ diff_file()
 		curr_name = curr_buff->name;
 		sprintf(buff_name, "%s-diffs", curr_buff->file_name);
 		tmp = first_buff;
-		while ((tmp != NULL) && (strcmp(tmp->name, buff_name)))
+		while ((tmp != NULL) && (strcmp(tmp->name, buff_name) != 0))
 			tmp = tmp->next_buff;
 		
 		if (tmp != NULL)

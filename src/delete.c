@@ -8,7 +8,8 @@
  |	Copyright (c) 1986 - 1988, 1991 - 1996, 2009, 2010 Hugh Mahon.
  */
 
-#include "aee.h"
+#include "../include/aee.h"
+#include <stdlib.h>
 
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;
@@ -22,13 +23,11 @@ extern int pst_pos;
 extern char observ_margins;  // Changed type from int to char;   /* Changed from int to char */
 extern int left_margin;
 
-void 
-del_char(save_flag)	/* delete character at current cursor position	*/
-int save_flag;
+void del_char(int save_flag)  	/* delete character at current cursor position 	*/
 {
 	int dselect;
 
-	dselect = mark_text;
+	dselect = (unsigned char)mark_text;
 	if ((mark_text) && (curr_buff->position == curr_buff->curr_line->line_length))
 		mark_text = FALSE;
 	in = 8;
@@ -37,29 +36,26 @@ int save_flag;
 		if ((delete(TRUE)) && (save_flag))
 			last_deleted(CHAR_DELETED, 1, &d_char);
 	}
-	mark_text = dselect;
+	mark_text = (char)dselect;
 }
 
-void 
-undel_char()			/* undelete last deleted character	*/
+void undel_char(void)			/* undelete last deleted character	*/
 {
 	int temp_flag;
 
-	temp_flag = overstrike;
+	temp_flag = (unsigned char)overstrike;
 	overstrike = FALSE;
 	if (d_char == '\n')	/* insert line if last del_char deleted eol */
 		insert_line(TRUE);
 	else
 	{
-		in = d_char;
+		in = (unsigned char)d_char;
 		insert(in);
 	}
-	overstrike = temp_flag;
+	overstrike = (char)temp_flag;
 }
 
-char *
-del_string(length)		/* delete string of specified length at current cursor position	*/
-int length;
+char *del_string(int length) 		/* delete string of specified length at current cursor position 	*/
 {
 	int tposit;
 	int i, d, count;
@@ -132,10 +128,7 @@ int length;
 	return(temp_point);
 }
 
-void 
-undel_string(string, length)	/* insert string at current position	*/
-char *string;
-int length;
+void undel_string(char *string, int length) 	/* insert string at current position 	*/
 {
 	int temp;
 	int tposit;
@@ -149,14 +142,14 @@ int length;
 	int temp_d_char;
 
 	formatted = FALSE;
-	temp_flag = overstrike;
+	temp_flag = (unsigned char)overstrike;
 	overstrike = FALSE;
 	if ((observ_margins) && (curr_buff->scr_pos < left_margin))
 	{
-		temp_d_char = d_char;
+		temp_d_char = (unsigned char)d_char;
 		insert(' ');
 		delete(TRUE);
-		d_char = temp_d_char;
+		d_char = (char)temp_d_char;
 	}
 	u = curr_buff->curr_line->vert_len;
 	if ((curr_buff->curr_line->max_length - (curr_buff->curr_line->line_length + length)) < 5)
@@ -193,16 +186,16 @@ int length;
 		tposit++;
 		*d_word2 = *d_word3;
 		d_word3++;
-		*d_word2++;
+		d_word2++;
 	}
 	*d_word2 = '\0';
 	if ((mark_text) && (pst_pos == 1) && ((cpste_line->line_length > 1) || (cpste_line->next_line != NULL)))
 	{
-		temp_mark = mark_text;
+		temp_mark = (unsigned char)mark_text;
 		mark_text = FALSE;
 		for (temp = 1; temp <= length; temp++)
 			right(FALSE);
-		mark_text = temp_mark;
+		mark_text = (char)temp_mark;
 		for (temp = length; temp >= 1; temp--)
 			left(TRUE);
 	}
@@ -219,12 +212,10 @@ int length;
 		}
 	}
 	draw_line(curr_buff->scr_vert, curr_buff->scr_pos, curr_buff->pointer, curr_buff->position, curr_buff->curr_line);
-	overstrike = temp_flag;
+	overstrike = (char)temp_flag;
 }
 
-void 
-del_word(save_flag)		/* delete word in front of cursor	*/
-int save_flag;
+void del_word(int save_flag) 		/* delete word in front of cursor 	*/
 {
 	int tposit;
 	int difference;
@@ -260,15 +251,12 @@ int save_flag;
 	formatted = FALSE;
 }
 
-void 
-undel_word()		/* undelete last deleted word		*/
+void undel_word(void)		/* undelete last deleted word		*/
 {
 	undel_string(d_word, d_wrd_len);
 }
 
-void 
-Clear_line(save_flag)		/* delete from cursor to end of line	*/
-int save_flag;
+void Clear_line(int save_flag) 		/* delete from cursor to end of line 	*/
 {
 	int difference;
 
@@ -286,14 +274,11 @@ int save_flag;
 	formatted = FALSE;
 }
 
-void 
-del_line(save_flag)	/* delete line forward of cursor to end of line */
-int save_flag;
+void del_line(int save_flag) 	/* delete line forward of cursor to end of line */
 {
 	int dselect;
 
-	Clear_line(save_flag);
-	dselect = mark_text;
+	dselect = (unsigned char)mark_text;
 	mark_text = FALSE;
 	if ((dselect) && (pst_pos != cpste_line->line_length))
 	{
@@ -320,11 +305,10 @@ int save_flag;
 		if ((dlt_line->line_length <= 1) && (save_flag))
 			last_deleted(LINE_DELETED, dlt_line->line_length, d_line);
 	}
-	mark_text = dselect;
+	mark_text = (char)dselect;
 }
 
-void 
-undel_line()			/* undelete last deleted line		*/
+void undel_line(void)			/* undelete last deleted line		*/
 {
 	char *ud1;
 	char *ud2;
@@ -336,7 +320,7 @@ undel_line()			/* undelete last deleted line		*/
 
 	temp_left = left_margin;
 	left_margin = 0;
-	temp_flag = indent;
+	temp_flag = (unsigned char)indent;
 	indent = FALSE;
 	insert_line(TRUE);
 	left(TRUE);
@@ -356,11 +340,11 @@ undel_line()			/* undelete last deleted line		*/
 	*ud1 = '\0';
 	if ((mark_text) && (pst_pos != cpste_line->line_length))
 	{
-		temp_mark = mark_text;
+		temp_mark = (unsigned char)mark_text;
 		mark_text = FALSE;
 		for (tposit = 1; tposit < dlt_line->line_length; tposit++)
 			right(FALSE);
-		mark_text = temp_mark;
+		mark_text = (char)temp_mark;
 		for (tposit = 1; tposit < dlt_line->line_length; tposit++)
 			fast_left();
 	}
@@ -378,16 +362,12 @@ undel_line()			/* undelete last deleted line		*/
 		}
 	}
 	draw_line(curr_buff->scr_vert, curr_buff->scr_pos, curr_buff->pointer, curr_buff->position, curr_buff->curr_line);
-	indent = temp_flag;
+	indent = (char)temp_flag;
 	left_margin = temp_left;
 	formatted = FALSE;
 }
 
-void 
-last_deleted(flag, length, string)
-int flag;
-int length;
-char *string;
+void last_deleted(int flag, int length, char *string)
 {
 	if ((flag == WORD_DELETED) && (length == 0))
 		return;
@@ -427,13 +407,12 @@ char *string;
 	}
 }
 
-void 
-undel_last()
+void undel_last(void)
 {
 	char *temp_ptr;
 	char temp_char;
 	int temp_length;
-	int auto_indent_temp = indent;
+	int auto_indent_temp = (unsigned char)indent;
 
 	if (undel_current->flag != 0)
 	{
@@ -471,12 +450,11 @@ undel_last()
 		undel_current->flag = 0;
 		if (undel_current != undel_first)
 			undel_current = undel_current->prev;
-		indent = auto_indent_temp;
+		indent = (char)auto_indent_temp;
 	}
 }
 
-void 
-delete_text()
+void delete_text(void)
 {
 	while (curr_buff->curr_line->next_line != NULL)
 		curr_buff->curr_line = curr_buff->curr_line->next_line;
@@ -497,8 +475,7 @@ delete_text()
 	curr_buff->position = 1;
 }
 
-void 
-undel_init()
+void undel_init(void)
 {
 	int counter;
 	struct del_buffs *temp;
@@ -524,9 +501,7 @@ undel_init()
 	undel_current = undel_first;
 }
 
-int 
-delete(disp)			/* delete character within the line	*/
-int disp;
+int delete(int disp) 			/* delete character within the line 	*/
 {
 	char *tp;
 	char *temp2;
@@ -553,7 +528,7 @@ int disp;
 		if (*curr_buff->pointer == '\t')
 			curr_buff->abs_pos = curr_buff->scr_pos = scanline(curr_buff->curr_line, temp_pos);
 		else
-			curr_buff->abs_pos = curr_buff->scr_pos -= len_char(*curr_buff->pointer, curr_buff->scr_pos);
+			curr_buff->abs_pos = curr_buff->scr_pos -= len_char(curr_buff->scr_pos, *curr_buff->pointer);
 		d = curr_buff->scr_pos % COLS;
 		if ((curr_buff->scr_horz - d) < 0)
 		{
@@ -611,7 +586,7 @@ int disp;
 		success = TRUE;
 		change = TRUE;
 		d = curr_buff->curr_line->vert_len + curr_buff->curr_line->prev_line->vert_len;
-		dselect = mark_text;
+		dselect = (unsigned char)mark_text;
 		mark_text = FALSE;
 		if ((dselect) && (cpste_line->prev_line != NULL))
 		{
@@ -621,7 +596,7 @@ int disp;
 			cpste_line->next_line = NULL;
 		}
 		left(disp);		/* go to previous line	*/
-		mark_text = dselect;
+		mark_text = (char)dselect;
 		temp_buff = curr_buff->curr_line->next_line;
 		curr_buff->pointer = resiz_line(temp_buff->line_length, curr_buff->curr_line, curr_buff->position);
 		if (temp_buff->next_line != NULL)

@@ -10,3 +10,5 @@ CMakeCache.txt
 cmake_install.cmake
 xae
 test.txt
+target/
+.cache/

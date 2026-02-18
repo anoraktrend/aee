@@ -8,7 +8,7 @@
  |	Copyright (c) 1986 - 1988, 1991 - 1996 Hugh Mahon.
  */
 
-#include "aee.h"
+#include "../include/aee.h"
 
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;
@@ -83,7 +83,7 @@ nextline()			/* move pointers to start of next line	*/
 			draw_line(curr_buff->scr_vert, curr_buff->scr_pos, curr_buff->pointer, 1, curr_buff->curr_line);
 		}
 		else
-			midscreen(curr_buff->last_line, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->last_line);
 	}
 	else
 		curr_buff->scr_vert += n;
@@ -145,7 +145,7 @@ prevline()		/* move pointers to end of previous line	*/
 				draw_line(curr_buff->curr_line->vert_len, 0, curr_buff->curr_line->next_line->line, 1, curr_buff->curr_line->next_line);
 		}
 		else
-			midscreen(curr_buff->last_line/2, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->last_line/2);
 	}
 	else
 		curr_buff->scr_vert -= p;
@@ -173,7 +173,7 @@ int disp;
 		if (*curr_buff->pointer == '\t')
 			l = scanline(curr_buff->curr_line, curr_buff->position);
 		else
-			l = curr_buff->scr_pos - len_char(*curr_buff->pointer, curr_buff->scr_pos);
+			l = curr_buff->scr_pos - len_char(curr_buff->scr_pos, *curr_buff->pointer);
 		if ((l / COLS) < (ll / COLS))
 		{
 			curr_buff->scr_vert--;
@@ -222,7 +222,7 @@ int disp;
 					draw_line(l, 0, curr_buff->curr_line->line, 1, curr_buff->curr_line);
 				}
 				else
-					midscreen((curr_buff->last_line / 2), curr_buff->position);
+					midscreen(curr_buff->position, (curr_buff->last_line / 2));
 			}
 			wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 			if (mark_text)
@@ -267,7 +267,7 @@ int disp;
 		if (mark_text)
 			slct_right();
 		r1 = curr_buff->scr_pos;
-		r = r1 + len_char(*curr_buff->pointer, curr_buff->scr_pos);
+		r = r1 + len_char(curr_buff->scr_pos, *curr_buff->pointer);
 		curr_buff->pointer++;
 		curr_buff->position++;
 		if ((r / COLS) > (r1 / COLS))
@@ -285,7 +285,7 @@ int disp;
 				if ((temp > 31) && (temp < 127))
 					waddch(curr_buff->win, temp);
 				else
-					value = out_char(curr_buff->win, temp, r, (curr_buff->last_line-1), 0);
+					value = out_char(curr_buff->win, temp, (curr_buff->last_line-1), r, 0);
 				if (mark_text)
 					wstandend(curr_buff->win);
 				curr_buff->scr_horz = r % COLS;
@@ -336,7 +336,7 @@ find_pos()	/* move to the same column as on line previously occupied */
 	curr_buff->position = 1;
 	while ((curr_buff->scr_horz < curr_buff->abs_pos) && (curr_buff->position < curr_buff->curr_line->line_length))
 	{
-		curr_buff->scr_horz += len_char(*curr_buff->pointer, curr_buff->scr_horz);
+		curr_buff->scr_horz += len_char(curr_buff->scr_horz, *curr_buff->pointer);
 		curr_buff->position++;
 		curr_buff->pointer++;
 	}
@@ -374,7 +374,7 @@ up()		/* move cursor up one line in the same column	*/
 			curr_buff->scr_pos = curr_buff->scr_horz;
 			curr_buff->scr_horz = curr_buff->scr_pos % COLS;
 			if (((curr_buff->scr_pos / COLS) + curr_buff->scr_vert) > curr_buff->last_line)
-				midscreen(curr_buff->last_line/2, curr_buff->position);
+				midscreen(curr_buff->position, curr_buff->last_line/2);
 			else
 				curr_buff->scr_vert += (curr_buff->scr_pos / COLS);
 		curr_buff->absolute_lin--;
@@ -424,7 +424,7 @@ down()			/* move cursor down one line in the same column	*/
 			{
 				d = (curr_buff->scr_vert + (curr_buff->scr_pos / COLS)) - curr_buff->last_line;
 				if (d > curr_buff->last_line)
-					midscreen(curr_buff->last_line/2, curr_buff->position);
+					midscreen(curr_buff->position, curr_buff->last_line/2);
 				else
 				{
 					curr_buff->scr_vert += (curr_buff->scr_pos / COLS) - d;
@@ -524,9 +524,9 @@ int lines;
 		curr_buff->abs_pos = curr_buff->scr_pos = curr_buff->scr_horz = 0;
 		curr_buff->position = 1;
 		if (curr_buff->curr_line->next_line == NULL)
-			midscreen(curr_buff->last_line, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->last_line);
 		else
-			midscreen(curr_buff->last_line/2, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->last_line/2);
 	}
 	else if ((lines > curr_buff->last_line) && (!mark_text))
 	{
@@ -562,9 +562,9 @@ int lines;
 		curr_buff->abs_pos = curr_buff->scr_pos = curr_buff->scr_horz = 0;
 		curr_buff->position = 1;
 		if (curr_buff->curr_line->next_line == NULL)
-			midscreen(curr_buff->last_line, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->last_line);
 		else
-			midscreen(curr_buff->last_line/2, curr_buff->position);
+			midscreen(curr_buff->position, curr_buff->last_line/2);
 	}
 	else
 	{
@@ -705,10 +705,10 @@ eol()		/* go to end of current line			*/
 	if (curr_buff->scr_vert > curr_buff->last_line)
 	{
 		curr_buff->scr_vert = curr_buff->last_line;
-		midscreen(curr_buff->scr_vert, curr_buff->position);
+		midscreen(curr_buff->position, curr_buff->scr_vert);
 	}
 	else if (mark_text)
-		midscreen(curr_buff->scr_vert, curr_buff->position);
+		midscreen(curr_buff->position, curr_buff->scr_vert);
 	else
 	{
 		curr_buff->pointer = &(curr_buff->curr_line->line[curr_buff->position - 1]);
@@ -741,13 +741,13 @@ bol()			/* move to beginning of current line	*/
 		if ((curr_buff->scr_vert - b) < 0)
 		{
 			curr_buff->scr_vert = 0;
-			midscreen(0, curr_buff->position);
+			midscreen(curr_buff->position, 0);
 		}
 		else
 		{
 			curr_buff->scr_vert -= b;
 			if (mark_text)
-				midscreen(curr_buff->scr_vert, curr_buff->position);
+				midscreen(curr_buff->position, curr_buff->scr_vert);
 			else
 				wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
 		}
@@ -783,7 +783,6 @@ next_page()
 	int counter = 0;
 	int vlength;
 	int tmp_vert = curr_buff->scr_vert;
-	struct text *tmp_line;
 	char done = FALSE;
 
 	if (curr_buff->curr_line->changed && curr_buff->journalling)
@@ -791,7 +790,6 @@ next_page()
 
 	vlength = 
 	   (curr_buff->curr_line->vert_len - (scanline(curr_buff->curr_line, curr_buff->position) / COLS)) - 1;
-	tmp_line = curr_buff->curr_line;
 	while ((curr_buff->curr_line->next_line != NULL) && (counter < curr_buff->last_line) && (!done))
 	{
 		if ((curr_buff->curr_line->vert_len + counter - vlength) <= curr_buff->last_line)
@@ -812,7 +810,7 @@ next_page()
 	}
 
 	if (curr_buff->curr_line->next_line != NULL)
-		midscreen(tmp_vert, 0);
+		midscreen(0, tmp_vert);
 }
 
 /*
@@ -825,14 +823,12 @@ prev_page()
 	int counter = 0;
 	int vlength;
 	int tmp_vert = curr_buff->scr_vert;
-	struct text *tmp_line;
 	char done = FALSE;
 
 	if (curr_buff->curr_line->changed && curr_buff->journalling)
 		write_journal(curr_buff, curr_buff->curr_line);
 
 	vlength = (scanline(curr_buff->curr_line, curr_buff->position) / COLS);
-	tmp_line = curr_buff->curr_line;
 	while ((curr_buff->curr_line->prev_line != NULL) && (counter < curr_buff->last_line) && (!done))
 	{
 		if ((curr_buff->curr_line->vert_len + counter - vlength) <= curr_buff->last_line)
@@ -858,6 +854,6 @@ prev_page()
 		}
 	}
 
-	midscreen(tmp_vert, 0);
+	midscreen(0, tmp_vert);
 }
 

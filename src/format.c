@@ -8,9 +8,8 @@
  |	Copyright (c) 1987, 1988, 1989, 1991, 1994, 1995, 1996, 1998, 2009, 2010 Hugh Mahon.
  */
 
-#include "aee.h"
-// Remove direct ncurses.h include since it conflicts with new_curse.h
-// #include <ncursesw/ncurses.h>
+#include "../include/aee.h"
+#include <stdlib.h>
 
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;
@@ -18,9 +17,7 @@ extern WINDOW *com_win;
 extern char mark_text;  /* Changed from int to char */
 extern struct text *dlt_line;
 
-int 
-Blank_Line(test_line)	/* test if line has any non-space characters	*/
-struct text *test_line;
+int Blank_Line(struct text *test_line) 	/* test if line has any non-space characters	*/
 {
 	char *line;
 	int length;
@@ -52,13 +49,10 @@ struct text *test_line;
 }
 
 void 
-Format()	/* format the paragraph according to set margins	*/
+Format(void)	/* format the paragraph according to set margins	*/
 {
-	struct text *temp_line;
-	struct text *start_line;
 	int count;
 	int orig_count;
-	int temp_pos;
 	int string_count;
 	int offset;
 	int temp_case;
@@ -88,16 +82,16 @@ Format()	/* format the paragraph according to set margins	*/
  |	save the currently set flags, and clear them
  */
 
-	temp_indent = indent;
+	temp_indent = (unsigned char)indent;
 	indent = FALSE;
-	temp_literal = literal;
+	temp_literal = (unsigned char)literal;
 	literal = TRUE;
-	temp_af = auto_format;
+	temp_af = (unsigned char)auto_format;
 	auto_format = FALSE;
 
 	wmove(com_win, 0, 0);
 	wclrtoeol(com_win);
-	wprintw(com_win, fmting_par_msg);
+	wprintw(com_win, "%s", fmting_par_msg);
 	wrefresh(com_win);
 
 /*
@@ -105,17 +99,16 @@ Format()	/* format the paragraph according to set margins	*/
  |	will be in the same relative position
  */
 
-	temp_line = curr_buff->curr_line;
-	temp_pos = offset = curr_buff->position;
+	offset = curr_buff->position;
 	if (curr_buff->position != 1)
 		prev_word();
 	temp_dword = d_word;
 	d_word = NULL;
-	temp_forward = forward;
+	temp_forward = (unsigned char)forward;
 	forward = TRUE;
-	temp_case = case_sen;
+	temp_case = (unsigned char)case_sen;
 	case_sen = TRUE;
-	temp_over = overstrike;
+	temp_over = (unsigned char)overstrike;
 	overstrike = FALSE;
 	tmp_srchstr = srch_str;
 	temp2 = srch_str = (char *) xalloc(curr_buff->curr_line->line_length - curr_buff->position);
@@ -136,7 +129,6 @@ Format()	/* format the paragraph according to set margins	*/
 		bol();
 	while (!Blank_Line(curr_buff->curr_line->prev_line))
 		bol();
-	start_line = curr_buff->curr_line;
 	string_count = 0;
 	while (line != curr_buff->pointer)
 	{
@@ -146,7 +138,7 @@ Format()	/* format the paragraph according to set margins	*/
 
 	wmove(com_win, 0, 0);
 	wclrtoeol(com_win);
-	wprintw(com_win, fmting_par_msg);
+	wprintw(com_win, "%s", fmting_par_msg);
 	wrefresh(com_win);
 
 /*
@@ -225,7 +217,7 @@ Format()	/* format the paragraph according to set margins	*/
 
 	wmove(com_win, 0, 0);
 	wclrtoeol(com_win);
-	wprintw(com_win, fmting_par_msg);
+	wprintw(com_win, "%s", fmting_par_msg);
 	wrefresh(com_win);
 
 /*
@@ -354,22 +346,21 @@ Format()	/* format the paragraph according to set margins	*/
 	if (d_word != NULL)
 		free(d_word);
 	d_word = temp_dword;
-	forward = temp_forward;
-	case_sen = temp_case;
+	forward = (int)temp_forward;
+	case_sen = (char)temp_case;
 	free(srch_str);
 	srch_str = tmp_srchstr;
-	indent = temp_indent;
-	overstrike = temp_over;
-	literal = temp_literal;
+	indent = (char)temp_indent;
+	overstrike = (char)temp_over;
+	literal = (char)temp_literal;
 	d_char = temp_d_char;
-	auto_format = temp_af;
+	auto_format = (char)temp_af;
 
-	midscreen(curr_buff->scr_vert, curr_buff->position);
+	midscreen(curr_buff->position, curr_buff->scr_vert);
 }
 
 int
-first_word_len(test_line)
-struct text *test_line;
+first_word_len(struct text *test_line)
 {
 	int counter;
 	char *pnt;
@@ -405,7 +396,7 @@ struct text *test_line;
 }
 
 void 
-Auto_Format()	/* format the paragraph according to set margins	*/
+Auto_Format(void)	/* format the paragraph according to set margins	*/
 {
 	int string_count;
 	int offset;
@@ -445,7 +436,7 @@ Auto_Format()	/* format the paragraph according to set margins	*/
 	tmp_d_line_length = dlt_line->line_length;
 	d_line = NULL;
 	auto_format = FALSE;
-	temp_forward = forward;
+	temp_forward = (char)forward;
 	forward = TRUE;
 	offset = curr_buff->position;
 	if ((curr_buff->position != 1) && ((*curr_buff->pointer == ' ') || (*curr_buff->pointer == '\t') || (curr_buff->position == curr_buff->curr_line->line_length) || (*curr_buff->pointer == '\0')))
@@ -454,7 +445,7 @@ Auto_Format()	/* format the paragraph according to set margins	*/
 	temp_dwl = d_wrd_len;
 	d_wrd_len = 0;
 	d_word = NULL;
-	temp_case = case_sen;
+	temp_case = (unsigned char)case_sen;
 	case_sen = TRUE;
 	tmp_srchstr = srch_str;
 	temp2 = srch_str = (char *) xalloc(1 + curr_buff->curr_line->line_length - curr_buff->position);
@@ -671,16 +662,14 @@ Auto_Format()	/* format the paragraph according to set margins	*/
 		free(d_word);
 	d_word = temp_dword;
 	d_wrd_len = temp_dwl;
-	case_sen = temp_case;
+	case_sen = (char)temp_case;
 	free(srch_str);
 	srch_str = tmp_srchstr;
 	d_char = temp_d_char;
 	auto_format = TRUE;
 	dlt_line->line_length = tmp_d_line_length;
 	d_line = tmp_d_line;
-
-	forward = temp_forward;
+	forward = (int)temp_forward;
 	formatted = TRUE;
 	literal = temp_literal;
 }
-

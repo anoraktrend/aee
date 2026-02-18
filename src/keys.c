@@ -10,7 +10,7 @@
  |
  */
 
-#include "aee.h"
+#include "../include/aee.h"
 
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;
@@ -225,8 +225,7 @@ keyboard()		/* accept input from keyboard		*/
 }
 
 void 
-def_key(string)		/* define a function or control key to a string */
-char *string;
+def_key(char *string)		/* define a function or control key to a string */
 {
 	char *temp, *tm1;
 	int gold_flag;

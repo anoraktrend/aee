@@ -10,23 +10,15 @@
  |
  */
 
-#include "aee.h"
-
+#include "../include/aee.h"
+#include <stdlib.h>
 /* Add missing extern declarations */
 extern struct bufr *curr_buff;       /* Current buffer */
 extern WINDOW *com_win;              /* Command window */
 extern char mark_text;                /* Text marking flag */
 extern struct text *srch_line;       /* Search line pointer */
 
-int 
-search(move_cursor, start_line, offset, pointer, s_str_off, srch_short, disp)	/* search for srch_str in file after cursor	*/
-int move_cursor;/* should the cursor be moved by search to the found string */
-struct text *start_line;/* these parameters allow for better meta handling */
-int offset;
-char *pointer;
-int s_str_off;
-int srch_short;
-int disp;		/* boolean for whether or not to display message */
+int search(int move_cursor, struct text *start_line, unsigned int offset, char *pointer, int disp, int s_str_off, int srch_short)
 {
 	int end_of_line;
 	int iter;	/* position in line of start of suspect string	*/
@@ -66,18 +58,18 @@ int disp;		/* boolean for whether or not to display message */
 	found = FALSE;
 	srch_line = start_line;
 	srch_1 = pointer;
-	iter = offset;
+	iter = (int)offset;
 	if (!srch_short)
 	{
-		if ((offset < start_line->line_length) && (forward))
+		if (((int)offset < start_line->line_length) && (forward))
 		{
 			srch_1++;
-			iter = offset + 1;
+			iter = (int)offset + 1;
 		}
-		else if ((offset > 1) && (!forward))
+		else if (((int)offset > 1) && (!forward))
 		{
 			srch_1--;
-			iter = offset - 1;
+			iter = (int)offset - 1;
 		}
 		else
 			end_of_line = TRUE;
@@ -148,7 +140,7 @@ int disp;		/* boolean for whether or not to display message */
 							increment = 1;
 							if ((srch_3[s_str_off+increment] != '$') && (srch_3[s_str_off+increment] != '['))
 							{
-								if (search(FALSE, srch_line, iter2, srch_2, (s_str_off+increment), TRUE, disp))
+								if (search(FALSE, srch_line, iter2, srch_2, disp, (s_str_off+increment), TRUE))
 								{
 									while (srch_3[s_str_off] != '\0')
 										s_str_off++;
@@ -203,7 +195,7 @@ int disp;		/* boolean for whether or not to display message */
 								s_str_off++;
 								if (case_sen)
 								{
-									if ((*srch_2 >= x1) && (*srch_2 <= x2))
+									if (((unsigned char)*srch_2 >= x1) && ((unsigned char)*srch_2 <= x2))
 										found2 = TRUE;
 								}
 								else
@@ -354,19 +346,19 @@ int disp;		/* boolean for whether or not to display message */
 		{
 			wmove(com_win,0,0);
 			wclrtoeol(com_win);
-			wprintw(com_win, str_str);
+			wprintw(com_win, "%s", str_str);
 			iter2 = curr_buff->scr_horz;
-	 		for (srch_3 = srch_str; *srch_3 != '\0'; srch_3++)
+			for (srch_3 = srch_str; *srch_3 != '\0'; srch_3++)
 			{
-				if ((*srch_3 >= 32) && (*srch_3 < 127))
+				if (((unsigned char)*srch_3 >= 32) && ((unsigned char)*srch_3 < 127))
 				{
 					iter2++;
-					waddch(com_win, *srch_3);
+					waddch(com_win, (unsigned char)*srch_3);
 				}
 				else
-					iter2 += out_char(com_win, *srch_3, iter2, 0, 0);
+					iter2 += out_char(com_win, (unsigned char)*srch_3, curr_buff->last_line, 0, iter2);
 			}
-			wprintw(com_win, not_fnd_str);
+			wprintw(com_win, "%s", not_fnd_str);
 			wrefresh(com_win);
 			wmove(curr_buff->win, curr_buff->scr_vert,curr_buff->scr_horz);
 		}
@@ -375,22 +367,21 @@ int disp;		/* boolean for whether or not to display message */
 }
 
 int 
-upper(value)		/* convert character to upper case		*/
-char value;
+upper(int value)		/* convert character to upper case		*/
 {
 	char value2;
 
 	if ((value >= 'a') && (value <= 'z'))
-		value2 = value - ('a' - 'A');
+		value2 = (char)(value - ('a' - 'A'));
 	else 
-		value2 = value;
+		value2 = (char)value;
 	return(value2);
 }
 
 int 
-search_prompt(flag)	/* prompt and read search string (srch_str)	*/
-int flag;
+search_prompt(int flag)	/* prompt and read search string (srch_str)	*/
 {
+	(void)flag;
 	char *tmp_srch;
 	char *srch_1;
 	char *srch_3;
@@ -413,7 +404,7 @@ int flag;
 		srch_3 = srch_str = tmp_srch;
 		if (u_srch_str != NULL) 
 			free(u_srch_str);
-		srch_1 = u_srch_str = xalloc(strlen(srch_str) + 1);
+		srch_1 = u_srch_str = xalloc((int)(strlen(srch_str) + 1));
 		while (*srch_3 != '\0')		/* make upper case version of string */
 		{
 			*srch_1 = toupper(*srch_3);
@@ -422,16 +413,17 @@ int flag;
 		}
 		*srch_1 = '\0';
 		if (strlen(srch_str) >= 1)
-			value = search(TRUE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, 0, FALSE, TRUE);
+			value = search(TRUE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, TRUE, 0, FALSE);
 	}
 	return(0);
 }
 
 void 
-replace()		/* replace the given one string with another	*/
+replace(void)		/* replace the given one string with another	*/
 {
-	int counter;
-	int i, j;
+	size_t counter;
+	size_t i;
+	int j;
 	int chng_all;		/* change all occurrences		*/
 	int go_on;		/* continue to replace			*/
 	int t_vert;		/* temporary vertical position		*/
@@ -453,10 +445,9 @@ replace()		/* replace the given one string with another	*/
 	if chng_all is true, do not prompt user whether or not to change
 */
 
+	temp_flag = (int)(unsigned char)overstrike;
 	temp_abs_line = curr_buff->absolute_lin;
-	temp_flag = overstrike;
-	overstrike = FALSE;
-	s_flag = mark_text;
+	s_flag = (int)(unsigned char)mark_text;
 	mark_text = FALSE;
 	t_pos = curr_buff->scr_pos;
 	t_srch_str = srch_str;
@@ -471,15 +462,15 @@ replace()		/* replace the given one string with another	*/
 	chng_all = FALSE;
 	while (go_on)
 	{
-		if (search(TRUE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, 0, FALSE, TRUE))
+		if (search(TRUE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, TRUE, 0, FALSE))
 		{
 			wstandout(curr_buff->win);
 			if (curr_buff->position == curr_buff->curr_line->line_length)
 				waddch(curr_buff->win, ' ');
-			else if ((*curr_buff->pointer >= ' ') && (*curr_buff->pointer < 127))
-				waddch(curr_buff->win, *curr_buff->pointer);
+			else if (((unsigned char)*curr_buff->pointer >= ' ') && ((unsigned char)*curr_buff->pointer < 127))
+				waddch(curr_buff->win, (unsigned char)*curr_buff->pointer);
 			else
-				value = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+				value = out_char(curr_buff->win, (unsigned char)*curr_buff->pointer, curr_buff->scr_vert, 0, curr_buff->scr_pos);
 			wstandend(curr_buff->win);
 			wrefresh(curr_buff->win);
 			if (!chng_all)
@@ -493,10 +484,10 @@ replace()		/* replace the given one string with another	*/
 				free(response);
 			}
 			wmove(curr_buff->win, curr_buff->scr_vert, curr_buff->scr_horz);
-			if ((*curr_buff->pointer >= ' ') && (*curr_buff->pointer < 127))
-				waddch(curr_buff->win, *curr_buff->pointer);
+			if (((unsigned char)*curr_buff->pointer >= ' ') && ((unsigned char)*curr_buff->pointer < 127))
+				waddch(curr_buff->win, (unsigned char)*curr_buff->pointer);
 			else
-				value = out_char(curr_buff->win, *curr_buff->pointer, curr_buff->scr_pos, curr_buff->scr_vert, 0);
+				value = out_char(curr_buff->win, (unsigned char)*curr_buff->pointer, curr_buff->scr_vert, 0, curr_buff->scr_pos);
 			if (((toupper(res) == toupper(*replace_r_char)) || 
 			      (go_on) || (res == '\0')) && 
 			      (toupper(res) != toupper(*replace_skip_char)))
@@ -543,18 +534,18 @@ replace()		/* replace the given one string with another	*/
 	curr_buff->abs_pos = curr_buff->scr_pos = t_pos;
 	curr_buff->scr_vert = t_vert;
 	curr_buff->scr_horz = t_horz;
-	mark_text = s_flag;
-	midscreen(curr_buff->scr_vert, curr_buff->position);
+	mark_text = (char)s_flag;
+	midscreen(curr_buff->position, curr_buff->scr_vert);
 	werase(com_win);
 	wrefresh(com_win);
-	overstrike = temp_flag;
+	overstrike = (char)temp_flag;
 	curr_buff->absolute_lin = temp_abs_line;
 }
 
 int 
-repl_prompt(flag)	/* prompt for replace parameters		*/
-int flag;
+repl_prompt(int flag)	/* prompt for replace parameters		*/
 {
+	(void)flag;
 	char *rparam;
 	char *rp;
 	char *start;
@@ -647,7 +638,7 @@ int flag;
 }
 
 void 
-match()		/* find the matching (), {}, or []	*/
+match(void)		/* find the matching (), {}, or []	*/
 {
 	int level;		/* level of nesting			*/
 	int t_vert;		/* temporary vertical position		*/
@@ -659,20 +650,20 @@ match()		/* find the matching (), {}, or []	*/
 	int mliteral;		/* temp storage of true literal value	*/
 	int total_lines;	/* sum of lines moved			*/
 	int temp_abs_line;	/* keep track of original line		*/
-	char curr_char;		/* the current character 		*/
+	int curr_char;		/* the current character 		*/
 	char *t_srch_str;	/* temp search string			*/
 	char *ut_srch_str;	/* upper case search string		*/
 	char *direction;	/* direction in which to move		*/
 	struct text *t_line;	/* temp pointer to hold curr_buff->curr_line	*/
 
-	if ((*curr_buff->pointer == '{') || (*curr_buff->pointer == '}') || (*curr_buff->pointer == '(') || (*curr_buff->pointer == ')') || (*curr_buff->pointer == '[') || (*curr_buff->pointer == ']') || (*curr_buff->pointer == '<') || (*curr_buff->pointer == '>'))
+	if (((unsigned char)*curr_buff->pointer == '{') || ((unsigned char)*curr_buff->pointer == '}') || ((unsigned char)*curr_buff->pointer == '(') || ((unsigned char)*curr_buff->pointer == ')') || ((unsigned char)*curr_buff->pointer == '[') || ((unsigned char)*curr_buff->pointer == ']') || ((unsigned char)*curr_buff->pointer == '<') || ((unsigned char)*curr_buff->pointer == '>'))
 	{
 		temp_abs_line = curr_buff->absolute_lin;
-		curr_char = *curr_buff->pointer;
-		mliteral = literal;
+		curr_char = (int)(unsigned char)*curr_buff->pointer;
+		mliteral = (int)(unsigned char)literal;
 		mforward = forward;
 		literal = FALSE;
-		if ((*curr_buff->pointer == '{') || (*curr_buff->pointer == '(') || (*curr_buff->pointer == '[') || (*curr_buff->pointer == '<'))  /* provide matches for quoted characters - > ] ) } 	*/
+		if (((unsigned char)*curr_buff->pointer < 32) || ((unsigned char)*curr_buff->pointer > 126) || (*curr_buff->pointer == '[') || (*curr_buff->pointer == '<'))  /* provide matches for quoted characters - > ] ) } 	*/
 		{
 			direction = "d";
 			forward = TRUE;
@@ -682,7 +673,7 @@ match()		/* find the matching (), {}, or []	*/
 			direction = "u";
 			forward = FALSE;
 		}
-		s_flag = mark_text;
+		s_flag = (int)(unsigned char)mark_text;
 		mark_text = FALSE;
 		t_pos = curr_buff->scr_pos;
 		t_srch_str = srch_str;
@@ -702,13 +693,13 @@ match()		/* find the matching (), {}, or []	*/
 		u_srch_str = srch_str;
 		level = 1;
 		total_lines = 0;
-		while ((level > 0) && (search(FALSE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, 0, FALSE, TRUE)))
+		while ((level > 0) && (search(FALSE, curr_buff->curr_line, curr_buff->position, curr_buff->pointer, TRUE, 0, FALSE)))
 		{
 			total_lines += lines_moved;
 			curr_buff->curr_line = srch_line;
 			curr_buff->pointer = start_of_string;
 			curr_buff->position = tmp_pos;
-			if (*start_of_string == curr_char)
+			if ((unsigned char)*start_of_string == (unsigned char)curr_char)
 				level++;
 			else
 				level--;
@@ -722,7 +713,7 @@ match()		/* find the matching (), {}, or []	*/
 		curr_buff->abs_pos = curr_buff->scr_pos = t_pos;
 		curr_buff->scr_vert = t_vert;
 		curr_buff->scr_horz = t_horz;
-		mark_text = s_flag;
+		mark_text = (char)s_flag;
 		if (level == 0)
 		{
 			if (lines_moved != 0)
@@ -743,13 +734,13 @@ match()		/* find the matching (), {}, or []	*/
 			clr_cmd_line = TRUE;
 			wmove(com_win, 0, 0);
 			wclrtoeol(com_win);
-			wprintw(com_win, cant_find_match_str);
+			wprintw(com_win, "%s", cant_find_match_str);
 			wrefresh(com_win);
 			curr_buff->absolute_lin = temp_abs_line;
 		}
 		u_srch_str = ut_srch_str;
 		srch_str = t_srch_str;
-		literal = mliteral;
+		literal = (char)mliteral;
 		forward = mforward;
 	}
 }
