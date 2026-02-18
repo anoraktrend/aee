@@ -15,14 +15,6 @@ pub struct AeFileInfo {
     pub line_location: u64,
 }
 
-impl AeFileInfo {
-    fn use_fields(&self) {
-        let _ = self.info_location;
-        let _ = self.prev_info;
-        let _ = self.next_info;
-        let _ = self.line_location;
-    }
-}
 
 // Text line structure
 #[derive(Clone)]
@@ -38,26 +30,6 @@ pub struct TextLine {
     pub line_length: i32,
 }
 
-impl TextLine {
-    fn use_fields(&self) {
-        let _ = &self.line;
-        let _ = self.line_number;
-        let _ = self.max_length;
-        let _ = self.vert_len;
-        self.file_info.use_fields();
-        let _ = self.changed;
-        let _ = &self.prev_line;
-        let _ = &self.next_line;
-        let _ = self.line_length;
-    }
-}
-
-// Files structure for command line args
-pub struct FileEntry {
-    pub name: String,
-    pub next_name: Option<Rc<RefCell<FileEntry>>>,
-}
-
 // Buffer structure
 pub struct Buffer {
     pub name: String,
@@ -68,57 +40,23 @@ pub struct Buffer {
     pub scr_pos: i32,
     pub position: i32,
     pub abs_pos: i32,
-    pub pointer: String, // current position in line
     pub lines: i32,
     pub last_line: i32,
     pub last_col: i32,
     pub num_of_lines: i32,
     pub absolute_lin: i32,
     pub window_top: i32,
-    pub journ_fd: Option<std::fs::File>,
-    pub journalling: bool,
-    pub journal_file: Option<String>,
     pub file_name: Option<String>,
     pub full_name: Option<String>,
     pub changed: bool,
-    pub orig_dir: Option<String>,
     pub main_buffer: bool,
     pub edit_buffer: bool,
-    pub dos_file: bool,
-    pub fileinfo: Option<std::fs::Metadata>,
-    pub next_buff: Option<Rc<RefCell<Buffer>>>,
-}
-
-// Tab stops
-#[derive(Clone)]
-pub struct TabStop {
-    pub column: i32,
-    pub next_stop: Option<Rc<RefCell<TabStop>>>,
-}
-
-// Delete buffers for undo
-#[derive(Clone)]
-pub struct DelBuff {
-    pub flag: i32,
-    pub character: i8,
-    pub string: Option<String>,
-    pub length: i32,
-    pub prev: Option<Rc<RefCell<DelBuff>>>,
-    pub next: Option<Rc<RefCell<DelBuff>>>,
-}
-
-// Journal database
-#[derive(Clone)]
-pub struct JournalDb {
-    pub file_name: String,
-    pub journal_name: String,
-    pub next: Option<Rc<RefCell<JournalDb>>>,
 }
 
 // Undo action
 #[derive(Clone)]
 pub enum LastAction {
-    InsertChar { line: Rc<RefCell<TextLine>>, pos: usize, ch: char },
+    InsertChar { line: Rc<RefCell<TextLine>>, pos: usize },
     DeleteChar { line: Rc<RefCell<TextLine>>, pos: usize, ch: char },
 }
 
@@ -177,8 +115,6 @@ pub struct EditorState {
     pub new_string: Option<String>,
 
     pub files: Vec<String>,
-    pub undel_first: Option<Rc<RefCell<DelBuff>>>,
-    pub undel_current: Option<Rc<RefCell<DelBuff>>>,
 
     // LSP client
     pub lsp_client: Option<crate::lsp::LspClient>,
@@ -252,8 +188,6 @@ impl EditorState {
             old_string: None,
             new_string: None,
             files: Vec::new(),
-            undel_first: None,
-            undel_current: None,
             lsp_client: None,
             start_at_line: None,
             lines_moved: 0,
@@ -524,44 +458,6 @@ impl EditorState {
         }
     }
 
-    pub async fn run(&mut self) {
-        // Main edit loop (stub, not used with cursive)
-        // while self.edit {
-        //     // Get input
-        //     let input = self.get_input();
-
-        //     // Process input
-        //     self.keyboard(input);
-
-        //     // Draw current line
-        //     self.draw_current_line();
-
-        //     // Display status
-        //     self.status_display();
-
-        //     // Refresh window
-        //     if let Some(ref buff) = self.curr_buff {
-        //         if let Some(win) = buff.borrow().win {
-        //             wmove(win, buff.borrow().scr_vert, buff.borrow().scr_horz);
-        //             wrefresh(win);
-        //         }
-        //     }
-        // }
-    }
-
-    fn get_input(&mut self) -> i32 {
-        // Stub
-        -1
-    }
-
-    fn keyboard(&mut self, _input: i32) {
-        // Stub
-    }
-
-    fn draw_current_line(&self) {
-        // Stub
-    }
-
     pub fn use_unused_fields(&self) {
         // Dummy function to suppress unused field warnings
         let _ = &self.first_line;
@@ -605,8 +501,6 @@ impl EditorState {
         let _ = &self.old_string;
         let _ = &self.new_string;
         let _ = &self.files;
-        let _ = &self.undel_first;
-        let _ = &self.undel_current;
         let _ = &self.lsp_client;
         let _ = &self.start_at_line;
         let _ = self.lines_moved;

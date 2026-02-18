@@ -44,15 +44,6 @@ pub enum TokenKind {
     Comment,
     Operator,
     Whitespace,
-    Other,
-}
-
-/// A highlighted span within a line
-#[derive(Debug, Clone)]
-pub struct Token {
-    pub start: usize,
-    pub end: usize,
-    pub kind: TokenKind,
 }
 
 /// Determine whether `word` is a keyword for the given language.
@@ -62,106 +53,6 @@ pub fn is_keyword(word: &str, lang: &str) -> bool {
         "rust" => RUST_KEYWORDS.contains(word),
         _ => C_KEYWORDS.contains(word) || RUST_KEYWORDS.contains(word),
     }
-}
-
-/// Tokenise a single source line into highlighted spans.
-pub fn tokenize_line(line: &str, lang: &str) -> Vec<Token> {
-    let mut tokens = Vec::new();
-    let chars: Vec<char> = line.chars().collect();
-    let len = chars.len();
-    let mut i = 0;
-
-    while i < len {
-        // Line comments: // ...
-        if i + 1 < len && chars[i] == '/' && chars[i + 1] == '/' {
-            tokens.push(Token { start: i, end: len, kind: TokenKind::Comment });
-            break;
-        }
-        // Line comments: # ... (Python/shell)
-        if chars[i] == '#' {
-            tokens.push(Token { start: i, end: len, kind: TokenKind::Comment });
-            break;
-        }
-
-        // String literals (double-quote)
-        if chars[i] == '"' {
-            let start = i;
-            i += 1;
-            while i < len {
-                if chars[i] == '\\' {
-                    i += 2; // skip escape
-                } else if chars[i] == '"' {
-                    i += 1;
-                    break;
-                } else {
-                    i += 1;
-                }
-            }
-            tokens.push(Token { start, end: i, kind: TokenKind::StringLiteral });
-            continue;
-        }
-
-        // String literals (single-quote char)
-        if chars[i] == '\'' {
-            let start = i;
-            i += 1;
-            while i < len {
-                if chars[i] == '\\' {
-                    i += 2;
-                } else if chars[i] == '\'' {
-                    i += 1;
-                    break;
-                } else {
-                    i += 1;
-                }
-            }
-            tokens.push(Token { start, end: i, kind: TokenKind::StringLiteral });
-            continue;
-        }
-
-        // Numbers
-        if chars[i].is_ascii_digit() || (chars[i] == '-' && i + 1 < len && chars[i + 1].is_ascii_digit()) {
-            let start = i;
-            if chars[i] == '-' { i += 1; }
-            while i < len && (chars[i].is_ascii_alphanumeric() || chars[i] == '.' || chars[i] == '_') {
-                i += 1;
-            }
-            tokens.push(Token { start, end: i, kind: TokenKind::Number });
-            continue;
-        }
-
-        // Identifiers / keywords
-        if chars[i].is_alphabetic() || chars[i] == '_' {
-            let start = i;
-            while i < len && (chars[i].is_alphanumeric() || chars[i] == '_') {
-                i += 1;
-            }
-            let word: String = chars[start..i].iter().collect();
-            let kind = if is_keyword(&word, lang) {
-                TokenKind::Keyword
-            } else {
-                TokenKind::Identifier
-            };
-            tokens.push(Token { start, end: i, kind });
-            continue;
-        }
-
-        // Whitespace
-        if chars[i].is_whitespace() {
-            let start = i;
-            while i < len && chars[i].is_whitespace() {
-                i += 1;
-            }
-            tokens.push(Token { start, end: i, kind: TokenKind::Whitespace });
-            continue;
-        }
-
-        // Everything else (operators, punctuation)
-        tokens.push(Token { start: i, end: i + 1, kind: TokenKind::Operator });
-        i += 1;
-    }
-
-    tokens
 }
 
 /// Guess the language from a file extension.
@@ -178,15 +69,6 @@ pub fn lang_from_extension(path: &str) -> &'static str {
         "sh" | "bash" => "shell",
         _ => "text",
     }
-}
-
-/// Apply local syntax highlighting to a line string, returning a sequence of
-/// (text_slice, token_kind) tuples that the UI layer can colour.
-/// Ignores multi-line state; use `highlight_line_with_state` when you need
-/// to carry block-comment context across lines.
-pub fn highlight_line<'a>(line: &'a str, lang: &str) -> Vec<(&'a str, TokenKind)> {
-    let (spans, _) = highlight_line_with_state(line, lang, false);
-    spans
 }
 
 /// Stateful highlighter that ports the C `highlight_syntax` state machine.

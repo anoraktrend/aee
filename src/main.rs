@@ -311,7 +311,6 @@ fn insert_char(editor: &mut editor_state::EditorState, ch: char) {
                 editor.last_action = Some(crate::editor_state::LastAction::InsertChar {
                     line: buff.curr_line.clone().unwrap(),
                     pos: (buff.position - 1) as usize,
-                    ch,
                 });
             }
         }
@@ -702,7 +701,7 @@ fn replace_next(editor: &mut editor_state::EditorState, search_str: &str, replac
 fn undo(editor: &mut editor_state::EditorState) {
     if let Some(action) = editor.last_action.take() {
         match action {
-            crate::editor_state::LastAction::InsertChar { line, pos, .. } => {
+            crate::editor_state::LastAction::InsertChar { line, pos } => {
                 let mut l = line.borrow_mut();
                 if pos < l.line.len() {
                     l.line.remove(pos);

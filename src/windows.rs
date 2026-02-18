@@ -196,18 +196,10 @@ pub fn add_buf(ident: &str) -> Buffer {
         absolute_lin: 1,
         changed: false,
         edit_buffer: true,
-        journalling: false,
-        journal_file: None,
         lines: rows as i32 - 1,
         last_line: rows as i32 - 2,
         last_col: cols as i32 - 1,
-        pointer: String::new(),
-        orig_dir: None,
         main_buffer: false,
-        dos_file: false,
-        fileinfo: None,
-        journ_fd: None,
-        next_buff: None,
     }
 }
 

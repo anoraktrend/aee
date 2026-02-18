@@ -95,14 +95,13 @@ pub fn print_status_bar(y: u16, text: &str, width: u16) -> Result<(), Box<dyn st
 
 fn token_color(kind: &TokenKind) -> Color {
     match kind {
-        TokenKind::Keyword      => Color::Yellow,
-        TokenKind::Comment      => Color::DarkGrey,
+        TokenKind::Keyword       => Color::Yellow,
+        TokenKind::Comment       => Color::DarkGrey,
         TokenKind::StringLiteral => Color::Green,
-        TokenKind::Number       => Color::Cyan,
-        TokenKind::Operator     => Color::Magenta,
-        TokenKind::Identifier   => Color::White,
-        TokenKind::Whitespace   => Color::Reset,
-        TokenKind::Other        => Color::Reset,
+        TokenKind::Number        => Color::Cyan,
+        TokenKind::Operator      => Color::Magenta,
+        TokenKind::Identifier    => Color::White,
+        TokenKind::Whitespace    => Color::Reset,
     }
 }
 
@@ -115,9 +114,3 @@ pub fn read_key() -> Result<KeyEvent, Box<dyn std::error::Error>> {
     }
 }
 
-// Stub window helpers kept for API compatibility
-pub fn make_com_win() -> i32 { 0 }
-pub fn make_help_win() -> i32 { 0 }
-pub fn make_info_win(_height: i32) -> i32 { 0 }
-pub fn paint_menu(_menu_list: &[String], _menu_win: i32, _max_width: i32, _max_height: i32, _current: i32) {}
-pub fn draw_line(_vertical: i32, _horizontal: i32, _ptr: &str, _t_pos: i32, _dr_l: &str) {}

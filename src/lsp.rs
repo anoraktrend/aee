@@ -7,6 +7,10 @@
 //   • textDocument/completion
 //   • textDocument/semanticTokens/full
 //   • textDocument/publishDiagnostics (notification, server-initiated)
+//
+// The public API is intentionally complete even though not all methods are
+// called yet from the main loop. Suppress dead_code lints for this module.
+#![allow(dead_code)]
 
 use std::collections::HashMap;
 use std::process::Stdio;
