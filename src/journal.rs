@@ -1,419 +1,425 @@
-#![allow(dead_code)]
+// journal.rs – crash-recovery journalling
+// Mirrors src/journal.c (write_journal, update_journal_entry, journ_info_init,
+// remove_journ_line, read_journal_entry, recover_from_journal,
+// open_journal_for_write, remove_journal_file, journal_name,
+// add_to_journal_db, rm_journal_db_entry, read_journal_db, write_db_file,
+// lock_journal_fd, unlock_journal_fd).
+//
+// Public API is shaped to match calls in main.rs:
+//   journal_name(fname, dir_opt)               -> String
+//   open_journal_for_write(buff, jpath, fname) -> io::Result<File>
+//   add_to_journal_db(fname_opt, jpath)
+//   remove_journal_file(jpath, fname)
+//   write_journal(jf, line_rc)
 
-/// Journal / crash-recovery – ported from src/journal.c
-///
-/// A journal file records every changed line when the cursor leaves it.
-/// On an unclean exit the editor can recover from the journal file.
-///
-/// The on-disk layout per line is:
-///
-///   [prev_info : u64] [next_info : u64] [line_location : u64] [line_length : i32]
-///
-/// followed by the raw line bytes at `line_location`.
-///
-/// A master database at `~/.aeeinfo` tracks which files are currently
-/// being journalled.
-
-use std::fs::{self, File};
+use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write};
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::editor_state::{Buffer, TextLine};
+use crate::editor_state::{Buffer, TextLine, NO_FURTHER_LINES};
+use crate::file_ops::{ae_basename, resolve_name};
 use crate::text::txtalloc;
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Constants
-// ──────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// Binary I/O helpers
+// ────────────────────────────────────────────────────────────────────────────
 
-/// Sentinel value for "no further lines" – mirrors C `NO_FURTHER_LINES`.
-pub const NO_FURTHER_LINES: u64 = u64::MAX;
+const U64_SIZE: usize = std::mem::size_of::<u64>();
+const I32_SIZE: usize = std::mem::size_of::<i32>();
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Low-level binary I/O helpers
-// ──────────────────────────────────────────────────────────────────────────────
-
-fn write_u64(f: &mut File, v: u64) -> io::Result<()> {
-    f.write_all(&v.to_ne_bytes())
-}
-
-fn write_i32(f: &mut File, v: i32) -> io::Result<()> {
-    f.write_all(&v.to_ne_bytes())
-}
-
+fn write_u64(f: &mut File, v: u64) -> io::Result<()> { f.write_all(&v.to_ne_bytes()) }
+fn write_i32(f: &mut File, v: i32) -> io::Result<()> { f.write_all(&v.to_ne_bytes()) }
 fn read_u64(f: &mut File) -> io::Result<u64> {
-    let mut buf = [0u8; 8];
+    let mut buf = [0u8; U64_SIZE];
     f.read_exact(&mut buf)?;
     Ok(u64::from_ne_bytes(buf))
 }
-
 fn read_i32(f: &mut File) -> io::Result<i32> {
-    let mut buf = [0u8; 4];
+    let mut buf = [0u8; I32_SIZE];
     f.read_exact(&mut buf)?;
     Ok(i32::from_ne_bytes(buf))
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// write_journal – write one line to the journal file
-// ──────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// journal_name  (called as `journal::journal_name(&fname, None)`)
+// ────────────────────────────────────────────────────────────────────────────
 
-/// Append the line text to the journal file and update the line's location
-/// metadata. Then call `update_journal_entry`.
-pub fn write_journal(
-    journ_file: &mut File,
-    line_rc: &Rc<RefCell<TextLine>>,
-) -> io::Result<()> {
-    let end = journ_file.seek(SeekFrom::End(0))?;
-    line_rc.borrow_mut().file_info.line_location = end;
-
-    let bytes = {
-        let l = line_rc.borrow();
-        l.line.as_bytes().to_vec()
-    };
-    journ_file.write_all(&bytes)?;
-    update_journal_entry(journ_file, line_rc)?;
-    line_rc.borrow_mut().changed = false;
-    Ok(())
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// update_journal_entry – rewrite the info block for a line
-// ──────────────────────────────────────────────────────────────────────────────
-
-/// Seek to `info_location` and write the four metadata words for `line`.
-/// If `info_location == NO_FURTHER_LINES` (uninitialised), calls
-/// `journ_info_init` instead.
-pub fn update_journal_entry(
-    journ_file: &mut File,
-    line_rc: &Rc<RefCell<TextLine>>,
-) -> io::Result<()> {
-    let info_loc = line_rc.borrow().file_info.info_location;
-    if info_loc == NO_FURTHER_LINES {
-        return journ_info_init(journ_file, line_rc);
-    }
-    journ_file.seek(SeekFrom::Start(info_loc))?;
-    let (prev, next, line_loc, line_len) = {
-        let l = line_rc.borrow();
-        (l.file_info.prev_info,
-         l.file_info.next_info,
-         l.file_info.line_location,
-         l.line_length)
-    };
-    write_u64(journ_file, prev)?;
-    write_u64(journ_file, next)?;
-    write_u64(journ_file, line_loc)?;
-    write_i32(journ_file, line_len)?;
-    Ok(())
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// journ_info_init – first-time write of info block
-// ──────────────────────────────────────────────────────────────────────────────
-
-fn journ_info_init(
-    journ_file: &mut File,
-    line_rc: &Rc<RefCell<TextLine>>,
-) -> io::Result<()> {
-    let end = journ_file.seek(SeekFrom::End(0))?;
-    line_rc.borrow_mut().file_info.info_location = end;
-
-    // Wire up prev/next pointers
-    let (prev_info, next_info) = {
-        let l = line_rc.borrow();
-        let prev = l.prev_line.as_ref()
-            .map(|p| p.borrow().file_info.info_location)
-            .unwrap_or(NO_FURTHER_LINES);
-        let next = l.next_line.as_ref()
-            .map(|n| n.borrow().file_info.info_location)
-            .unwrap_or(NO_FURTHER_LINES);
-        (prev, next)
-    };
-    {
-        let mut l = line_rc.borrow_mut();
-        l.file_info.prev_info = prev_info;
-        l.file_info.next_info = next_info;
-    }
-    // Update neighbouring lines so they point at us
-    if let Some(prev_rc) = line_rc.borrow().prev_line.clone() {
-        prev_rc.borrow_mut().file_info.next_info = end;
-        update_journal_entry(journ_file, &prev_rc)?;
-    }
-    if let Some(next_rc) = line_rc.borrow().next_line.clone() {
-        next_rc.borrow_mut().file_info.prev_info = end;
-        update_journal_entry(journ_file, &next_rc)?;
-    }
-    update_journal_entry(journ_file, line_rc)
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// read_journal_entry – read one info block + text
-// ──────────────────────────────────────────────────────────────────────────────
-
-fn read_journal_entry(
-    journ_file: &mut File,
-    line_rc: &Rc<RefCell<TextLine>>,
-) -> io::Result<()> {
-    let info_loc = line_rc.borrow().file_info.info_location;
-    journ_file.seek(SeekFrom::Start(info_loc))?;
-    let prev  = read_u64(journ_file)?;
-    let next  = read_u64(journ_file)?;
-    let tloc  = read_u64(journ_file)?;
-    let tlen  = read_i32(journ_file)?;
-    {
-        let mut l = line_rc.borrow_mut();
-        l.file_info.prev_info     = prev;
-        l.file_info.next_info     = next;
-        l.file_info.line_location = tloc;
-        l.line_length             = tlen;
-    }
-    // Read the text
-    journ_file.seek(SeekFrom::Start(tloc))?;
-    let len = tlen.max(0) as usize;
-    let mut bytes = vec![0u8; len];
-    journ_file.read_exact(&mut bytes)?;
-    line_rc.borrow_mut().line = String::from_utf8_lossy(&bytes).into_owned();
-    Ok(())
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// recover_from_journal – rebuild the buffer from a journal file
-// ──────────────────────────────────────────────────────────────────────────────
-
-/// Read a journal file and reconstruct the buffer it describes.
-/// Returns `Ok(original_file_name)` or an `Err`.
-pub fn recover_from_journal(
-    buff: &mut Buffer,
-    journal_path: &Path,
-) -> io::Result<String> {
-    let mut jf = File::open(journal_path)?;
-
-    // The first record in the file is the original file name followed by '\n'.
-    let mut orig_name = String::new();
-    let mut byte = [0u8; 1];
-    loop {
-        let n = jf.read(&mut byte)?;
-        if n == 0 { return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "empty journal")); }
-        if byte[0] == b'\n' { break; }
-        orig_name.push(byte[0] as char);
-    }
-
-    // Byte offset just after the '\n' is where the first info block lives.
-    let first_info_loc = jf.stream_position()?;
-
-    // Reconstruct linked list
-    let first_line_rc = buff.first_line.as_ref()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "no first line"))?
-        .clone();
-
-    first_line_rc.borrow_mut().file_info.info_location = first_info_loc;
-
-    let mut line_rc = first_line_rc;
-    loop {
-        read_journal_entry(&mut jf, &line_rc)?;
-        let next_info = line_rc.borrow().file_info.next_info;
-        if next_info == NO_FURTHER_LINES { break; }
-        let new_line = txtalloc();
-        {
-            let mut nl = new_line.borrow_mut();
-            nl.file_info.info_location = next_info;
-            nl.file_info.next_info = 0;
-            nl.prev_line = Some(line_rc.clone());
-        }
-        line_rc.borrow_mut().next_line = Some(new_line.clone());
-        buff.num_of_lines += 1;
-        line_rc = new_line;
-    }
-
-    buff.changed = true;
-    Ok(orig_name)
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// open_journal_for_write – create the journal file and write initial entry
-// ──────────────────────────────────────────────────────────────────────────────
-
-/// Open the journal file for writing, record `full_name` as the first line,
-/// and initialise the first text-line entry.
-pub fn open_journal_for_write(
-    buff: &mut Buffer,
-    journal_path: &Path,
-    full_name: &str,
-) -> io::Result<File> {
-    let mut jf = File::create(journal_path)?;
-    if !full_name.is_empty() {
-        jf.write_all(full_name.as_bytes())?;
-        jf.write_all(b"\n")?;
-    }
-    jf.write_all(b"\n")?;
-
-    if let Some(ref first_rc) = buff.first_line.clone() {
-        journ_info_init(&mut jf, first_rc)?;
-    }
-    Ok(jf)
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// remove_journal_file – delete the journal and its db entry
-// ──────────────────────────────────────────────────────────────────────────────
-
-/// Close and delete the journal file, and remove its entry from `~/.aeeinfo`.
-pub fn remove_journal_file(journal_path: &Path, full_name: &str) -> io::Result<()> {
-    fs::remove_file(journal_path)?;
-    rm_journal_db_entry(journal_path, full_name)
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Journal name generation
-// ──────────────────────────────────────────────────────────────────────────────
-
-/// Generate a journal file path for `file_name`.
-/// If `journal_dir` is Some, place it there; otherwise put it next to the file
-/// with a ".rv" extension.
-pub fn journal_name(file_name: &str, journal_dir: Option<&str>) -> PathBuf {
-    let base_name = Path::new(file_name)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unnamed");
-
-    let stem = if base_name.is_empty() {
-        // Generate a timestamp-based name
+/// Compute the journal file path for `file_name`.
+/// `journal_dir` is `None` to use the file's own directory, or
+/// `Some(dir)` to place the journal in a specific directory.
+pub fn journal_name(file_name: &str, journal_dir: Option<&str>) -> String {
+    let base = if !file_name.is_empty() {
+        ae_basename(file_name)
+    } else {
         let secs = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs())
             .unwrap_or(0);
-        format!("{:012}", secs)
-    } else {
-        base_name.to_string()
+        format!("{:014}", secs)
     };
 
-    let name_with_ext = format!("{}.rv", stem);
-
     match journal_dir {
-        Some(dir) => {
-            let mut p = PathBuf::from(dir);
-            p.push(&name_with_ext);
-            p
-        }
-        None => {
-            let base = Path::new(file_name).parent().unwrap_or(Path::new("."));
-            let mut p = PathBuf::from(base);
-            p.push(&name_with_ext);
-            p
-        }
+        Some(dir) if !dir.is_empty() => format!("{}/{}.rv", dir, base),
+        _ => format!("{}.rv", base),
     }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Journal database (~/.aeeinfo) – track active journal sessions
-// ──────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// write_journal  (mirrors C `write_journal()`)
+// ────────────────────────────────────────────────────────────────────────────
 
-/// One entry in the journal database.
-#[derive(Debug, Clone)]
-pub struct JournalDbEntry {
-    pub file_name: Option<String>,
-    pub journal_name: String,
-}
-
-fn db_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-    PathBuf::from(home).join(".aeeinfo")
-}
-
-fn lock_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-    PathBuf::from(home).join(".aeeinfo.L")
-}
-
-/// Acquire an exclusive lock file.  Returns `Ok(())` or `Err`.
-fn lock_journal_db() -> io::Result<()> {
-    use std::fs::OpenOptions;
-    let lp = lock_path();
-    for _ in 0..3 {
-        match OpenOptions::new().write(true).create_new(true).open(&lp) {
-            Ok(_) => return Ok(()),
-            Err(_) => std::thread::sleep(std::time::Duration::from_secs(1)),
-        }
+/// Write the current content of `line` to the end of the journal file, then
+/// update the info record for that line.
+pub fn write_journal(
+    journ_fd: &mut File,
+    line_rc: &Rc<RefCell<TextLine>>,
+) -> io::Result<()> {
+    let _ = journ_fd.seek(SeekFrom::End(0));
+    let loc = journ_fd.stream_position()?;
+    {
+        let mut line = line_rc.borrow_mut();
+        line.file_info.line_location = loc;
+        let content = line.line.clone();
+        journ_fd.write_all(content.as_bytes())?;
+        journ_fd.write_all(b"\0")?;
     }
-    Err(io::Error::new(io::ErrorKind::WouldBlock, "could not acquire journal lock"))
+    update_journal_entry(journ_fd, line_rc)?;
+    line_rc.borrow_mut().changed = false;
+    Ok(())
 }
 
-fn unlock_journal_db() {
-    let _ = fs::remove_file(lock_path());
+// ────────────────────────────────────────────────────────────────────────────
+// update_journal_entry / journ_info_init / remove_journ_line
+// ────────────────────────────────────────────────────────────────────────────
+
+fn update_journal_entry(
+    journ_fd: &mut File,
+    line_rc: &Rc<RefCell<TextLine>>,
+) -> io::Result<()> {
+    let fi = line_rc.borrow().file_info.clone();
+    if fi.info_location == NO_FURTHER_LINES {
+        journ_info_init(journ_fd, line_rc)?;
+        return Ok(());
+    }
+    journ_fd.seek(SeekFrom::Start(fi.info_location))?;
+    write_u64(journ_fd, fi.prev_info)?;
+    write_u64(journ_fd, fi.next_info)?;
+    write_u64(journ_fd, fi.line_location)?;
+    let ll = line_rc.borrow().line_length;
+    write_i32(journ_fd, ll)
 }
 
-/// Read all entries from `~/.aeeinfo`.
-pub fn read_journal_db() -> io::Result<Vec<JournalDbEntry>> {
-    let path = db_path();
-    if !path.exists() { return Ok(vec![]); }
-    let content = fs::read_to_string(&path)?;
-    let mut entries = Vec::new();
-    for line in content.lines() {
-        let parts: Vec<&str> = line.splitn(4, ' ').collect();
-        if parts.len() < 3 { continue; }
-        let file_name_len: usize = parts[0].parse().unwrap_or(0);
-        let journ_name_len: usize = parts[1].parse().unwrap_or(0);
-        let rest = if parts.len() >= 4 {
-            format!("{} {}", parts[2], parts[3])
+fn journ_info_init(
+    journ_fd: &mut File,
+    line_rc: &Rc<RefCell<TextLine>>,
+) -> io::Result<()> {
+    journ_fd.seek(SeekFrom::End(0))?;
+    let loc = journ_fd.stream_position()?;
+
+    {
+        let mut line = line_rc.borrow_mut();
+        line.file_info.info_location = loc;
+
+        if let Some(ref prev_rc) = line.prev_line.clone() {
+            line.file_info.prev_info = prev_rc.borrow().file_info.info_location;
+            prev_rc.borrow_mut().file_info.next_info = loc;
+        }
+        if let Some(ref next_rc) = line.next_line.clone() {
+            line.file_info.next_info = next_rc.borrow().file_info.info_location;
+            next_rc.borrow_mut().file_info.prev_info = loc;
         } else {
-            parts[2].to_string()
-        };
-        let (file_part, journ_part) = if file_name_len > 0 {
-            let fp = rest[..file_name_len.min(rest.len())].to_string();
-            let jp_start = (file_name_len + 1).min(rest.len());
-            let jp = rest[jp_start..(jp_start + journ_name_len).min(rest.len())].to_string();
-            (Some(fp), jp)
-        } else {
-            let jp = rest[..journ_name_len.min(rest.len())].to_string();
-            (None, jp)
-        };
-        entries.push(JournalDbEntry { file_name: file_part, journal_name: journ_part });
+            line.file_info.next_info = NO_FURTHER_LINES;
+        }
     }
-    Ok(entries)
-}
 
-/// Write all entries back to `~/.aeeinfo`.
-fn write_journal_db(entries: &[JournalDbEntry]) -> io::Result<()> {
-    let path = db_path();
-    let mut f = File::create(&path)?;
-    for e in entries {
-        match &e.file_name {
-            Some(fn_) => writeln!(f, "{} {} {} {}", fn_.len(), e.journal_name.len(), fn_, e.journal_name)?,
-            None       => writeln!(f, "0 {} {}", e.journal_name.len(), e.journal_name)?,
+    update_journal_entry(journ_fd, line_rc)?;
+
+    let (prev_opt, next_opt) = {
+        let line = line_rc.borrow();
+        (line.prev_line.clone(), line.next_line.clone())
+    };
+    if let Some(prev_rc) = prev_opt { update_journal_entry(journ_fd, &prev_rc)?; }
+    if let Some(next_rc) = next_opt {
+        if line_rc.borrow().file_info.next_info != NO_FURTHER_LINES {
+            update_journal_entry(journ_fd, &next_rc)?;
         }
     }
     Ok(())
 }
 
-/// Add a new entry to `~/.aeeinfo`.
-pub fn add_to_journal_db(file_name: Option<&str>, journal_path: &Path) -> io::Result<()> {
-    lock_journal_db()?;
-    let mut entries = read_journal_db().unwrap_or_default();
-    entries.push(JournalDbEntry {
-        file_name: file_name.map(|s| s.to_string()),
-        journal_name: journal_path.to_string_lossy().into_owned(),
-    });
-    let result = write_journal_db(&entries);
-    unlock_journal_db();
-    result
+/// Remove a line from the journal linked list (mirrors C `remove_journ_line()`).
+pub fn remove_journ_line(
+    journ_fd: &mut File,
+    line_rc: &Rc<RefCell<TextLine>>,
+) -> io::Result<()> {
+    let (prev_opt, next_opt) = {
+        let line = line_rc.borrow();
+        (line.prev_line.clone(), line.next_line.clone())
+    };
+
+    match (prev_opt, next_opt) {
+        (None, Some(ref next_rc)) => {
+            let loc = line_rc.borrow().file_info.info_location;
+            next_rc.borrow_mut().file_info.info_location = loc;
+            update_journal_entry(journ_fd, next_rc)?;
+            if let Some(ref nn) = next_rc.borrow().next_line.clone() {
+                nn.borrow_mut().file_info.prev_info = loc;
+                update_journal_entry(journ_fd, nn)?;
+            }
+        }
+        (Some(ref prev_rc), None) => {
+            prev_rc.borrow_mut().file_info.next_info = NO_FURTHER_LINES;
+            update_journal_entry(journ_fd, prev_rc)?;
+        }
+        (Some(ref prev_rc), Some(ref next_rc)) => {
+            let next_loc = next_rc.borrow().file_info.info_location;
+            let prev_loc = prev_rc.borrow().file_info.info_location;
+            prev_rc.borrow_mut().file_info.next_info = next_loc;
+            next_rc.borrow_mut().file_info.prev_info = prev_loc;
+            update_journal_entry(journ_fd, prev_rc)?;
+            update_journal_entry(journ_fd, next_rc)?;
+        }
+        (None, None) => {}
+    }
+    Ok(())
 }
 
-/// Remove the entry for `journal_path` from `~/.aeeinfo`.
-pub fn rm_journal_db_entry(journal_path: &Path, _full_name: &str) -> io::Result<()> {
-    lock_journal_db()?;
-    let entries = read_journal_db().unwrap_or_default();
-    let jname = journal_path.to_string_lossy();
-    let filtered: Vec<JournalDbEntry> = entries
-        .into_iter()
-        .filter(|e| e.journal_name != jname.as_ref())
-        .collect();
-    let result = if filtered.is_empty() {
-        let _ = fs::remove_file(db_path());
-        Ok(())
-    } else {
-        write_journal_db(&filtered)
+// ────────────────────────────────────────────────────────────────────────────
+// read_journal_entry
+// ────────────────────────────────────────────────────────────────────────────
+
+fn read_journal_entry(
+    journ_fd: &mut File,
+    line_rc: &Rc<RefCell<TextLine>>,
+) -> io::Result<()> {
+    let info_loc = line_rc.borrow().file_info.info_location;
+    journ_fd.seek(SeekFrom::Start(info_loc))?;
+
+    let prev_info     = read_u64(journ_fd)?;
+    let next_info     = read_u64(journ_fd)?;
+    let line_location = read_u64(journ_fd)?;
+    let line_length   = read_i32(journ_fd)?;
+
+    {
+        let mut line = line_rc.borrow_mut();
+        line.file_info.prev_info     = prev_info;
+        line.file_info.next_info     = next_info;
+        line.file_info.line_location = line_location;
+        line.line_length             = line_length;
+    }
+
+    journ_fd.seek(SeekFrom::Start(line_location))?;
+    let len = (line_length - 1).max(0) as usize;
+    let mut buf = vec![0u8; len];
+    journ_fd.read_exact(&mut buf)?;
+    let text = String::from_utf8_lossy(&buf).to_string();
+
+    let mut line = line_rc.borrow_mut();
+    line.line        = text;
+    line.max_length  = line_length;
+    Ok(())
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// open_journal_for_write
+// (called as `journal::open_journal_for_write(&mut buff, &jpath, &fname)`)
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Create (or truncate) the journal file at `jpath` and write the file-name
+/// header, then initialise the info record for the first line.
+/// Returns the open `File` handle.
+pub fn open_journal_for_write(
+    buffer: &mut Buffer,
+    jpath: &str,
+    fname: &str,
+) -> io::Result<File> {
+    let mut fd = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(jpath)?;
+
+    // Header: full file name + newline.
+    if !fname.is_empty() {
+        fd.write_all(fname.as_bytes())?;
+    }
+    fd.write_all(b"\n")?;
+
+    // Initialise journal entry for the first line.
+    if let Some(ref first_rc) = buffer.first_line {
+        journ_info_init(&mut fd, first_rc)?;
+    }
+
+    buffer.journalling  = true;
+    buffer.journal_file = Some(jpath.to_string());
+    Ok(fd)
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// add_to_journal_db
+// (called as `journal::add_to_journal_db(Some(&fname), &jpath)`)
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Add an entry to ~/.aeeinfo.
+pub fn add_to_journal_db(fname: Option<&str>, jpath: &str) -> io::Result<()> {
+    let mut list = read_journal_db_inner()?;
+    list.push(JournalDbEntry {
+        file_name:    fname.map(|s| s.to_string()),
+        journal_name: jpath.to_string(),
+    });
+    write_db_file_inner(&list)
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// remove_journal_file
+// (called as `journal::remove_journal_file(&jpath, &fname)`)
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Delete the journal file from disk and remove its entry from ~/.aeeinfo.
+pub fn remove_journal_file(jpath: &str, _fname: &str) -> io::Result<()> {
+    let _ = fs::remove_file(jpath);
+    if let Ok(mut list) = read_journal_db_inner() {
+        list.retain(|e| e.journal_name != jpath);
+        let _ = write_db_file_inner(&list);
+    }
+    Ok(())
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// recover_from_journal
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Read the edit buffer back from the journal file at `file_name`.
+pub fn recover_from_journal(
+    buffer: &mut Buffer,
+    file_name: &str,
+) -> io::Result<()> {
+    let mut journ_fd = File::open(file_name)?;
+
+    // Skip header (up to first '\n').
+    let mut header = Vec::new();
+    let mut byte   = [0u8; 1];
+    loop {
+        journ_fd.read_exact(&mut byte)?;
+        if byte[0] == b'\n' { break; }
+        header.push(byte[0]);
+    }
+    let stored_name = String::from_utf8_lossy(&header).to_string();
+    let start = journ_fd.stream_position()?;
+
+    if buffer.first_line.is_none() {
+        buffer.first_line = Some(txtalloc());
+    }
+
+    let first_rc = buffer.first_line.clone().unwrap();
+    first_rc.borrow_mut().file_info.info_location = start;
+
+    let cols = crate::ui::COLS();
+    let mut current   = first_rc.clone();
+    let mut num_lines = 0i32;
+    loop {
+        read_journal_entry(&mut journ_fd, &current)?;
+        {
+            let mut line = current.borrow_mut();
+            let ll = line.line_length;
+            line.vert_len   = (crate::ui::scanline_raw(&line.line, ll) / cols) + 1;
+            line.max_length = ll;
+        }
+        num_lines += 1;
+
+        let next_info = current.borrow().file_info.next_info;
+        if next_info == NO_FURTHER_LINES { break; }
+
+        let next_line = txtalloc();
+        next_line.borrow_mut().file_info.info_location = next_info;
+        next_line.borrow_mut().prev_line               = Some(current.clone());
+        next_line.borrow_mut().line_number             = current.borrow().line_number + 1;
+        current.borrow_mut().next_line                 = Some(next_line.clone());
+        current = next_line;
+    }
+
+    buffer.num_of_lines = num_lines;
+    buffer.curr_line    = buffer.first_line.clone();
+
+    if buffer.full_name.is_none() || buffer.full_name.as_deref() == Some("") {
+        if !stored_name.is_empty() {
+            buffer.full_name = Some(stored_name.clone());
+            buffer.file_name = Some(ae_basename(&stored_name));
+        }
+    }
+    Ok(())
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Journal database (~/.aeeinfo)
+// ────────────────────────────────────────────────────────────────────────────
+
+fn db_file_path()   -> String { resolve_name("~/.aeeinfo") }
+fn lock_file_path() -> String { resolve_name("~/.aeeinfo.L") }
+
+fn lock_journal_fd() -> bool {
+    OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(lock_file_path())
+        .is_ok()
+}
+
+fn unlock_journal_fd() { let _ = fs::remove_file(lock_file_path()); }
+
+#[derive(Debug, Clone)]
+struct JournalDbEntry {
+    file_name:    Option<String>,
+    journal_name: String,
+}
+
+fn read_journal_db_inner() -> io::Result<Vec<JournalDbEntry>> {
+    // Best-effort lock; proceed even if we can't lock.
+    let _locked = lock_journal_fd();
+    let content = match fs::read_to_string(db_file_path()) {
+        Ok(c)  => c,
+        Err(e) if e.kind() == io::ErrorKind::NotFound => {
+            if _locked { unlock_journal_fd(); }
+            return Ok(Vec::new());
+        }
+        Err(e) => {
+            if _locked { unlock_journal_fd(); }
+            return Err(e);
+        }
     };
-    unlock_journal_db();
-    result
+
+    let mut list = Vec::new();
+    for line in content.lines() {
+        let mut parts = line.split_whitespace();
+        let file_len:  usize = parts.next().and_then(|v| v.parse().ok()).unwrap_or(0);
+        let _journ_len: usize = parts.next().and_then(|v| v.parse().ok()).unwrap_or(0);
+        let file_name  = if file_len > 0 { parts.next().map(|s| s.to_string()) } else { None };
+        let journ_name = parts.next().unwrap_or("").to_string();
+        if !journ_name.is_empty() {
+            list.push(JournalDbEntry { file_name, journal_name: journ_name });
+        }
+    }
+    if _locked { unlock_journal_fd(); }
+    Ok(list)
+}
+
+fn write_db_file_inner(list: &[JournalDbEntry]) -> io::Result<()> {
+    let _locked = lock_journal_fd();
+    let mut out = String::new();
+    for entry in list {
+        let flen = entry.file_name.as_deref().map(|s| s.len()).unwrap_or(0);
+        if let Some(ref f) = entry.file_name {
+            out.push_str(&format!(
+                "{} {} {} {}\n",
+                flen, entry.journal_name.len(), f, entry.journal_name
+            ));
+        } else {
+            out.push_str(&format!("0 {} {}\n", entry.journal_name.len(), entry.journal_name));
+        }
+    }
+    fs::write(db_file_path(), out)?;
+    if _locked { unlock_journal_fd(); }
+    Ok(())
 }

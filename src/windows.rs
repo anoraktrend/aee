@@ -184,6 +184,8 @@ pub fn add_buf(ident: &str) -> Buffer {
         name: ident.to_string(),
         file_name: None,
         full_name: None,
+        orig_dir: None,
+        next_buff: None,
         first_line: Some(first_line.clone()),
         curr_line: Some(first_line),
         position: 1,
@@ -200,6 +202,11 @@ pub fn add_buf(ident: &str) -> Buffer {
         last_line: rows as i32 - 2,
         last_col: cols as i32 - 1,
         main_buffer: false,
+        dos_file: false,
+        journalling: false,
+        journal_file: None,
+        fileinfo_mtime: 0,
+        fileinfo_size: 0,
     }
 }
 

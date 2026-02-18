@@ -10,29 +10,60 @@ use crossterm::{
 use std::io::{stdout, Write};
 
 use crate::highlighting::TokenKind;
+use crate::editor_state::TextLine;
 
-// Initialize terminal
-pub fn init_ui() -> Result<(), Box<dyn std::error::Error>> {
-    let mut stdout = stdout();
-    execute!(stdout, terminal::EnterAlternateScreen)?;
-    execute!(stdout, cursor::Hide)?;
-    terminal::enable_raw_mode()?;
-    Ok(())
+// ────────────────────────────────────────────────────────────────────────────
+// Terminal size helpers (mirrors C globals COLS / LINES)
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Return the current terminal width (mirrors C `COLS`).
+#[allow(non_snake_case)]
+pub fn COLS() -> i32 {
+    terminal::size().map(|(w, _)| w as i32).unwrap_or(80)
 }
 
-// Cleanup terminal
-pub fn cleanup_ui() -> Result<(), Box<dyn std::error::Error>> {
-    let mut stdout = stdout();
-    execute!(stdout, style::ResetColor)?;
-    execute!(stdout, cursor::Show)?;
-    execute!(stdout, terminal::LeaveAlternateScreen)?;
-    terminal::disable_raw_mode()?;
-    Ok(())
+/// Return the current terminal height (mirrors C `LINES`).
+#[allow(non_snake_case, dead_code)]
+pub fn LINES() -> i32 {
+    terminal::size().map(|(_, h)| h as i32).unwrap_or(24)
 }
 
 // Get terminal size
 pub fn get_terminal_size() -> (u16, u16) {
     terminal::size().unwrap_or((80, 24))
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// scanline (mirrors C `scanline()` in aee.c)
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Compute the screen-column position of character at 1-based `position`
+/// within `line`, taking tabs and control characters into account.
+/// Mirrors C `scanline(line, position)`.
+pub fn scanline(line: &TextLine, position: i32) -> i32 {
+    scanline_raw(&line.line, position)
+}
+
+/// Raw scanline that works on a plain `&str` content.
+pub fn scanline_raw(content: &str, position: i32) -> i32 {
+    let mut scr_pos = 0i32;
+    let chars: Vec<char> = content.chars().collect();
+    let limit = (position - 1).min(chars.len() as i32) as usize;
+    for i in 0..limit {
+        let ch = chars[i];
+        scr_pos += len_char_at(scr_pos, ch);
+    }
+    scr_pos
+}
+
+fn len_char_at(scr_pos: i32, ch: char) -> i32 {
+    if ch == '\t' {
+        8 - (scr_pos % 8)
+    } else if (ch as u32) < 32 || ch == '\x7f' {
+        2
+    } else {
+        1
+    }
 }
 
 // Clear screen
