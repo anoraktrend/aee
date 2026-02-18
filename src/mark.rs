@@ -12,7 +12,6 @@ use std::cell::RefCell;
 use crate::editor_state::{Buffer, TextLine};
 use crate::text::txtalloc;
 use crate::delete_ops;
-use crate::motion;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mark-mode flags (mirrors C enum values)

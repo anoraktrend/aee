@@ -8,14 +8,13 @@
 /// A single-buffer build still works identically to before.
 
 use crossterm::{
-    cursor, execute, style, queue,
+    cursor, execute, queue,
     terminal::{self, Clear, ClearType},
-    style::{Print, SetAttribute, Attribute, Color, SetForegroundColor, ResetColor},
+    style::{Print, SetAttribute, Attribute},
 };
 use std::io::{self, Write};
 
 use crate::editor_state::Buffer;
-use crate::ui;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Screen layout constants

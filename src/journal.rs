@@ -14,14 +14,14 @@
 /// A master database at `~/.aeeinfo` tracks which files are currently
 /// being journalled.
 
-use std::fs::{self, File, OpenOptions};
+use std::fs::{self, File};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use crate::editor_state::{Buffer, TextLine, AeFileInfo};
+use crate::editor_state::{Buffer, TextLine};
 use crate::text::txtalloc;
 
 // ──────────────────────────────────────────────────────────────────────────────

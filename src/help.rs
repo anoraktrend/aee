@@ -8,7 +8,6 @@
 
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Seek, SeekFrom};
-use std::path::Path;
 
 use crossterm::{
     cursor, execute, style,
@@ -101,7 +100,7 @@ fn open_help_file(configured: Option<&str>) -> Option<File> {
 fn display_page(reader: &mut BufReader<File>, stdout: &mut io::Stdout) -> bool {
     use crossterm::style::Print;
 
-    let (cols, rows) = terminal::size().unwrap_or((80, 24));
+    let (_cols, rows) = terminal::size().unwrap_or((80, 24));
     let _ = execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0));
 
     let mut row = 0u16;
