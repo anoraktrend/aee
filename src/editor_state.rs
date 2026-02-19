@@ -466,6 +466,12 @@ impl EditorState {
             buff.scr_pos      = 0;
             buff.scr_vert     = 0;
             buff.scr_horz     = 0;
+            
+            // Initialize window geometry from terminal size
+            let (cols, rows) = crate::ui::get_terminal_size();
+            buff.lines = rows as i32 - 1;
+            buff.last_line = rows as i32 - 2;
+            buff.last_col = cols as i32 - 1;
         }
 
         self.num_of_bufs    = 1;

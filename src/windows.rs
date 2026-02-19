@@ -13,6 +13,7 @@ use crossterm::{
     cursor, execute, queue,
     terminal::{self, Clear, ClearType},
     style::{Print, SetAttribute, Attribute},
+    cursor::SetCursorStyle,
 };
 use std::io::{self, Write};
 
@@ -239,7 +240,8 @@ pub fn set_up_term() -> io::Result<()> {
     execute!(
         io::stdout(),
         terminal::EnterAlternateScreen,
-        cursor::Hide,
+        cursor::Show,
+        SetCursorStyle::BlinkingBlock,
         Clear(ClearType::All),
     )?;
     Ok(())

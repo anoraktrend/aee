@@ -88,12 +88,18 @@ pub struct LspClient {
     rx: mpsc::UnboundedReceiver<LspMessage>,
     /// Responses that arrived but haven't been consumed by wait_for_response yet.
     pending_responses: HashMap<i64, Value>,
-    /// Latest diagnostics keyed by URI.
-    pub diagnostics: HashMap<String, Value>,
-    /// Latest semantic tokens keyed by URI.
-    pub semantic_tokens: HashMap<String, Vec<SemanticToken>>,
+    /// Back buffer for diagnostics (written by background task).
+    diagnostics_back: HashMap<String, Value>,
+    /// Front buffer for diagnostics (read by main thread).
+    diagnostics_front: HashMap<String, Value>,
+    /// Back buffer for semantic tokens (written by background task).
+    semantic_tokens_back: HashMap<String, Vec<SemanticToken>>,
+    /// Front buffer for semantic tokens (read by main thread).
+    semantic_tokens_front: HashMap<String, Vec<SemanticToken>>,
     /// Token types advertised during initialize (mirrors TOKEN_TYPES by default).
     pub token_type_legend: Vec<String>,
+    /// Flag indicating if back buffer has new data.
+    has_pending_updates: bool,
 }
 
 impl LspClient {
@@ -177,9 +183,12 @@ impl LspClient {
             request_id: 0,
             rx,
             pending_responses: HashMap::new(),
-            diagnostics: HashMap::new(),
-            semantic_tokens: HashMap::new(),
+            diagnostics_back: HashMap::new(),
+            diagnostics_front: HashMap::new(),
+            semantic_tokens_back: HashMap::new(),
+            semantic_tokens_front: HashMap::new(),
             token_type_legend: TOKEN_TYPES.iter().map(|s| s.to_string()).collect(),
+            has_pending_updates: false,
         };
 
         // Perform the mandatory initialize handshake
@@ -249,7 +258,8 @@ impl LspClient {
     fn handle_notification(&mut self, method: &str, params: Value) {
         if method == "textDocument/publishDiagnostics" {
             if let Some(uri) = params["uri"].as_str() {
-                self.diagnostics.insert(uri.to_string(), params["diagnostics"].clone());
+                self.diagnostics_back.insert(uri.to_string(), params["diagnostics"].clone());
+                self.has_pending_updates = true;
             }
         }
         // other notification methods are silently ignored
@@ -424,7 +434,7 @@ impl LspClient {
     }
 
     /// Request semantic tokens for an entire document.
-    /// On success, decodes and caches them in `self.semantic_tokens[uri]`.
+    /// On success, decodes and caches them in the back buffer.
     pub async fn semantic_tokens_full(
         &mut self,
         uri: &str,
@@ -443,7 +453,8 @@ impl LspClient {
                     .filter_map(|v| v.as_u64())
                     .collect();
                 let tokens = decode_semantic_tokens(&data);
-                self.semantic_tokens.insert(uri.to_string(), tokens);
+                self.semantic_tokens_back.insert(uri.to_string(), tokens);
+                self.has_pending_updates = true;
             }
         }
         Ok(())
@@ -457,13 +468,29 @@ impl LspClient {
         Ok(())
     }
 
-    /// Get cached diagnostics for a URI, if any.
-    pub fn get_diagnostics(&self, uri: &str) -> Option<&Value> {
-        self.diagnostics.get(uri)
+    /// Swap front and back buffers if there are pending updates.
+    /// Call this after polling messages to make new data visible to readers.
+    /// Returns true if buffers were swapped.
+    pub fn swap_buffers(&mut self) -> bool {
+        if !self.has_pending_updates {
+            return false;
+        }
+        std::mem::swap(&mut self.diagnostics_front, &mut self.diagnostics_back);
+        std::mem::swap(&mut self.semantic_tokens_front, &mut self.semantic_tokens_back);
+        // Clear the back buffers after swap so they're ready for new data
+        self.diagnostics_back.clear();
+        self.semantic_tokens_back.clear();
+        self.has_pending_updates = false;
+        true
     }
 
-    /// Get cached semantic tokens for a URI, if any.
+    /// Get cached diagnostics for a URI from the front buffer, if any.
+    pub fn get_diagnostics(&self, uri: &str) -> Option<&Value> {
+        self.diagnostics_front.get(uri)
+    }
+
+    /// Get cached semantic tokens for a URI from the front buffer, if any.
     pub fn get_semantic_tokens(&self, uri: &str) -> Option<&Vec<SemanticToken>> {
-        self.semantic_tokens.get(uri)
+        self.semantic_tokens_front.get(uri)
     }
 }

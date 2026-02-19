@@ -108,18 +108,10 @@ async fn main() {
                 match key.code {
                     // ── All Ctrl+Char bindings must come BEFORE the generic Char(c) arm ──
 
-                    // Ctrl+A – ASCII code display (fn_AC_str in C)
+                    // Ctrl+A – advance character (fn_ADV_str in C)
                     KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        // Show ASCII code of character under cursor
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            let buff = buff_rc.borrow();
-                            if let Some(ref line_rc) = buff.curr_line {
-                                let line = line_rc.borrow();
-                                let pos = (buff.position as usize).saturating_sub(1);
-                                if let Some(ch) = line.line.chars().nth(pos) {
-                                    let _ = ui::print_at(0, 0, &format!("ASCII: {} ({})", ch as u32, ch));
-                                }
-                            }
+                            motion::move_right(&mut buff_rc.borrow_mut());
                         }
                     }
                     // Ctrl+B – bottom of file (fn_EOT_str in C)
@@ -526,125 +518,10 @@ async fn main() {
                         if editor.mark_text {
                             mark::unmark_text(&mut mark_state);
                             editor.mark_text = false;
-                        } else if let Some(selected) = show_main_menu() {
-                            match selected {
-                                0 => save_file(&mut editor, &mut journal_file),
-                                1 => break,
-                                2 => {
-                                    // Search forward
-                                    let search_str = get_user_input("Search: ");
-                                    if !search_str.is_empty() {
-                                        editor.srch_str = Some(search_str.clone());
-                                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                                            search::search_forward(
-                                                &mut buff_rc.borrow_mut(),
-                                                &search_str,
-                                                editor.case_sen,
-                                            );
-                                        }
-                                    }
-                                }
-                                3 => {
-                                    // Search backward
-                                    let search_str = get_user_input("Search backward: ");
-                                    if !search_str.is_empty() {
-                                        editor.srch_str = Some(search_str.clone());
-                                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                                            search::search_backward(
-                                                &mut buff_rc.borrow_mut(),
-                                                &search_str,
-                                                editor.case_sen,
-                                            );
-                                        }
-                                    }
-                                }
-                                4 => {
-                                    // Replace next
-                                    let search_str = get_user_input("Search: ");
-                                    let replace_str = get_user_input("Replace: ");
-                                    if !search_str.is_empty() {
-                                        editor.srch_str = Some(search_str.clone());
-                                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                                            search::replace_next(
-                                                &mut buff_rc.borrow_mut(),
-                                                &search_str,
-                                                &replace_str,
-                                                editor.case_sen,
-                                            );
-                                        }
-                                    }
-                                }
-                                5 => {
-                                    // Replace all occurrences
-                                    let search_str = get_user_input("Search (replace all): ");
-                                    let replace_str = get_user_input("Replace with: ");
-                                    if !search_str.is_empty() {
-                                        editor.srch_str = Some(search_str.clone());
-                                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                                            let count = search::replace_all(
-                                                &mut buff_rc.borrow_mut(),
-                                                &search_str,
-                                                &replace_str,
-                                                editor.case_sen,
-                                            );
-                                            let _ = ui::print_at(0, 0,
-                                                &format!("Replaced {} occurrences", count));
-                                        }
-                                    }
-                                }
-                                6 => {
-                                    // Go to line
-                                    let line_num_str = get_user_input("Go to line: ");
-                                    if let Ok(n) = line_num_str.parse::<i32>() {
-                                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                                            motion::goto_line(&mut buff_rc.borrow_mut(), n);
-                                        }
-                                    }
-                                }
-                                7 => {
-                                    // Format paragraph
-                                    if let Some(buff_rc) = editor.curr_buff.clone() {
-                                        format::format_paragraph(
-                                            &mut buff_rc.borrow_mut(),
-                                            editor.left_margin,
-                                            editor.right_margin,
-                                            editor.right_justify,
-                                        );
-                                    }
-                                }
-                                8 => {
-                                    // Join next line
-                                    if let Some(buff_rc) = editor.curr_buff.clone() {
-                                        delete_ops::join_next_line(&mut buff_rc.borrow_mut());
-                                    }
-                                }
-                                9 => {
-                                    // Delete to end of line
-                                    if let Some(buff_rc) = editor.curr_buff.clone() {
-                                        let deleted = delete_ops::del_to_eol(&mut buff_rc.borrow_mut());
-                                        if !deleted.is_empty() {
-                                            editor.d_word = Some(deleted);
-                                        }
-                                    }
-                                }
-                                10 => help::help(None), // Help
-                                11 => {
-                                    // Show current working directory
-                                    let pwd = file_ops::show_pwd();
-                                    let _ = ui::print_at(0, 0, &format!("PWD: {}", pwd));
-                                }
-                                12 => {
-                                    // Diff current buffer against on-disk file
-                                    if let Some(diff) = file_ops::diff_file(&editor) {
-                                        // Show diff in a simple manner (first few lines)
-                                        for (i, line) in diff.lines().take(5).enumerate() {
-                                            let _ = ui::print_at(0, i as u16, line);
-                                        }
-                                    } else {
-                                        let _ = ui::print_at(0, 0, "No file to diff");
-                                    }
-                                }
-                                _ => {}
+                        } else {
+                            // Show the main menu - if it returns true, exit the editor
+                            if show_main_menu(&mut editor, &mut journal_file) {
+                                break;
                             }
                         }
                     }
@@ -691,26 +568,54 @@ async fn main() {
     }
 }
 
+/// Display the key binding bar at the top of the screen (matching the C version)
+fn draw_key_bindings(y: u16, width: u16) -> Result<u16, Box<dyn std::error::Error>> {
+    // Key bindings exactly like the C AEE version
+    let bindings = [
+        "Esc  menu       ^P   prev page  ^K   del char   ^O   end of lin ^Y   adv word   ^G^P prev buff  ^G^V forward    ^J   carrg rtrn",
+        "^E   command    ^L   del line   ^G^K und char   ^U   mark       ^Z   replace    ^G^X fmt parag  ^G^R reverse    ^H   backspace",
+        "^T   top of txt ^G^L und line   ^F   search     ^X   cut        ^G^Z repl prmpt ^G^B append     ^G   GOLD",
+        "^B   end of txt ^W   del word   ^G^F srch prmpt ^C   copy       ^G^C clear line ^A   adv char   ^G^D prefix",
+        "^N   next page  ^G^W und word   ^D   beg of lin ^V   paste      ^G^N next buff  ^G^Y prev word  ^R   redraw",
+    ];
+
+    let mut current_y = y;
+    for binding in &bindings {
+        // Pad to full width and truncate if needed
+        let display = if binding.len() > width as usize {
+            binding[..width as usize].to_string()
+        } else {
+            format!("{:<width$}", binding, width = width as usize)
+        };
+        ui::print_at(0, current_y, &display)?;
+        current_y += 1;
+    }
+
+    // Bottom line showing " ^ = Ctrl key  ---- access HELP through menu ---"
+    // This line is highlighted (white on black)
+    let help_line = " ^ = Ctrl key  ---- access HELP through menu ---";
+    let help_display = if help_line.len() > width as usize {
+        help_line[..width as usize].to_string()
+    } else {
+        format!("{:<width$}", help_line, width = width as usize)
+    };
+    ui::print_highlighted_at(0, current_y, &help_display)?;
+    current_y += 1;
+
+    Ok(current_y)
+}
+
 fn draw_screen(editor: &editor_state::EditorState) -> Result<(), Box<dyn std::error::Error>> {
     ui::clear_screen()?;
 
     let (width, height) = ui::get_terminal_size();
-    let info_height = 1u16;
-    let text_start_y = info_height;
+    
+    // Draw key bindings at top (like C version)
+    let key_bindings_height = draw_key_bindings(0, width)?;
+    let text_start_y = key_bindings_height;
 
-    // ── Info / status bar ────────────────────────────────────────────────────
-    let info_text = if let Some(buff) = &editor.curr_buff {
-        let buff = buff.borrow();
-        let file_label = buff.file_name.as_deref().unwrap_or("[No File]");
-        let changed_mark = if buff.changed { " [+]" } else { "" };
-        format!(
-            " aee  {}{}  |  Ln {} Col {}  |  ^Q Quit  ^S Save  ^F Find  ^G Goto  ESC Menu",
-            file_label, changed_mark, buff.absolute_lin, buff.position - 1
-        )
-    } else {
-        " aee  |  ^Q Quit  ^S Save  ^F Find  ^G Goto  ESC Menu".to_string()
-    };
-    ui::print_status_bar(0, &info_text, width)?;
+    // ── Text area ends before the status bar at the bottom ────────────────
+    let status_bar_y = height - 1;
 
     // ── Determine language for syntax highlighting ───────────────────────────
     let lang: &str = if let Some(buff) = &editor.curr_buff {
@@ -752,7 +657,27 @@ fn draw_screen(editor: &editor_state::EditorState) -> Result<(), Box<dyn std::er
             });
 
         // Draw lines with stateful syntax highlighting (tracks /* */ block comments)
-        let mut in_block_comment = false;
+        // Compute the correct block-comment state at window_top by scanning from file start
+        let mut in_block_comment = if lang != "text" && buff.window_top > 1 {
+            // Collect lines before window_top to compute the block-comment state
+            let mut scan_line = buff.first_line.clone();
+            let mut line_num = 1;
+            let mut state = false;
+            while line_num < buff.window_top {
+                if let Some(rc) = scan_line {
+                    let txt = rc.borrow().line.clone();
+                    let (_, new_state) = highlighting::highlight_line_with_state(&txt, lang, state);
+                    state = new_state;
+                    scan_line = rc.borrow().next_line.clone();
+                    line_num += 1;
+                } else {
+                    break;
+                }
+            }
+            state
+        } else {
+            false
+        };
         // LSP uses 0-based line numbers; our window_top is 1-based.
         let mut lsp_line_idx = (buff.window_top as u32).saturating_sub(1);
         while let Some(line) = current_line {
@@ -810,6 +735,20 @@ fn draw_screen(editor: &editor_state::EditorState) -> Result<(), Box<dyn std::er
             current_line = line_data.next_line.clone();
         }
     }
+
+    // ── Status bar at the bottom ───────────────────────────────────────────
+    let info_text = if let Some(buff) = &editor.curr_buff {
+        let buff = buff.borrow();
+        let file_label = buff.file_name.as_deref().unwrap_or("[No File]");
+        let changed_mark = if buff.changed { " [+]" } else { "" };
+        format!(
+            " aee  {}{}  |  Ln {} Col {}",
+            file_label, changed_mark, buff.absolute_lin, buff.position - 1
+        )
+    } else {
+        " aee  |  Ln 1 Col 0".to_string()
+    };
+    ui::print_status_bar(status_bar_y, &info_text, width)?;
 
     // ── Reposition cursor ────────────────────────────────────────────────────
     if let Some(buff) = &editor.curr_buff {
@@ -1035,60 +974,78 @@ fn undo(editor: &mut editor_state::EditorState) {
     }
 }
 
-fn show_main_menu() -> Option<usize> {
-    let menu_items = ["Save File       ^S",
-        "Quit            ^Q",
-        "Search          ^F",
-        "Search Backward ",
-        "Replace next    ",
-        "Replace all     ",
-        "Go to line      ^G",
-        "Format Paragraph",
-        "Join Next Line  ",
-        "Delete to EOL   ",
-        "Help            ",
-        "Show PWD        ",
-        "Diff file       "];
-
+/// Display a menu and return the selected option index, or None if cancelled
+/// The menu_items are (key, label, is_submenu) tuples
+fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
     let (width, height) = ui::get_terminal_size();
     let menu_width = 30u16;
     let menu_height = menu_items.len() as u16 + 4;
     let start_x = (width - menu_width) / 2;
-    let start_y = (height - menu_height) / 2;
+    let start_y = (height - menu_height - 2) / 2;
 
     let mut selected = 0;
 
     loop {
-        // Clear and draw menu
-        ui::clear_screen().unwrap();
+        // Clear only the rectangular area that the menu will occupy
+        ui::clear_area(start_x, start_y, menu_width, menu_height + 4).unwrap();
 
-        // Title
-        ui::print_at(start_x + 2, start_y, "── Main Menu ──").unwrap();
+        // Top border: +------------------------------+
+        ui::print_highlighted_at(start_x, start_y, "+").unwrap();
+        for x in (start_x + 1)..(start_x + menu_width - 1) {
+            ui::print_highlighted_at(x, start_y, "-").unwrap();
+        }
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y, "+").unwrap();
 
-        // Separator
-        for x in start_x..start_x + menu_width {
-            ui::print_at(x, start_y + 1, "─").unwrap();
+        // Title (highlighted, centered with padding)
+        let title_padded = format!("{:^width$}", title, width = menu_width as usize - 4);
+        ui::print_highlighted_at(start_x + 2, start_y + 1, &title_padded).unwrap();
+
+        // Separator (highlighted) - items header line
+        ui::print_highlighted_at(start_x, start_y + 2, "+").unwrap();
+        for x in (start_x + 1)..(start_x + menu_width - 1) {
+            ui::print_highlighted_at(x, start_y + 2, "-").unwrap();
+        }
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y + 2, "+").unwrap();
+
+        // Items with | borders
+        for (i, (key, item, is_submenu)) in menu_items.iter().enumerate() {
+            let suffix = if *is_submenu { " >" } else { "" };
+            let prefix = if i == selected { ">" } else { " " };
+            let item_str = format!("{}{}) {}{}", prefix, key, item, suffix);
+            let item_padded = format!("{:<width$}", item_str, width = menu_width as usize - 4);
+            ui::print_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
+            // Right border
+            ui::print_highlighted_at(start_x + menu_width - 1, start_y + 3 + i as u16, "|").unwrap();
         }
 
-        // Items
-        for (i, &item) in menu_items.iter().enumerate() {
-            let prefix = if i == selected { "►" } else { " " };
-            ui::print_at(start_x + 1, start_y + 2 + i as u16, &format!("{} {}", prefix, item)).unwrap();
+        // Left border for items
+        for i in 0..menu_items.len() {
+            ui::print_highlighted_at(start_x, start_y + 3 + i as u16, "|").unwrap();
         }
 
-        // Borders
-        for y in start_y..start_y + menu_height {
-            ui::print_at(start_x, y, "│").unwrap();
-            ui::print_at(start_x + menu_width - 1, y, "│").unwrap();
+        // Empty row before bottom border
+        ui::print_highlighted_at(start_x, start_y + 3 + menu_items.len() as u16, "|").unwrap();
+        for x in (start_x + 1)..(start_x + menu_width - 1) {
+            ui::print_highlighted_at(x, start_y + 3 + menu_items.len() as u16, " ").unwrap();
         }
-        for x in start_x..start_x + menu_width {
-            ui::print_at(x, start_y + menu_height - 1, "─").unwrap();
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y + 3 + menu_items.len() as u16, "|").unwrap();
+
+        // Bottom border: +------------------------------+
+        ui::print_highlighted_at(start_x, start_y + menu_height + 2, "+").unwrap();
+        for x in (start_x + 1)..(start_x + menu_width - 1) {
+            ui::print_highlighted_at(x, start_y + menu_height + 2, "-").unwrap();
         }
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y + menu_height + 2, "+").unwrap();
+
+        // Bottom message (centered in the bottom row)
+        let cancel_msg = " press Esc to cancel ";
+        let cancel_x = start_x + (menu_width - cancel_msg.len() as u16) / 2;
+        ui::print_highlighted_at(cancel_x, start_y + menu_height + 3, cancel_msg).unwrap();
 
         // Position cursor
-        ui::move_cursor(start_x + 1, start_y + 2 + selected as u16).unwrap();
+        ui::move_cursor(start_x + 2, start_y + 3 + selected as u16).unwrap();
 
-        // Read key
+        // Read key - accept both arrow keys and letter keys
         match ui::read_key().unwrap().code {
             KeyCode::Up => {
                 selected = selected.saturating_sub(1);
@@ -1100,6 +1057,280 @@ fn show_main_menu() -> Option<usize> {
             }
             KeyCode::Enter => return Some(selected),
             KeyCode::Esc => return None,
+            KeyCode::Char(c) => {
+                // Check if user pressed a letter key
+                for (i, (key, _, _)) in menu_items.iter().enumerate() {
+                    if c.to_ascii_lowercase() == key.chars().next().unwrap() {
+                        return Some(i);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Show main menu and handle selection
+/// Returns true if user selected "leave editor" to quit
+fn show_main_menu(editor: &mut editor_state::EditorState, journal_file: &mut Option<std::fs::File>) -> bool {
+    let menu_items = [
+        ("a", "leave editor     ", false),
+        ("b", "help             ", false),
+        ("c", "edit             ", true),
+        ("d", "file operations  ", true),
+        ("e", "redraw screen    ", false),
+        ("f", "settings         ", true),
+        ("g", "search/replace   ", true),
+        ("h", "miscellaneous   ", true),
+    ];
+
+    if let Some(selected) = show_menu("main menu", &menu_items) {
+        match selected {
+            // a) leave editor - quit
+            0 => {
+                return true;
+            }
+            // b) help
+            1 => {
+                help::help(None);
+            }
+            // c) edit submenu
+            2 => {
+                show_edit_menu();
+            }
+            // d) file operations submenu
+            3 => {
+                show_file_menu(editor, journal_file);
+            }
+            // e) redraw screen
+            4 => {
+                // Just return - main loop will redraw
+            }
+            // f) settings submenu
+            5 => {
+                show_settings_menu(editor);
+            }
+            // g) search/replace submenu
+            6 => {
+                show_search_menu(editor);
+            }
+            // h) miscellaneous submenu
+            7 => {
+                show_misc_menu(editor);
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+/// Edit submenu: mark, copy, cut, paste
+fn show_edit_menu() {
+    let menu_items = [
+        ("a", "mark text               ", false),
+        ("b", "copy marked text       ", false),
+        ("c", "cut (delete) marked text", false),
+        ("d", "paste                  ", false),
+    ];
+
+    if let Some(selected) = show_menu("edit menu", &menu_items) {
+        // These would trigger the actual operations
+        // For now just show a message
+        match selected {
+            0 => { let _ = ui::print_at(0, 0, "Use ^U to mark text"); }
+            1 => { let _ = ui::print_at(0, 0, "Use ^C to copy marked text"); }
+            2 => { let _ = ui::print_at(0, 0, "Use ^X to cut marked text"); }
+            3 => { let _ = ui::print_at(0, 0, "Use ^V to paste"); }
+            _ => {}
+        }
+    }
+}
+
+/// File operations submenu
+fn show_file_menu(editor: &mut editor_state::EditorState, journal_file: &mut Option<std::fs::File>) {
+    let menu_items = [
+        ("a", "read a file           ", false),
+        ("b", "write a file          ", false),
+        ("c", "save file             ", false),
+        ("d", "print editor contents ", false),
+        ("e", "recover from journal  ", false),
+    ];
+
+    if let Some(selected) = show_menu("file menu", &menu_items) {
+        match selected {
+            0 => {
+                let name = get_user_input("Read file: ");
+                if !name.is_empty() {
+                    editor.load_file(&name);
+                }
+            }
+            1 => {
+                let name = get_user_input("Write to file: ");
+                if !name.is_empty() {
+                    let _ = file_ops::write_file(editor, &name);
+                }
+            }
+            2 => {
+                save_file(editor, journal_file);
+            }
+            3 => {
+                // Print would need printer support - just show message
+                let _ = ui::print_at(0, 0, "Print not implemented");
+            }
+            4 => {
+                // Recover from journal
+                if let Some(ref buff_rc) = editor.curr_buff {
+                    let fname = buff_rc.borrow().file_name.clone().unwrap_or_default();
+                    let jpath = journal::journal_name(&fname, None);
+                    if std::path::Path::new(&jpath).exists() {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            let _ = journal::recover_from_journal(&mut buff_rc.borrow_mut(), &jpath);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Settings submenu
+fn show_settings_menu(editor: &mut editor_state::EditorState) {
+    let menu_items = [
+        ("a", "tabs to spaces         ", false),
+        ("b", "case sensitive search ", false),
+        ("c", "literal search        ", false),
+        ("d", "search direction      ", false),
+        ("e", "observe margins       ", false),
+        ("f", "info window           ", false),
+        ("g", "status line           ", false),
+        ("h", "auto indent           ", false),
+        ("i", "overstrike            ", false),
+        ("j", "auto paragraph format ", false),
+        ("k", "multi windows         ", false),
+        ("l", "left margin           ", false),
+        ("m", "right margin          ", false),
+        ("n", "info window height    ", false),
+        ("o", "text/binary mode      ", false),
+        ("p", "current file type     ", false),
+        ("q", "save editor config    ", false),
+    ];
+
+    if let Some(selected) = show_menu("settings menu", &menu_items) {
+        match selected {
+            0 => { editor.indent = !editor.indent; }
+            1 => { editor.case_sen = !editor.case_sen; }
+            2 => { /* literal search toggle */ }
+            3 => { /* search direction toggle */ }
+            4 => { editor.observ_margins = !editor.observ_margins; }
+            5 => { /* info window toggle */ }
+            6 => { editor.status_line = !editor.status_line; }
+            7 => { editor.indent = !editor.indent; }
+            8 => { editor.overstrike = !editor.overstrike; }
+            9 => { editor.auto_format = !editor.auto_format; }
+            10 => { /* multi windows toggle */ }
+            11 => { 
+                let input = get_user_input("Left margin: ");
+                if let Ok(n) = input.parse::<i32>() {
+                    editor.left_margin = n;
+                }
+            }
+            12 => { 
+                let input = get_user_input("Right margin: ");
+                if let Ok(n) = input.parse::<i32>() {
+                    editor.right_margin = n;
+                }
+            }
+            13 => { /* info window height */ }
+            14 => { /* text/binary mode */ }
+            15 => { /* current file type */ }
+            16 => { /* save editor config */ }
+            _ => {}
+        }
+    }
+}
+
+/// Search/replace submenu
+fn show_search_menu(editor: &mut editor_state::EditorState) {
+    let menu_items = [
+        ("a", "search for ...       ", false),
+        ("b", "search               ", false),
+        ("c", "replace prompt ...   ", false),
+        ("d", "replace              ", false),
+    ];
+
+    if let Some(selected) = show_menu("search/replace menu", &menu_items) {
+        match selected {
+            0 => {
+                let s = get_user_input("Search for: ");
+                if !s.is_empty() {
+                    editor.srch_str = Some(s.clone());
+                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                        search::search_forward(&mut buff_rc.borrow_mut(), &s, editor.case_sen);
+                    }
+                }
+            }
+            1 => {
+                if let Some(ref s) = editor.srch_str {
+                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                        search::search_forward(&mut buff_rc.borrow_mut(), s, editor.case_sen);
+                    }
+                }
+            }
+            2 => {
+                let s = get_user_input("Search: ");
+                let r = get_user_input("Replace with: ");
+                if !s.is_empty() {
+                    editor.srch_str = Some(s.clone());
+                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                        let count = search::replace_all(&mut buff_rc.borrow_mut(), &s, &r, editor.case_sen);
+                        let _ = ui::print_at(0, 0, &format!("Replaced {} occurrences", count));
+                    }
+                }
+            }
+            3 => {
+                if let Some(ref s) = editor.srch_str {
+                    let r = get_user_input("Replace with: ");
+                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                        search::replace_next(&mut buff_rc.borrow_mut(), s, &r, editor.case_sen);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Miscellaneous submenu
+fn show_misc_menu(editor: &mut editor_state::EditorState) {
+    let menu_items = [
+        ("a", "format paragraph   ", false),
+        ("b", "shell command     ", false),
+        ("c", "check spelling   ", false),
+    ];
+
+    if let Some(selected) = show_menu("miscellaneous menu", &menu_items) {
+        match selected {
+            0 => {
+                if let Some(buff_rc) = editor.curr_buff.clone() {
+                    format::format_paragraph(
+                        &mut buff_rc.borrow_mut(),
+                        editor.left_margin,
+                        editor.right_margin,
+                        editor.right_justify,
+                    );
+                }
+            }
+            1 => {
+                let cmd = get_user_input("Shell command: ");
+                if !cmd.is_empty() {
+                    // Execute shell command (simple implementation)
+                    let _ = ui::print_at(0, 0, &format!("Shell not implemented: {}", cmd));
+                }
+            }
+            2 => {
+                let _ = ui::print_at(0, 0, "Check spelling not implemented");
+            }
             _ => {}
         }
     }

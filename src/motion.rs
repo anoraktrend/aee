@@ -240,16 +240,31 @@ pub fn up(buff: &mut Buffer) {
     { return; }
 
     let tscr_pos = buff.abs_pos;
-    prevline(buff);
-    buff.position  = 1;
-    buff.scr_horz  = 0;
-    buff.abs_pos   = tscr_pos;
-    find_pos(buff);
-    buff.scr_pos   = buff.scr_horz;
-    buff.scr_horz  = buff.scr_pos % COLS();
-    buff.scr_vert = buff.scr_vert.saturating_add(buff.scr_pos / COLS());
-    buff.absolute_lin = buff.absolute_lin.saturating_sub(1);
-    buff.abs_pos   = tscr_pos;
+    
+    // Move to previous line
+    let prev = buff.curr_line.as_ref().and_then(|l| l.borrow().prev_line.clone());
+    if let Some(prev_line) = prev {
+        buff.curr_line = Some(prev_line);
+        buff.position = 1;
+        buff.scr_horz = 0;
+        buff.scr_pos = 0;
+        buff.abs_pos = tscr_pos;
+        
+        // Find the position on the new line that matches our horizontal target
+        find_pos(buff);
+        buff.scr_pos = buff.scr_horz;
+        
+        // Update vertical position
+        if buff.scr_vert > 0 {
+            // Still room on screen, just move up
+            buff.scr_vert = buff.scr_vert.saturating_sub(1);
+        } else {
+            // At top of screen, scroll the window up
+            buff.window_top = buff.window_top.saturating_sub(1);
+        }
+        
+        buff.absolute_lin = buff.absolute_lin.saturating_sub(1);
+    }
 }
 
 /// Move cursor down one line (mirrors C `down()`).
@@ -260,14 +275,31 @@ pub fn down(buff: &mut Buffer) {
     { return; }
 
     let tscr_pos = buff.abs_pos;
-    nextline(buff);
-    buff.abs_pos   = tscr_pos;
-    find_pos(buff);
-    buff.scr_pos   = buff.scr_horz;
-    buff.scr_horz  = buff.scr_pos % COLS();
-    buff.scr_vert = buff.scr_vert.saturating_add(buff.scr_pos / COLS());
-    buff.absolute_lin = buff.absolute_lin.saturating_add(1);
-    buff.abs_pos   = tscr_pos;
+    
+    // Move to next line
+    let next = buff.curr_line.as_ref().and_then(|l| l.borrow().next_line.clone());
+    if let Some(next_line) = next {
+        buff.curr_line = Some(next_line);
+        buff.position = 1;
+        buff.scr_horz = 0;
+        buff.scr_pos = 0;
+        buff.abs_pos = tscr_pos;
+        
+        // Find the position on the new line that matches our horizontal target
+        find_pos(buff);
+        buff.scr_pos = buff.scr_horz;
+        
+        // Update vertical position
+        if buff.scr_vert < buff.last_line {
+            // Still room on screen, just move down
+            buff.scr_vert = buff.scr_vert.saturating_add(1);
+        } else {
+            // At bottom of screen, scroll the window
+            buff.window_top = buff.window_top.saturating_add(1);
+        }
+        
+        buff.absolute_lin = buff.absolute_lin.saturating_add(1);
+    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────

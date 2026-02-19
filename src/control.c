@@ -261,15 +261,24 @@ void paint_menu(struct menu_entries menu_list[], WINDOW *menu_win, int max_width
 			waddch(menu_win, '-');
 		waddch(menu_win, '+');
 
-		wmove(menu_win, (max_height - 2), 1);
+		wmove(menu_win, 2, 1);
+		waddch(menu_win, '+');
+		for (counter = 0; counter < (max_width - 4); counter++)
+			waddch(menu_win, '-');
+		waddch(menu_win, '+');
+
+		wstandend(menu_win);
+		wmove(menu_win, 2, 3);
+		waddstr(menu_win, menu_list[0].item_string);
+		wmove(menu_win, (max_height - 3), 1);
+		if (!nohighlight)
+			wstandout(menu_win);
 		waddch(menu_win, '+');
 		for (counter = 0; counter < (max_width - 4); counter++)
 			waddch(menu_win, '-');
 		waddch(menu_win, '+');
 		wstandend(menu_win);
-		wmove(menu_win, 2, 3);
-		waddstr(menu_win, menu_list[0].item_string);
-		wmove(menu_win, (max_height - 3), 3);
+		wmove(menu_win, (max_height - 2), 3);
 		if (menu_list[0].argument != MENU_WARN)
 			waddstr(menu_win, cancel_string);
 	}

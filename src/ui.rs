@@ -72,6 +72,18 @@ pub fn clear_screen() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Clear a rectangular area on the screen by filling with spaces.
+/// Used for overlays like menus that should only clear their own area.
+pub fn clear_area(start_x: u16, start_y: u16, width: u16, height: u16) -> Result<(), Box<dyn std::error::Error>> {
+    let mut stdout = stdout();
+    let spaces = " ".repeat(width as usize);
+    for y in start_y..start_y + height {
+        execute!(stdout, cursor::MoveTo(start_x, y), style::Print(&spaces))?;
+    }
+    stdout.flush()?;
+    Ok(())
+}
+
 // Move cursor
 pub fn move_cursor(x: u16, y: u16) -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = stdout();
@@ -119,7 +131,7 @@ pub fn print_highlighted_owned(
     print_highlighted(x, y, &borrowed)
 }
 
-/// Print the status / info bar with standout (inverted) colors.
+/// Print the status / info bar - plain text without highlight.
 pub fn print_status_bar(y: u16, text: &str, width: u16) -> Result<(), Box<dyn std::error::Error>> {
     let mut out = stdout();
     // Pad to full width
@@ -127,9 +139,23 @@ pub fn print_status_bar(y: u16, text: &str, width: u16) -> Result<(), Box<dyn st
     execute!(
         out,
         cursor::MoveTo(0, y),
-        SetForegroundColor(Color::Black),
-        style::SetBackgroundColor(Color::Cyan),
         style::Print(padded),
+        ResetColor
+    )?;
+    out.flush()?;
+    Ok(())
+}
+
+/// Print highlighted text (white foreground, black background) at position.
+/// Used for key bindings line and menu borders.
+pub fn print_highlighted_at(x: u16, y: u16, text: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let mut out = stdout();
+    execute!(
+        out,
+        cursor::MoveTo(x, y),
+        SetForegroundColor(Color::White),
+        style::SetBackgroundColor(Color::Black),
+        style::Print(text),
         style::SetBackgroundColor(style::Color::Reset),
         ResetColor
     )?;

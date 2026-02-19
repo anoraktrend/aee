@@ -534,30 +534,6 @@ src/control.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/aee.dir/build.make CMakeFiles/aee.dir/src/control.c.s
 .PHONY : src/control.c.s
 
-src/curses_compat.o: src/curses_compat.c.o
-.PHONY : src/curses_compat.o
-
-# target to build an object file
-src/curses_compat.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aee.dir/build.make CMakeFiles/aee.dir/src/curses_compat.c.o
-.PHONY : src/curses_compat.c.o
-
-src/curses_compat.i: src/curses_compat.c.i
-.PHONY : src/curses_compat.i
-
-# target to preprocess a source file
-src/curses_compat.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aee.dir/build.make CMakeFiles/aee.dir/src/curses_compat.c.i
-.PHONY : src/curses_compat.c.i
-
-src/curses_compat.s: src/curses_compat.c.s
-.PHONY : src/curses_compat.s
-
-# target to generate assembly for a file
-src/curses_compat.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aee.dir/build.make CMakeFiles/aee.dir/src/curses_compat.c.s
-.PHONY : src/curses_compat.c.s
-
 src/delete.o: src/delete.c.o
 .PHONY : src/delete.o
 
@@ -913,9 +889,6 @@ help:
 	@echo "... src/control.o"
 	@echo "... src/control.i"
 	@echo "... src/control.s"
-	@echo "... src/curses_compat.o"
-	@echo "... src/curses_compat.i"
-	@echo "... src/curses_compat.s"
 	@echo "... src/delete.o"
 	@echo "... src/delete.i"
 	@echo "... src/delete.s"
