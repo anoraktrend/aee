@@ -3,20 +3,6 @@
 version = 4
 
 [[package]]
-name = "aee"
-version = "1.0.0"
-dependencies = [
- "crossterm 0.27.0",
- "cursive",
- "lazy_static",
- "libc",
- "regex",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -36,6 +22,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "are"
+version = "1.0.0"
+dependencies = [
+ "crossterm 0.27.0",
+ "cursive",
+ "lazy_static",
+ "libc",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

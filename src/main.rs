@@ -978,7 +978,14 @@ fn undo(editor: &mut editor_state::EditorState) {
 /// The menu_items are (key, label, is_submenu) tuples
 fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
     let (width, height) = ui::get_terminal_size();
-    let menu_width = 30u16;
+    // Calculate menu width based on the longest item
+    let mut max_item_len = 0usize;
+    for (key, item, is_submenu) in menu_items {
+        let suffix_len = if *is_submenu { 2 } else { 0 };
+        let item_len = 4 + key.len() + item.len() + suffix_len; // "a) item" = 4 + len(key) + len(item)
+        max_item_len = max_item_len.max(item_len);
+    }
+    let menu_width = (max_item_len + 4).max(30).min(width as usize) as u16;
     let menu_height = menu_items.len() as u16 + 4;
     let start_x = (width - menu_width) / 2;
     let start_y = (height - menu_height - 2) / 2;
@@ -1007,26 +1014,18 @@ fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
         }
         ui::print_highlighted_at(start_x + menu_width - 1, start_y + 2, "+").unwrap();
 
-        // Items with | borders
-        for (i, (key, item, is_submenu)) in menu_items.iter().enumerate() {
-            let suffix = if *is_submenu { " >" } else { "" };
-            let prefix = if i == selected { ">" } else { " " };
-            let item_str = format!("{}{}) {}{}", prefix, key, item, suffix);
-            let item_padded = format!("{:<width$}", item_str, width = menu_width as usize - 4);
-            ui::print_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
+        // Draw vertical borders for items
+        for i in 0..menu_items.len() {
+            // Left border
+            ui::print_highlighted_at(start_x, start_y + 3 + i as u16, "|").unwrap();
             // Right border
             ui::print_highlighted_at(start_x + menu_width - 1, start_y + 3 + i as u16, "|").unwrap();
-        }
-
-        // Left border for items
-        for i in 0..menu_items.len() {
-            ui::print_highlighted_at(start_x, start_y + 3 + i as u16, "|").unwrap();
         }
 
         // Empty row before bottom border
         ui::print_highlighted_at(start_x, start_y + 3 + menu_items.len() as u16, "|").unwrap();
         for x in (start_x + 1)..(start_x + menu_width - 1) {
-            ui::print_highlighted_at(x, start_y + 3 + menu_items.len() as u16, " ").unwrap();
+            ui::print_at(x, start_y + 3 + menu_items.len() as u16, " ").unwrap();
         }
         ui::print_highlighted_at(start_x + menu_width - 1, start_y + 3 + menu_items.len() as u16, "|").unwrap();
 
@@ -1041,6 +1040,21 @@ fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
         let cancel_msg = " press Esc to cancel ";
         let cancel_x = start_x + (menu_width - cancel_msg.len() as u16) / 2;
         ui::print_highlighted_at(cancel_x, start_y + menu_height + 3, cancel_msg).unwrap();
+
+        // Draw menu items - selected item is highlighted with reverse video
+        for (i, (key, item, is_submenu)) in menu_items.iter().enumerate() {
+            let suffix = if *is_submenu { " >" } else { "" };
+            let prefix = if i == selected { ">" } else { " " };
+            let item_str = format!("{}{}) {}{}", prefix, key, item, suffix);
+            let item_padded = format!("{:<width$}", item_str, width = menu_width as usize - 2);
+            
+            if i == selected {
+                // Highlight selected item (white on black - same as borders)
+                ui::print_highlighted_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
+            } else {
+                ui::print_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
+            }
+        }
 
         // Position cursor
         ui::move_cursor(start_x + 2, start_y + 3 + selected as u16).unwrap();
