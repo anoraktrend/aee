@@ -1,10 +1,8 @@
-#![allow(dead_code)]
-
-/// Paragraph formatting – ported from src/format.c
-///
-/// Implements `Format` (manual paragraph reflow) and `Auto_Format`
-/// (automatic word-wrap as you type).  All operations work on the
-/// `Buffer` data model; the draw loop in main.rs handles rendering.
+//! Paragraph formatting – ported from src/format.c
+//!
+//! Implements `Format` (manual paragraph reflow) and `Auto_Format`
+//! (automatic word-wrap as you type).  All operations work on the
+//! `Buffer` data model; the draw loop in main.rs handles rendering.
 
 use crate::editor_state::Buffer;
 use crate::motion;
@@ -141,8 +139,8 @@ fn insert_char(buff: &mut Buffer, ch: char) {
         line.changed = true;
     }
     buff.changed = true;
-    buff.position += 1;
-    buff.scr_horz += 1;
+    buff.position = buff.position.saturating_add(1);
+    buff.scr_horz = buff.scr_horz.saturating_add(1);
     buff.scr_pos = buff.scr_horz;
     buff.abs_pos = buff.scr_pos;
 }
@@ -186,8 +184,8 @@ fn insert_line(buff: &mut Buffer) {
     }
     line_rc.borrow_mut().next_line = Some(new_line_rc.clone());
     buff.curr_line = Some(new_line_rc);
-    buff.num_of_lines += 1;
-    buff.absolute_lin += 1;
+    buff.num_of_lines = buff.num_of_lines.saturating_add(1);
+    buff.absolute_lin = buff.absolute_lin.saturating_add(1);
     buff.position = 1;
     buff.scr_horz = 0;
     buff.scr_pos = 0;
@@ -195,9 +193,9 @@ fn insert_line(buff: &mut Buffer) {
     let (_, height) = crate::ui::get_terminal_size();
     let text_height = (height as i32) - 1;
     if buff.scr_vert < text_height - 1 {
-        buff.scr_vert += 1;
+        buff.scr_vert = buff.scr_vert.saturating_add(1);
     } else {
-        buff.window_top += 1;
+        buff.window_top = buff.window_top.saturating_add(1);
     }
     buff.changed = true;
 }
@@ -432,6 +430,25 @@ pub fn auto_format(buff: &mut Buffer, right_margin: i32) {
         prev_word(buff);
         if buff.position > 1 {
             let del = del_word_at_cursor(buff);
+            // Remove any trailing space left behind by the deleted word.
+            if buff.position > 1 {
+                left(buff);
+                let trail = {
+                    match buff.curr_line.as_ref() {
+                        None => '\0',
+                        Some(line_rc) => {
+                            let line = line_rc.borrow();
+                            let p = (buff.position as usize).saturating_sub(1);
+                            line.line.chars().nth(p).unwrap_or('\0')
+                        }
+                    }
+                };
+                if trail == ' ' {
+                    del_char_at_cursor(buff);
+                } else {
+                    right(buff);
+                }
+            }
             if next_line_blank(buff) {
                 insert_line(buff);
             } else {

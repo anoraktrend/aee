@@ -1,11 +1,13 @@
-#![allow(dead_code)]
+//! Multi-buffer window management – ported from src/windows.c
+//!
+//! In the crossterm port there is no ncurses window hierarchy.  Each
+//! `Buffer` in the linked list gets a rectangular slice of the terminal
+//! screen allocated by `redo_win`.  `new_screen` repaints all of them.
+//! A single-buffer build still works identically to before.
+//!
+//! The functions below are kept for C compatibility and future multi-buffer support.
 
-/// Multi-buffer window management – ported from src/windows.c
-///
-/// In the crossterm port there is no ncurses window hierarchy.  Each
-/// `Buffer` in the linked list gets a rectangular slice of the terminal
-/// screen allocated by `redo_win`.  `new_screen` repaints all of them.
-/// A single-buffer build still works identically to before.
+#![allow(dead_code)]
 
 use crossterm::{
     cursor, execute, queue,

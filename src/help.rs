@@ -1,10 +1,8 @@
-#![allow(dead_code)]
-
-/// Help system – ported from src/help.c
-///
-/// Reads the help file (plain text with form-feeds as section separators)
-/// and displays it in the terminal, allowing the user to navigate topics.
-/// Uses crossterm instead of ncurses.
+//! Help system – ported from src/help.c
+//!
+//! Reads the help file (plain text with form-feeds as section separators)
+//! and displays it in the terminal, allowing the user to navigate topics.
+//! Uses crossterm instead of ncurses.
 
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Seek, SeekFrom};

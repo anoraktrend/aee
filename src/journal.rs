@@ -150,6 +150,8 @@ fn journ_info_init(
 }
 
 /// Remove a line from the journal linked list (mirrors C `remove_journ_line()`).
+/// This function is kept for C compatibility but not currently used in the Rust port.
+#[allow(dead_code)]
 pub fn remove_journ_line(
     journ_fd: &mut File,
     line_rc: &Rc<RefCell<TextLine>>,
@@ -327,7 +329,7 @@ pub fn recover_from_journal(
             line.vert_len   = (crate::ui::scanline_raw(&line.line, ll) / cols) + 1;
             line.max_length = ll;
         }
-        num_lines += 1;
+        num_lines = num_lines.saturating_add(1);
 
         let next_info = current.borrow().file_info.next_info;
         if next_info == NO_FURTHER_LINES { break; }

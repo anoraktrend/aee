@@ -1,11 +1,9 @@
-#![allow(dead_code)]
-
-/// Search and replace – ported from src/srch_rep.c
-///
-/// Provides forward/reverse literal search with optional case-sensitivity,
-/// mirroring the core logic of the C `search()` and `replace()` functions.
-/// The regex engine from the C original is not yet ported; only literal
-/// search is implemented here.
+//! Search and replace – ported from src/srch_rep.c
+//!
+//! Provides forward/reverse literal search with optional case-sensitivity,
+//! mirroring the core logic of the C `search()` and `replace()` functions.
+//! The regex engine from the C original is not yet ported; only literal
+//! search is implemented here.
 
 use crate::editor_state::Buffer;
 

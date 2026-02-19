@@ -247,14 +247,12 @@ impl LspClient {
     }
 
     fn handle_notification(&mut self, method: &str, params: Value) {
-        match method {
-            "textDocument/publishDiagnostics" => {
-                if let Some(uri) = params["uri"].as_str() {
-                    self.diagnostics.insert(uri.to_string(), params["diagnostics"].clone());
-                }
+        if method == "textDocument/publishDiagnostics" {
+            if let Some(uri) = params["uri"].as_str() {
+                self.diagnostics.insert(uri.to_string(), params["diagnostics"].clone());
             }
-            _ => {} // ignore other notifications
         }
+        // other notification methods are silently ignored
     }
 
     /// Wait synchronously (via tokio blocking receive) for a specific request id.

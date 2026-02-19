@@ -68,12 +68,14 @@ pub struct TextLine {
 // struct bufr (mirrors aee.h)
 // ──────────────────────────────────────────────────────────────────────────────
 /// An edit buffer – roughly equivalent to C `struct bufr`.
+/// `next_buff` links buffers in the multi-buffer list; metadata fields are
+/// populated by `load_file` and checked on save to detect external changes.
 pub struct Buffer {
     /// Buffer name (short file name or generated name like "A", "B", …).
     pub name: String,
     /// First line of text in this buffer.
     pub first_line: Option<Rc<RefCell<TextLine>>>,
-    /// Next buffer in the linked list.
+    /// Next buffer in the linked list (traversed by `EditorState::buf_count`).
     pub next_buff: Option<Rc<RefCell<Buffer>>>,
     /// Current line the cursor is on.
     pub curr_line: Option<Rc<RefCell<TextLine>>>,
@@ -154,17 +156,31 @@ pub enum LastAction {
 // ──────────────────────────────────────────────────────────────────────────────
 // Main editor state
 // ──────────────────────────────────────────────────────────────────────────────
+/// Main editor state – mirrors the collection of C globals in aee.c.
+/// Fields tagged `#[allow(dead_code)]` are C-port placeholders that will be
+/// wired up as individual features are ported from C; all others are actively
+/// used by the Rust code.
+#[allow(dead_code)]
 pub struct EditorState {
     // ── Convenience references (also exist inside curr_buff) ─────────────────
+    /// Mirrors `first_line` global – synced from `curr_buff` each iteration.
     pub first_line:  Option<Rc<RefCell<TextLine>>>,
+    /// Mirrors `curr_line` global – synced from `curr_buff` each iteration.
     pub curr_line:   Option<Rc<RefCell<TextLine>>>,
-    pub paste_buff:  Option<Rc<RefCell<TextLine>>>,
-    pub dlt_line:    Option<Rc<RefCell<TextLine>>>,
-    pub fpste_line:  Option<Rc<RefCell<TextLine>>>,
-    pub cpste_line:  Option<Rc<RefCell<TextLine>>>,
-    pub pste_tmp:    Option<Rc<RefCell<TextLine>>>,
-    pub tmp_line:    Option<Rc<RefCell<TextLine>>>,
-    pub srch_line:   Option<Rc<RefCell<TextLine>>>,
+    /// Cut/paste buffer (mirrors C `paste_buff`).
+    #[allow(dead_code)] pub paste_buff:  Option<Rc<RefCell<TextLine>>>,
+    /// Deleted-line buffer (mirrors C `dlt_line`).
+    #[allow(dead_code)] pub dlt_line:    Option<Rc<RefCell<TextLine>>>,
+    /// First paste-line pointer (mirrors C `fpste_line`).
+    #[allow(dead_code)] pub fpste_line:  Option<Rc<RefCell<TextLine>>>,
+    /// Current paste-line pointer (mirrors C `cpste_line`).
+    #[allow(dead_code)] pub cpste_line:  Option<Rc<RefCell<TextLine>>>,
+    /// Paste temp pointer (mirrors C `pste_tmp`).
+    #[allow(dead_code)] pub pste_tmp:    Option<Rc<RefCell<TextLine>>>,
+    /// Temp line pointer (mirrors C `tmp_line`).
+    #[allow(dead_code)] pub tmp_line:    Option<Rc<RefCell<TextLine>>>,
+    /// Search anchor line (mirrors C `srch_line`).
+    #[allow(dead_code)] pub srch_line:   Option<Rc<RefCell<TextLine>>>,
 
     // ── Buffer list ───────────────────────────────────────────────────────────
     pub first_buff:  Option<Rc<RefCell<Buffer>>>,
@@ -175,11 +191,15 @@ pub struct EditorState {
     pub mark_text:        bool,
     pub journ_on:         bool,
     pub input_file:       bool,
+    /// Main edit-mode flag; the event loop runs while this is `true`.
     pub edit:             bool,
-    pub gold:             bool,
+    /// Gold-key (PF1) state – not yet implemented in terminal port.
+    #[allow(dead_code)] pub gold:             bool,
     pub recover:          bool,
     pub case_sen:         bool,
+    /// True when buffer has been modified this session (mirrors C `change`).
     pub change:           bool,
+    /// Literal (non-regex) search mode.
     pub literal:          bool,
     pub forward:          bool,
     pub restricted:       bool,
@@ -189,51 +209,69 @@ pub struct EditorState {
     pub nohighlight:      bool,
     pub echo_flag:        bool,
     pub info_window:      bool,
+    /// Set when a file was given on the command line (used in startup path).
     pub recv_file:        bool,
     pub overstrike:       bool,
     pub indent:           bool,
     pub auto_format:      bool,
-    pub formatted:        bool,
+    /// Set when the current paragraph has been auto-formatted.
+    #[allow(dead_code)] pub formatted:        bool,
     pub observ_margins:   bool,
     pub right_justify:    bool,
     pub status_line:      bool,
-    pub ee_mode_menu:     bool,
+    /// Modes-menu visible flag (XAE / not yet ported).
+    #[allow(dead_code)] pub ee_mode_menu:     bool,
 
-    // ── XAE window geometry (ignored in terminal build) ───────────────────────
-    pub win_height: i32,
-    pub win_width:  i32,
+    // ── XAE window geometry (not used in terminal build) ─────────────────────
+    #[allow(dead_code)] pub win_height: i32,
+    #[allow(dead_code)] pub win_width:  i32,
 
     // ── Editing settings ──────────────────────────────────────────────────────
     pub left_margin:     i32,
     pub right_margin:    i32,
     pub tab_spacing:     i32,
     pub info_win_height: i32,
-    pub eightbit:        bool,
+    /// 8-bit (high-byte) input mode (XAE / not yet ported).
+    #[allow(dead_code)] pub eightbit:        bool,
 
     // ── Search / replace strings ──────────────────────────────────────────────
     pub srch_str:    Option<String>,
-    pub u_srch_str:  Option<String>,
-    pub old_string:  Option<String>,
-    pub u_old_string: Option<String>,
-    pub new_string:  Option<String>,
+    /// Previous search string (for undo-search; mirrors C `u_srch_str`).
+    #[allow(dead_code)] pub u_srch_str:  Option<String>,
+    /// Previous replace target (mirrors C `old_string`).
+    #[allow(dead_code)] pub old_string:  Option<String>,
+    /// Previous replace target undo (mirrors C `u_old_string`).
+    #[allow(dead_code)] pub u_old_string: Option<String>,
+    /// Replace-with string (mirrors C `new_string`).
+    #[allow(dead_code)] pub new_string:  Option<String>,
 
     // ── Miscellaneous global state ─────────────────────────────────────────────
     pub files:         Vec<String>,
     pub start_at_line: Option<String>,
-    pub print_command: String,
+    /// Shell command used to print the buffer (mirrors C `print_command`).
+    #[allow(dead_code)] pub print_command: String,
     pub journal_dir:   String,
 
     pub lines_moved: i32,
+    /// Length of the last deleted word (mirrors C `d_wrd_len`).
     pub d_wrd_len:   i32,
-    pub value:       i32,
-    pub tmp_pos:     i32,
-    pub tmp_vert:    i32,
-    pub repl_length: i32,
-    pub pst_pos:     i32,
-    pub gold_count:  i32,
+    /// General-purpose integer (mirrors C `value`).
+    #[allow(dead_code)] pub value:       i32,
+    /// Temporary cursor position (mirrors C `tmp_pos`).
+    #[allow(dead_code)] pub tmp_pos:     i32,
+    /// Temporary vertical position (mirrors C `tmp_vert`).
+    #[allow(dead_code)] pub tmp_vert:    i32,
+    /// Replacement-string length accumulator (mirrors C `repl_length`).
+    #[allow(dead_code)] pub repl_length: i32,
+    /// Paste position (mirrors C `pst_pos`).
+    #[allow(dead_code)] pub pst_pos:     i32,
+    /// Gold-key repeat count (mirrors C `gold_count`).
+    #[allow(dead_code)] pub gold_count:  i32,
     pub num_of_bufs: i32,
-    pub line_wrap:   i32,
-    pub info_type:   i32,
+    /// Line-wrap column (mirrors C `line_wrap`).
+    #[allow(dead_code)] pub line_wrap:   i32,
+    /// Info-window display type (mirrors C `info_type`).
+    #[allow(dead_code)] pub info_type:   i32,
     pub local_lines: i32,
     pub local_cols:  i32,
 
@@ -244,10 +282,15 @@ pub struct EditorState {
     /// Deleted line (mirrors `d_line`).
     pub d_line: Option<String>,
 
-    pub tab_stops:    Vec<i32>,
-    pub in_string:    String,
-    pub commands:     Vec<String>,
-    pub init_strings: Vec<String>,
+    pub tab_stops:     Vec<i32>,
+    /// Linked-list of tab-stop columns built from `tab_spacing` during init.
+    pub tab_stop_list: Option<Box<TabStop>>,
+    /// Current input string being assembled (mirrors C `in_string`).
+    #[allow(dead_code)] pub in_string:    String,
+    /// Startup command list (mirrors C `commands`).
+    #[allow(dead_code)] pub commands:     Vec<String>,
+    /// Startup init-string list (mirrors C `init_strings`).
+    #[allow(dead_code)] pub init_strings: Vec<String>,
 
     // ── LSP client ────────────────────────────────────────────────────────────
     pub lsp_client: Option<crate::lsp::LspClient>,
@@ -329,7 +372,8 @@ impl EditorState {
             d_char:       '\0',
             d_word:       None,
             d_line:       None,
-            tab_stops:    Vec::new(),
+            tab_stops:     Vec::new(),
+            tab_stop_list: None,
             in_string:    String::new(),
             commands:     Vec::new(),
             init_strings: Vec::new(),
@@ -379,8 +423,8 @@ impl EditorState {
                         _ => {}
                     }
                 }
-            } else if arg.starts_with('+') {
-                self.start_at_line = Some(arg[1..].to_string());
+            } else if let Some(rest) = arg.strip_prefix('+') {
+                self.start_at_line = Some(rest.to_string());
             } else {
                 self.files.push(arg.clone());
                 self.input_file = true;
@@ -427,6 +471,36 @@ impl EditorState {
         self.num_of_bufs    = 1;
         self.forward        = true;
         self.windows        = true;
+
+        // Build the tab-stop linked list from tab_spacing (mirrors set_tabs() in aee.c).
+        // Columns are multiples of tab_spacing up to column 160.
+        let spacing = self.tab_spacing.max(1);
+        let mut list: Option<Box<TabStop>> = None;
+        let mut col = (160 / spacing) * spacing;
+        while col > 0 {
+            list = Some(Box::new(TabStop { column: col, next_stop: list }));
+            col -= spacing;
+        }
+        self.tab_stop_list = list;
+        // Mirror into the flat Vec<i32> used by other callers.
+        self.tab_stops.clear();
+        let mut cur = self.tab_stop_list.as_deref();
+        while let Some(ts) = cur {
+            self.tab_stops.push(ts.column);
+            cur = ts.next_stop.as_deref();
+        }
+    }
+
+    /// Count buffers by walking the `first_buff → next_buff` linked list.
+    /// This is the primary reader of `Buffer::next_buff`.
+    pub fn buf_count(&self) -> i32 {
+        let mut count = 0i32;
+        let mut cur = self.first_buff.clone();
+        while let Some(b) = cur {
+            count += 1;
+            cur = b.borrow().next_buff.clone();
+        }
+        count
     }
 
     /// Load a file into the main buffer (mirrors `check_fp` + `get_file` in file.c).
@@ -484,9 +558,21 @@ impl EditorState {
             if contents.contains("\r\n") {
                 buff.dos_file = true;
             }
+
+            // Capture the working directory at load time (mirrors orig_dir in C).
+            buff.orig_dir = std::env::current_dir()
+                .ok()
+                .map(|p| p.to_string_lossy().into_owned());
+
+            // Cache file-stat info so save_file can detect external changes.
+            if let Ok(meta) = std::fs::metadata(file_name) {
+                buff.fileinfo_mtime = meta.modified()
+                    .ok()
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                buff.fileinfo_size = meta.len();
+            }
         }
     }
-
-    /// Suppress dead-code warnings on fields used only indirectly.
-    pub fn use_unused_fields(&self) { let _ = self.info_type; let _ = self.line_wrap; }
 }

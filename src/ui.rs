@@ -49,8 +49,7 @@ pub fn scanline_raw(content: &str, position: i32) -> i32 {
     let mut scr_pos = 0i32;
     let chars: Vec<char> = content.chars().collect();
     let limit = (position - 1).min(chars.len() as i32) as usize;
-    for i in 0..limit {
-        let ch = chars[i];
+    for ch in chars[..limit].iter().copied() {
         scr_pos += len_char_at(scr_pos, ch);
     }
     scr_pos

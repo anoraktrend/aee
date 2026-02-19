@@ -1,10 +1,8 @@
-#![allow(dead_code)]
-
-/// Mark / cut / copy / paste – ported from src/mark.c
-///
-/// The paste buffer is a separate linked list of `TextLine` nodes that
-/// mirrors the editor's main text list.  Copy/cut populate it; paste
-/// inserts it at the current cursor position.
+//! Mark / cut / copy / paste – ported from src/mark.c
+//!
+//! The paste buffer is a separate linked list of `TextLine` nodes that
+//! mirrors the editor's main text list.  Copy/cut populate it; paste
+//! inserts it at the current cursor position.
 
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -414,16 +412,16 @@ fn split_line_at_cursor(buff: &mut Buffer) {
     }
     line_rc.borrow_mut().next_line = Some(new_line.clone());
     buff.curr_line = Some(new_line);
-    buff.num_of_lines += 1;
-    buff.absolute_lin += 1;
+    buff.num_of_lines = buff.num_of_lines.saturating_add(1);
+    buff.absolute_lin = buff.absolute_lin.saturating_add(1);
     buff.position = 1;
     buff.scr_horz = 0;
     buff.scr_pos  = 0;
     buff.abs_pos  = 0;
     let (_, height) = crate::ui::get_terminal_size();
     let text_height = (height as i32) - 1;
-    if buff.scr_vert < text_height - 1 { buff.scr_vert += 1; }
-    else { buff.window_top += 1; }
+    if buff.scr_vert < text_height - 1 { buff.scr_vert = buff.scr_vert.saturating_add(1); }
+    else { buff.window_top = buff.window_top.saturating_add(1); }
     buff.changed = true;
 }
 

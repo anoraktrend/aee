@@ -81,7 +81,7 @@ pub fn nextline(buff: &mut Buffer) {
         buff.scr_pos   = 0;
         buff.scr_horz  = 0;
 
-        let new_vert = buff.scr_vert + vert_len;
+        let new_vert = buff.scr_vert.saturating_add(vert_len);
         buff.scr_vert = new_vert.min(buff.last_line);
     }
 }
@@ -105,7 +105,7 @@ pub fn prevline(buff: &mut Buffer) {
             .map(|l| l.borrow().line_length)
             .unwrap_or(1);
         while buff.position < ll {
-            buff.position += 1;
+            buff.position = buff.position.saturating_add(1);
         }
         let scr_p = buff.curr_line.clone()
             .map(|l| scanline(&l.borrow(), buff.position))
@@ -137,8 +137,8 @@ pub fn find_pos(buff: &mut Buffer) {
 
     while scr_horz < target && pos < ll {
         let ch = chars.get((pos - 1) as usize).copied().unwrap_or('\0');
-        scr_horz += len_char(scr_horz, ch);
-        pos += 1;
+        scr_horz = scr_horz.saturating_add(len_char(scr_horz, ch));
+        pos = pos.saturating_add(1);
     }
 
     buff.scr_horz = scr_horz % COLS();
@@ -205,8 +205,8 @@ pub fn right(buff: &mut Buffer, _disp: bool) -> bool {
             chars.get((pos - 1) as usize).copied().unwrap_or('\0')
         };
 
-        let r = buff.scr_pos + len_char(buff.scr_pos, ch);
-        buff.position += 1;
+        let r = buff.scr_pos.saturating_add(len_char(buff.scr_pos, ch));
+        buff.position = buff.position.saturating_add(1);
         buff.abs_pos   = r;
         buff.scr_pos   = r;
         buff.scr_horz  = r % COLS();
@@ -247,8 +247,8 @@ pub fn up(buff: &mut Buffer) {
     find_pos(buff);
     buff.scr_pos   = buff.scr_horz;
     buff.scr_horz  = buff.scr_pos % COLS();
-    buff.scr_vert += buff.scr_pos / COLS();
-    buff.absolute_lin -= 1;
+    buff.scr_vert = buff.scr_vert.saturating_add(buff.scr_pos / COLS());
+    buff.absolute_lin = buff.absolute_lin.saturating_sub(1);
     buff.abs_pos   = tscr_pos;
 }
 
@@ -265,8 +265,8 @@ pub fn down(buff: &mut Buffer) {
     find_pos(buff);
     buff.scr_pos   = buff.scr_horz;
     buff.scr_horz  = buff.scr_pos % COLS();
-    buff.scr_vert += buff.scr_pos / COLS();
-    buff.absolute_lin += 1;
+    buff.scr_vert = buff.scr_vert.saturating_add(buff.scr_pos / COLS());
+    buff.absolute_lin = buff.absolute_lin.saturating_add(1);
     buff.abs_pos   = tscr_pos;
 }
 
@@ -380,7 +380,7 @@ pub fn eol(buff: &mut Buffer) {
     buff.scr_pos  = scr_p;
     buff.scr_horz = scr_p % COLS();
     let delta = (scr_p / COLS()).min(buff.last_line - buff.scr_vert);
-    buff.scr_vert += delta;
+    buff.scr_vert = buff.scr_vert.saturating_add(delta);
 }
 
 /// Move to beginning of current line (mirrors C `bol()`).

@@ -1,5 +1,6 @@
 // Another Easy Editor - Rust version
 // Converted from the original C implementation
+#![allow(clippy::explicit_auto_deref)]
 
 mod editor_state;
 mod text;
@@ -29,14 +30,14 @@ async fn main() {
     editor.parse_options(&args);
     editor.initialize().await;
 
-    // Suppress unused field warnings
-    editor.use_unused_fields();
-
     // Initialize terminal UI (use windows module for proper raw-mode setup)
     if let Err(e) = windows::set_up_term() {
         eprintln!("Failed to initialize terminal: {}", e);
         return;
     }
+
+    // Track terminal dimensions so we can call windows::resize_check each loop
+    let (mut last_cols, mut last_rows) = ui::get_terminal_size();
 
     // If a file was given on the command line, load it (or open a blank buffer
     // for a brand-new path).  With no argument the editor starts with an
@@ -59,12 +60,37 @@ async fn main() {
         }
     }
 
+    // If -r flag was given, attempt crash recovery from the journal file
+    if editor.recover && !editor.files.is_empty() {
+        let file_name = editor.files[0].clone();
+        let jdir = if editor.journal_dir.is_empty() { None } else { Some(editor.journal_dir.as_str()) };
+        let jpath = journal::journal_name(&file_name, jdir);
+        if std::path::Path::new(&jpath).exists() {
+            if let Some(buff_rc) = editor.curr_buff.clone() {
+                match journal::recover_from_journal(&mut buff_rc.borrow_mut(), &jpath) {
+                    Ok(_) => { /* recovery succeeded; buffer is now populated from journal */ }
+                    Err(e) => eprintln!("Journal recovery failed: {}", e),
+                }
+            }
+        }
+    }
+
     // Mark / cut / copy / paste state
     let mut mark_state = mark::MarkState::new();
     let mut mark_anchor: Option<mark::MarkAnchor> = None;
 
     // Main editing loop
     loop {
+        // Check for terminal resize and update buffer geometry if needed
+        let (curr_cols, curr_rows) = ui::get_terminal_size();
+        if curr_cols != last_cols || curr_rows != last_rows {
+            last_cols = curr_cols;
+            last_rows = curr_rows;
+            if let Some(buff_rc) = editor.curr_buff.clone() {
+                windows::resize_check(&mut buff_rc.borrow_mut(), curr_cols, curr_rows);
+            }
+        }
+
         // Poll any pending LSP messages (non-blocking)
         if let Some(lsp) = &mut editor.lsp_client {
             lsp.poll_messages();
@@ -82,126 +108,308 @@ async fn main() {
                 match key.code {
                     // ── All Ctrl+Char bindings must come BEFORE the generic Char(c) arm ──
 
-                    KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        break; // Ctrl+Q – quit
-                    }
-                    KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        save_file(&mut editor, &mut journal_file); // Ctrl+S – save
-                    }
-                    KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        undo(&mut editor); // Ctrl+Z – undo
-                    }
-                    KeyCode::Char('t') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    // Ctrl+A – ASCII code display (fn_AC_str in C)
+                    KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        // Show ASCII code of character under cursor
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            motion::top(&mut buff_rc.borrow_mut()); // Ctrl+T – top of file
-                        }
-                    }
-                    KeyCode::Char('b') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        // Ctrl+B – search backward (was bottom; top/bottom are PageUp/Down)
-                        if let Some(ref s) = editor.srch_str.clone() {
-                            if let Some(buff_rc) = editor.curr_buff.clone() {
-                                search::search_backward(
-                                    &mut buff_rc.borrow_mut(), s, editor.case_sen);
+                            let buff = buff_rc.borrow();
+                            if let Some(ref line_rc) = buff.curr_line {
+                                let line = line_rc.borrow();
+                                let pos = (buff.position as usize).saturating_sub(1);
+                                if let Some(ch) = line.line.chars().nth(pos) {
+                                    let _ = ui::print_at(0, 0, &format!("ASCII: {} ({})", ch as u32, ch));
+                                }
                             }
                         }
                     }
-                    KeyCode::Char('w') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    // Ctrl+B – bottom of file (fn_EOT_str in C)
+                    KeyCode::Char('b') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            delete_ops::del_word(&mut buff_rc.borrow_mut()); // Ctrl+W – del word
+                            motion::bottom(&mut buff_rc.borrow_mut());
                         }
                     }
-                    KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    // Ctrl+C – copy marked region (fn_COPY_str in C)
+                    KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        mark::copy(&mut mark_state);
+                        editor.mark_text = false;
+                    }
+                    // Ctrl+D – beginning of line (fn_BOL_str in C)
+                    KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            delete_ops::del_to_eol(&mut buff_rc.borrow_mut()); // Ctrl+K – kill to eol
+                            motion::bol(&mut buff_rc.borrow_mut());
                         }
                     }
+                    // Ctrl+E – command prompt (fn_CMD_str in C)
+                    KeyCode::Char('e') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        let cmd = get_user_input("Command: ");
+                        // Command parsing for extended functionality
+                        let parts: Vec<&str> = cmd.split_whitespace().collect();
+                        if parts.is_empty() { continue; }
+                        match parts[0] {
+                            "help" => help::help(None),
+                            "pwd" => {
+                                let pwd = file_ops::show_pwd();
+                                let _ = ui::print_at(0, 0, &format!("PWD: {}", pwd));
+                            }
+                            "mkdir" if parts.len() > 1 => {
+                                if let Err(e) = file_ops::create_dir(parts[1]) {
+                                    let _ = ui::print_at(0, 0, &format!("Error: {}", e));
+                                }
+                            }
+                            "dirname" if parts.len() > 1 => {
+                                if let Some(dir) = file_ops::ae_dirname(parts[1]) {
+                                    let _ = ui::print_at(0, 0, &format!("Dirname: {}", dir));
+                                }
+                            }
+                            "write" if parts.len() > 1 => {
+                                let saved = file_ops::write_file(&mut editor, parts[1]);
+                                let _ = ui::print_at(0, 0, &format!("Write result: {}", saved));
+                            }
+                            "format" => {
+                                if let Some(buff_rc) = editor.curr_buff.clone() {
+                                    format::format_paragraph(
+                                        &mut buff_rc.borrow_mut(),
+                                        editor.left_margin,
+                                        editor.right_margin,
+                                        editor.right_justify,
+                                    );
+                                }
+                            }
+                            "indent" => {
+                                editor.indent = !editor.indent;
+                                let _ = ui::print_at(0, 0, &format!("Indent: {}", editor.indent));
+                            }
+                            "margin" if parts.len() > 2 => {
+                                if let (Ok(lm), Ok(rm)) = (parts[1].parse::<i32>(), parts[2].parse::<i32>()) {
+                                    editor.left_margin = lm;
+                                    editor.right_margin = rm;
+                                    editor.observ_margins = true;
+                                }
+                            }
+                            "justify" => {
+                                editor.right_justify = !editor.right_justify;
+                                let _ = ui::print_at(0, 0, &format!("Right justify: {}", editor.right_justify));
+                            }
+                            "bufcount" => {
+                                let count = editor.buf_count();
+                                let _ = ui::print_at(0, 0, &format!("Buffer count: {}", count));
+                            }
+                            "append" => {
+                                // Use Append mark mode
+                                if let Some(buff_rc) = editor.curr_buff.clone() {
+                                    let buff = buff_rc.borrow();
+                                    mark::slct(&mut mark_state, &buff, mark::MarkMode::Append);
+                                    mark_anchor = mark::MarkAnchor::from_buffer(&buff);
+                                    editor.mark_text = true;
+                                }
+                            }
+                            "prefix" => {
+                                // Use Prefix mark mode
+                                if let Some(buff_rc) = editor.curr_buff.clone() {
+                                    let buff = buff_rc.borrow();
+                                    mark::slct(&mut mark_state, &buff, mark::MarkMode::Prefix);
+                                    mark_anchor = mark::MarkAnchor::from_buffer(&buff);
+                                    editor.mark_text = true;
+                                }
+                            }
+                            "status" => {
+                                editor.status_line = !editor.status_line;
+                            }
+                            _ => {}
+                        }
+                    }
+                    // Ctrl+F – search (fn_SRCH_str in C)
                     KeyCode::Char('f') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         let s = get_user_input("Search: ");
                         if !s.is_empty() {
                             editor.srch_str = Some(s.clone());
                             if let Some(buff_rc) = editor.curr_buff.clone() {
-                                search::search_forward(
-                                    &mut buff_rc.borrow_mut(), &s, editor.case_sen);
+                                if let Some(result) = search::search_forward(&mut buff_rc.borrow_mut(), &s, editor.case_sen) {
+                                    editor.lines_moved = result.lines_moved;
+                                    let _ = ui::print_at(0, 0, &format!("Found at line {}, col {}", result.line_num, result.col));
+                                }
                             }
                         }
                     }
-                    KeyCode::Char('n') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        // Ctrl+N – repeat last search forward
-                        if let Some(ref s) = editor.srch_str.clone() {
-                            if let Some(buff_rc) = editor.curr_buff.clone() {
-                                search::search_forward(
-                                    &mut buff_rc.borrow_mut(), s, editor.case_sen);
-                            }
-                        }
-                    }
+                    // Ctrl+G – goto line (fn_GOTO_str in C)
                     KeyCode::Char('g') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        // Ctrl+G – goto line
-                        let input = get_user_input("Goto line: ");
-                        if let Ok(n) = input.trim().parse::<i32>() {
+                        let line_num_str = get_user_input("Go to line: ");
+                        if let Ok(n) = line_num_str.parse::<i32>() {
                             if let Some(buff_rc) = editor.curr_buff.clone() {
                                 motion::goto_line(&mut buff_rc.borrow_mut(), n);
                             }
                         }
                     }
+                    // Ctrl+H – backspace (fn_BCK_str in C) - handled by Backspace key
+                    // Ctrl+I – tab (handled elsewhere)
+                    // Ctrl+J – newline/CR (fn_CR_str in C)
                     KeyCode::Char('j') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        // Ctrl+J – format / reflow paragraph
+                        insert_newline(&mut editor);
+                    }
+                    // Ctrl+K – delete character (fn_DC_str in C)
+                    KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            format::format_paragraph(
-                                &mut buff_rc.borrow_mut(),
-                                editor.left_margin,
-                                editor.right_margin,
-                                false,
-                            );
+                            if let Some(ch) = delete_ops::delete_forward(&mut buff_rc.borrow_mut()) {
+                                editor.d_char = ch;
+                            }
                         }
                     }
-                    KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        // Ctrl+A – toggle auto-format (apply one auto_format pass)
+                    // Ctrl+L – delete line (fn_DL_str in C)
+                    KeyCode::Char('l') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            format::auto_format(
-                                &mut buff_rc.borrow_mut(),
-                                editor.right_margin,
-                            );
+                            let deleted = delete_ops::del_line(&mut buff_rc.borrow_mut());
+                            if !deleted.is_empty() { editor.d_line = Some(deleted); }
                         }
                     }
-
-                    // ── Mark / cut / copy / paste (F1–F4) ───────────────────────────────
-                    KeyCode::F(1) => {
-                        // F1 – begin mark
+                    // Ctrl+N – next page (fn_NP_str in C)
+                    KeyCode::Char('n') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::next_page(&mut buff_rc.borrow_mut());
+                        }
+                    }
+                    // Ctrl+O – end of line (fn_EOL_str in C)
+                    KeyCode::Char('o') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::eol(&mut buff_rc.borrow_mut());
+                        }
+                    }
+                    // Ctrl+P – previous page (fn_PP_str in C)
+                    KeyCode::Char('p') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::prev_page(&mut buff_rc.borrow_mut());
+                        }
+                    }
+                    // Ctrl+Q – quit (reserved in C, but used here for exit)
+                    KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        break;
+                    }
+                    // Ctrl+R – redraw screen (fn_RD_str in C)
+                    KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        // Terminal will redraw on next loop iteration
+                    }
+                    // Ctrl+S – save (reserved in C)
+                    KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        save_file(&mut editor, &mut journal_file);
+                    }
+                    // Ctrl+T – top of file (fn_BOT_str in C)
+                    KeyCode::Char('t') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::top(&mut buff_rc.borrow_mut());
+                        }
+                    }
+                    // Ctrl+U – mark (fn_MARK_str in C)
+                    KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
                             let buff = buff_rc.borrow();
                             mark::slct(&mut mark_state, &buff, mark::MarkMode::Mark);
                             mark_anchor = mark::MarkAnchor::from_buffer(&buff);
+                            editor.mark_text = true;
                         }
                     }
-                    KeyCode::F(2) => {
-                        // F2 – copy marked region
-                        mark::copy(&mut mark_state);
-                    }
-                    KeyCode::F(3) => {
-                        // F3 – cut marked region
-                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                            if let Some(anchor) = mark_anchor.take() {
-                                mark::cut(
-                                    &mut mark_state,
-                                    &mut buff_rc.borrow_mut(),
-                                    anchor.line,
-                                    anchor.pos,
-                                );
-                            }
-                        }
-                    }
-                    KeyCode::F(4) => {
-                        // F4 – paste
+                    // Ctrl+V – paste (fn_PST_str in C)
+                    KeyCode::Char('v') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if let Some(buff_rc) = editor.curr_buff.clone() {
                             mark::paste(&mark_state, &mut buff_rc.borrow_mut());
                         }
+                    }
+                    // Ctrl+W – delete word (fn_DW_str in C)
+                    KeyCode::Char('w') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            let deleted = delete_ops::del_word(&mut buff_rc.borrow_mut());
+                            if !deleted.is_empty() { editor.d_word = Some(deleted); }
+                        }
+                    }
+                    // Ctrl+X – cut (fn_CUT_str in C)
+                    KeyCode::Char('x') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            if let Some(anchor) = mark_anchor.take() {
+                                mark::cut(&mut mark_state, &mut buff_rc.borrow_mut(), anchor.line, anchor.pos);
+                            }
+                        }
+                        editor.mark_text = false;
+                    }
+                    // Ctrl+Y – advance word (fn_AW_str in C)
+                    KeyCode::Char('y') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::adv_word(&mut buff_rc.borrow_mut());
+                        }
+                    }
+                    // Ctrl+Z – undo (fn_UNDO_str in C)
+                    KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        undo(&mut editor);
+                    }
+
+                    // ── Function keys F1–F8 (matches C code f[] array) ───────────────────────────────
+                    // F1 – GOLD key (fn_GOLD_str in C)
+                    KeyCode::F(1) => {
+                        editor.gold = !editor.gold;
+                    }
+                    // F2 – undelete character (fn_UDC_str in C)
+                    KeyCode::F(2) => {
+                        if editor.d_char != '\0' {
+                            if let Some(buff_rc) = editor.curr_buff.clone() {
+                                delete_ops::insert_char_at_cursor(&mut buff_rc.borrow_mut(), editor.d_char);
+                            }
+                        }
+                    }
+                    // F3 – delete word (fn_DW_str in C)
+                    KeyCode::F(3) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            let deleted = delete_ops::del_word(&mut buff_rc.borrow_mut());
+                            if !deleted.is_empty() { editor.d_word = Some(deleted); }
+                        }
+                    }
+                    // F4 – advance word (fn_AW_str in C)
+                    KeyCode::F(4) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::adv_word(&mut buff_rc.borrow_mut());
+                        }
+                    }
+                    // F5 – search (fn_SRCH_str in C)
+                    KeyCode::F(5) => {
+                        let s = get_user_input("Search: ");
+                        if !s.is_empty() {
+                            editor.srch_str = Some(s.clone());
+                            if let Some(buff_rc) = editor.curr_buff.clone() {
+                                search::search_forward(&mut buff_rc.borrow_mut(), &s, editor.case_sen);
+                            }
+                        }
+                    }
+                    // F6 – mark (fn_MARK_str in C)
+                    KeyCode::F(6) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            let buff = buff_rc.borrow();
+                            mark::slct(&mut mark_state, &buff, mark::MarkMode::Mark);
+                            mark_anchor = mark::MarkAnchor::from_buffer(&buff);
+                            editor.mark_text = true;
+                        }
+                    }
+                    // F7 – cut (fn_CUT_str in C)
+                    KeyCode::F(7) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            if let Some(anchor) = mark_anchor.take() {
+                                mark::cut(&mut mark_state, &mut buff_rc.borrow_mut(), anchor.line, anchor.pos);
+                            }
+                        }
+                        editor.mark_text = false;
+                    }
+                    // F8 – advance line (fn_AL_str in C)
+                    KeyCode::F(8) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::adv_line(&mut buff_rc.borrow_mut());
+                        }
+                    }
+
+                    // ── Insert key – toggle overstrike mode ──────────────────────────────
+                    KeyCode::Insert => {
+                        editor.overstrike = !editor.overstrike;
                     }
 
                     // ── Generic printable character – must come last among Char arms ──
                     KeyCode::Char(c) => {
                         insert_char(&mut editor, c);
-                        // Auto-format on space/tab if right_margin is set
-                        if editor.right_margin > 0 && (c == ' ' || c == '\t') {
+                        // Auto-format on space/tab if auto_format is enabled and right_margin set
+                        if editor.auto_format && editor.right_margin > 0 && (c == ' ' || c == '\t') {
                             if let Some(buff_rc) = editor.curr_buff.clone() {
                                 format::auto_format(
                                     &mut buff_rc.borrow_mut(),
@@ -242,7 +450,9 @@ async fn main() {
                     KeyCode::Delete => {
                         // Delete: delete character at cursor using delete_ops module
                         if let Some(buff_rc) = editor.curr_buff.clone() {
-                            delete_ops::delete_forward(&mut buff_rc.borrow_mut());
+                            if let Some(ch) = delete_ops::delete_forward(&mut buff_rc.borrow_mut()) {
+                                editor.d_char = ch; // save for Ctrl+U undelete
+                            }
                         }
                     }
                     KeyCode::Left => {
@@ -277,6 +487,12 @@ async fn main() {
                             motion::bol(&mut buff_rc.borrow_mut());
                         }
                     }
+                    // Ctrl+End – go to bottom of file (must come before generic End)
+                    KeyCode::End if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                            motion::bottom(&mut buff_rc.borrow_mut());
+                        }
+                    }
                     KeyCode::End => {
                         // End – end of line (motion module)
                         if let Some(buff_rc) = editor.curr_buff.clone() {
@@ -306,11 +522,16 @@ async fn main() {
                         }
                     }
                     KeyCode::Esc => {
-                        if let Some(selected) = show_main_menu() {
+                        // If mark mode is active, cancel it instead of opening menu
+                        if editor.mark_text {
+                            mark::unmark_text(&mut mark_state);
+                            editor.mark_text = false;
+                        } else if let Some(selected) = show_main_menu() {
                             match selected {
                                 0 => save_file(&mut editor, &mut journal_file),
                                 1 => break,
                                 2 => {
+                                    // Search forward
                                     let search_str = get_user_input("Search: ");
                                     if !search_str.is_empty() {
                                         editor.srch_str = Some(search_str.clone());
@@ -324,6 +545,21 @@ async fn main() {
                                     }
                                 }
                                 3 => {
+                                    // Search backward
+                                    let search_str = get_user_input("Search backward: ");
+                                    if !search_str.is_empty() {
+                                        editor.srch_str = Some(search_str.clone());
+                                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                                            search::search_backward(
+                                                &mut buff_rc.borrow_mut(),
+                                                &search_str,
+                                                editor.case_sen,
+                                            );
+                                        }
+                                    }
+                                }
+                                4 => {
+                                    // Replace next
                                     let search_str = get_user_input("Search: ");
                                     let replace_str = get_user_input("Replace: ");
                                     if !search_str.is_empty() {
@@ -338,7 +574,7 @@ async fn main() {
                                         }
                                     }
                                 }
-                                4 => {
+                                5 => {
                                     // Replace all occurrences
                                     let search_str = get_user_input("Search (replace all): ");
                                     let replace_str = get_user_input("Replace with: ");
@@ -356,7 +592,58 @@ async fn main() {
                                         }
                                     }
                                 }
-                                5 => help::help(None), // Help
+                                6 => {
+                                    // Go to line
+                                    let line_num_str = get_user_input("Go to line: ");
+                                    if let Ok(n) = line_num_str.parse::<i32>() {
+                                        if let Some(buff_rc) = editor.curr_buff.clone() {
+                                            motion::goto_line(&mut buff_rc.borrow_mut(), n);
+                                        }
+                                    }
+                                }
+                                7 => {
+                                    // Format paragraph
+                                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                                        format::format_paragraph(
+                                            &mut buff_rc.borrow_mut(),
+                                            editor.left_margin,
+                                            editor.right_margin,
+                                            editor.right_justify,
+                                        );
+                                    }
+                                }
+                                8 => {
+                                    // Join next line
+                                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                                        delete_ops::join_next_line(&mut buff_rc.borrow_mut());
+                                    }
+                                }
+                                9 => {
+                                    // Delete to end of line
+                                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                                        let deleted = delete_ops::del_to_eol(&mut buff_rc.borrow_mut());
+                                        if !deleted.is_empty() {
+                                            editor.d_word = Some(deleted);
+                                        }
+                                    }
+                                }
+                                10 => help::help(None), // Help
+                                11 => {
+                                    // Show current working directory
+                                    let pwd = file_ops::show_pwd();
+                                    let _ = ui::print_at(0, 0, &format!("PWD: {}", pwd));
+                                }
+                                12 => {
+                                    // Diff current buffer against on-disk file
+                                    if let Some(diff) = file_ops::diff_file(&editor) {
+                                        // Show diff in a simple manner (first few lines)
+                                        for (i, line) in diff.lines().take(5).enumerate() {
+                                            let _ = ui::print_at(0, i as u16, line);
+                                        }
+                                    } else {
+                                        let _ = ui::print_at(0, 0, "No file to diff");
+                                    }
+                                }
                                 _ => {}
                             }
                         }
@@ -546,9 +833,9 @@ fn insert_char(editor: &mut editor_state::EditorState, ch: char) {
                 line.line.insert(safe_pos, ch);
                 line.line_length = line.line.len() as i32;
                 line.changed = true;
-                buff.position += 1;
-                buff.abs_pos += 1;
-                buff.scr_horz += 1;
+                buff.position = buff.position.saturating_add(1);
+                buff.abs_pos = buff.abs_pos.saturating_add(1);
+                buff.scr_horz = buff.scr_horz.saturating_add(1);
                 buff.changed = true;
                 // Record undo
                 editor.last_action = Some(crate::editor_state::LastAction::InsertChar {
@@ -595,19 +882,19 @@ fn insert_newline(editor: &mut editor_state::EditorState) {
 
             // Update buffer
             buff.curr_line = Some(new_line);
-            buff.num_of_lines += 1;
+            buff.num_of_lines = buff.num_of_lines.saturating_add(1);
             buff.position = 1;
             buff.abs_pos = 0;
             buff.scr_horz = 0;
-            buff.absolute_lin += 1;
+            buff.absolute_lin = buff.absolute_lin.saturating_add(1);
             buff.changed = true;
 
             let (_, height) = ui::get_terminal_size();
             let text_height = (height as i32) - 1;
             if buff.scr_vert < text_height - 1 {
-                buff.scr_vert += 1;
+                buff.scr_vert = buff.scr_vert.saturating_add(1);
             } else {
-                buff.window_top += 1;
+                buff.window_top = buff.window_top.saturating_add(1);
             }
         }
     }
@@ -752,9 +1039,16 @@ fn show_main_menu() -> Option<usize> {
     let menu_items = ["Save File       ^S",
         "Quit            ^Q",
         "Search          ^F",
+        "Search Backward ",
         "Replace next    ",
         "Replace all     ",
-        "Help            "];
+        "Go to line      ^G",
+        "Format Paragraph",
+        "Join Next Line  ",
+        "Delete to EOL   ",
+        "Help            ",
+        "Show PWD        ",
+        "Diff file       "];
 
     let (width, height) = ui::get_terminal_size();
     let menu_width = 30u16;
