@@ -240,9 +240,18 @@ async fn main() {
                     }
                     // Ctrl+K – delete character (fn_DC_str in C)
                     KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                        if let Some(buff_rc) = editor.curr_buff.clone() {
-                            if let Some(ch) = delete_ops::delete_forward(&mut buff_rc.borrow_mut()) {
-                                editor.d_char = ch;
+                        if !key.modifiers.contains(KeyModifiers::SHIFT) {
+                            // Ctrl+K – delete character at cursor
+                            if let Some(buff_rc) = editor.curr_buff.clone() {
+                                if let Some(ch) = delete_ops::delete_forward(&mut buff_rc.borrow_mut()) {
+                                    editor.d_char = ch;
+                                }
+                            }
+                        } else {
+                            // Ctrl+Shift+K – delete to end of line (del_to_eol)
+                            if let Some(buff_rc) = editor.curr_buff.clone() {
+                                let deleted = delete_ops::del_to_eol(&mut buff_rc.borrow_mut());
+                                if !deleted.is_empty() { editor.d_word = Some(deleted); }
                             }
                         }
                     }
@@ -974,9 +983,30 @@ fn undo(editor: &mut editor_state::EditorState) {
     }
 }
 
-/// Display a menu and return the selected option index, or None if cancelled
-/// The menu_items are (key, label, is_submenu) tuples
-fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
+/// Menu position and size info for clearing later
+struct MenuArea {
+    start_x: u16,
+    start_y: u16,
+    width: u16,
+    height: u16,
+}
+
+impl MenuArea {
+    fn clear(&self) {
+        // Clear the menu area plus some extra space for the message box
+        let extra_height = 4u16;
+        let _ = ui::clear_area(self.start_x, self.start_y, self.width, self.height + extra_height);
+    }
+}
+
+/// Display a menu with optional previous menu area to clear first
+/// Returns (selected_index, area) so caller can clear it later if needed
+fn show_menu_with_area(title: &str, menu_items: &[(&str, &str, bool)], prev_menu: Option<&MenuArea>) -> Option<(usize, MenuArea)> {
+    // Clear previous menu area if provided
+    if let Some(prev) = prev_menu {
+        prev.clear();
+    }
+
     let (width, height) = ui::get_terminal_size();
     // Calculate menu width based on the longest item
     let mut max_item_len = 0usize;
@@ -989,6 +1019,14 @@ fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
     let menu_height = menu_items.len() as u16 + 4;
     let start_x = (width - menu_width) / 2;
     let start_y = (height - menu_height - 2) / 2;
+
+    // Create the menu area info to return
+    let menu_area = MenuArea {
+        start_x,
+        start_y,
+        width: menu_width,
+        height: menu_height + 4, // include message box
+    };
 
     let mut selected = 0;
 
@@ -1003,14 +1041,16 @@ fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
         }
         ui::print_highlighted_at(start_x + menu_width - 1, start_y, "+").unwrap();
 
-        // Title (highlighted, centered with padding)
-        let title_padded = format!("{:^width$}", title, width = menu_width as usize - 4);
-        ui::print_highlighted_at(start_x + 2, start_y + 1, &title_padded).unwrap();
-
+        // Title (centered with padding)
+        
+        let title_padded = format!("{:^width$}", title, width = menu_width as usize - 2);
+        ui::print_at(start_x, start_y + 1, &title_padded).unwrap();
+        ui::print_highlighted_at(start_x, start_y + 1, "|").unwrap();
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y + 1, "|").unwrap();
         // Separator (highlighted) - items header line
         ui::print_highlighted_at(start_x, start_y + 2, "+").unwrap();
         for x in (start_x + 1)..(start_x + menu_width - 1) {
-            ui::print_highlighted_at(x, start_y + 2, "-").unwrap();
+            ui::print_at(x, start_y + 2, "-").unwrap();
         }
         ui::print_highlighted_at(start_x + menu_width - 1, start_y + 2, "+").unwrap();
 
@@ -1030,27 +1070,34 @@ fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
         ui::print_highlighted_at(start_x + menu_width - 1, start_y + 3 + menu_items.len() as u16, "|").unwrap();
 
         // Bottom border: +------------------------------+
+        ui::print_highlighted_at(start_x, start_y + menu_height, "+").unwrap();
+        for x in (start_x + 1)..(start_x + menu_width - 1) {
+            ui::print_at(x, start_y + menu_height, "-").unwrap();
+        }
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y + menu_height, "+").unwrap();
+
+        // Bottom message (centered in the bottom row)
+        let cancel_msg = " press Esc to cancel ";
+        let cmsg_padded = format!("{:^width$}", cancel_msg, width = menu_width as usize - 2);
+        ui::print_at(start_x, start_y + menu_height + 1, &cmsg_padded).unwrap();
+        ui::print_highlighted_at(start_x, start_y + menu_height + 1, "|").unwrap();
+        ui::print_highlighted_at(start_x + menu_width - 1, start_y + menu_height + 1, "|").unwrap();
         ui::print_highlighted_at(start_x, start_y + menu_height + 2, "+").unwrap();
         for x in (start_x + 1)..(start_x + menu_width - 1) {
             ui::print_highlighted_at(x, start_y + menu_height + 2, "-").unwrap();
         }
         ui::print_highlighted_at(start_x + menu_width - 1, start_y + menu_height + 2, "+").unwrap();
 
-        // Bottom message (centered in the bottom row)
-        let cancel_msg = " press Esc to cancel ";
-        let cancel_x = start_x + (menu_width - cancel_msg.len() as u16) / 2;
-        ui::print_highlighted_at(cancel_x, start_y + menu_height + 3, cancel_msg).unwrap();
-
         // Draw menu items - selected item is highlighted with reverse video
         for (i, (key, item, is_submenu)) in menu_items.iter().enumerate() {
             let suffix = if *is_submenu { " >" } else { "" };
-            let prefix = if i == selected { ">" } else { " " };
+            let prefix = { " " };
             let item_str = format!("{}{}) {}{}", prefix, key, item, suffix);
             let item_padded = format!("{:<width$}", item_str, width = menu_width as usize - 2);
             
             if i == selected {
                 // Highlight selected item (white on black - same as borders)
-                ui::print_highlighted_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
+                ui::print_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
             } else {
                 ui::print_at(start_x + 1, start_y + 3 + i as u16, &item_padded).unwrap();
             }
@@ -1069,13 +1116,13 @@ fn show_menu(title: &str, menu_items: &[(&str, &str, bool)]) -> Option<usize> {
                     selected += 1;
                 }
             }
-            KeyCode::Enter => return Some(selected),
+            KeyCode::Enter => return Some((selected, menu_area)),
             KeyCode::Esc => return None,
             KeyCode::Char(c) => {
                 // Check if user pressed a letter key
                 for (i, (key, _, _)) in menu_items.iter().enumerate() {
                     if c.to_ascii_lowercase() == key.chars().next().unwrap() {
-                        return Some(i);
+                        return Some((i, menu_area));
                     }
                 }
             }
@@ -1095,10 +1142,10 @@ fn show_main_menu(editor: &mut editor_state::EditorState, journal_file: &mut Opt
         ("e", "redraw screen    ", false),
         ("f", "settings         ", true),
         ("g", "search/replace   ", true),
-        ("h", "miscellaneous   ", true),
+        ("h", "miscellaneous    ", true),
     ];
 
-    if let Some(selected) = show_menu("main menu", &menu_items) {
+    if let Some((selected, menu_area)) = show_menu_with_area("main menu", &menu_items, None) {
         match selected {
             // a) leave editor - quit
             0 => {
@@ -1110,11 +1157,11 @@ fn show_main_menu(editor: &mut editor_state::EditorState, journal_file: &mut Opt
             }
             // c) edit submenu
             2 => {
-                show_edit_menu();
+                show_edit_menu(&menu_area);
             }
             // d) file operations submenu
             3 => {
-                show_file_menu(editor, journal_file);
+                show_file_menu(editor, journal_file, &menu_area);
             }
             // e) redraw screen
             4 => {
@@ -1122,15 +1169,15 @@ fn show_main_menu(editor: &mut editor_state::EditorState, journal_file: &mut Opt
             }
             // f) settings submenu
             5 => {
-                show_settings_menu(editor);
+                show_settings_menu(editor, &menu_area);
             }
             // g) search/replace submenu
             6 => {
-                show_search_menu(editor);
+                show_search_menu(editor, &menu_area);
             }
             // h) miscellaneous submenu
             7 => {
-                show_misc_menu(editor);
+                show_misc_menu(editor, &menu_area);
             }
             _ => {}
         }
@@ -1139,7 +1186,7 @@ fn show_main_menu(editor: &mut editor_state::EditorState, journal_file: &mut Opt
 }
 
 /// Edit submenu: mark, copy, cut, paste
-fn show_edit_menu() {
+fn show_edit_menu(prev_menu: &MenuArea) {
     let menu_items = [
         ("a", "mark text               ", false),
         ("b", "copy marked text       ", false),
@@ -1147,7 +1194,7 @@ fn show_edit_menu() {
         ("d", "paste                  ", false),
     ];
 
-    if let Some(selected) = show_menu("edit menu", &menu_items) {
+    if let Some((selected, _)) = show_menu_with_area("edit menu", &menu_items, Some(prev_menu)) {
         // These would trigger the actual operations
         // For now just show a message
         match selected {
@@ -1161,16 +1208,17 @@ fn show_edit_menu() {
 }
 
 /// File operations submenu
-fn show_file_menu(editor: &mut editor_state::EditorState, journal_file: &mut Option<std::fs::File>) {
+fn show_file_menu(editor: &mut editor_state::EditorState, journal_file: &mut Option<std::fs::File>, prev_menu: &MenuArea) {
     let menu_items = [
         ("a", "read a file           ", false),
         ("b", "write a file          ", false),
         ("c", "save file             ", false),
-        ("d", "print editor contents ", false),
-        ("e", "recover from journal  ", false),
+        ("d", "diff with disk        ", false),
+        ("e", "print editor contents ", false),
+        ("f", "recover from journal  ", false),
     ];
 
-    if let Some(selected) = show_menu("file menu", &menu_items) {
+    if let Some((selected, _)) = show_menu_with_area("file menu", &menu_items, Some(prev_menu)) {
         match selected {
             0 => {
                 let name = get_user_input("Read file: ");
@@ -1188,10 +1236,18 @@ fn show_file_menu(editor: &mut editor_state::EditorState, journal_file: &mut Opt
                 save_file(editor, journal_file);
             }
             3 => {
+                // Diff with disk version
+                if let Some(diff) = file_ops::diff_file(editor) {
+                    let _ = ui::print_highlighted_at(0, 0, &diff);
+                } else {
+                    let _ = ui::print_highlighted_at(0, 0, "No diff (file not saved or no on-disk version)");
+                }
+            }
+            4 => {
                 // Print would need printer support - just show message
                 let _ = ui::print_at(0, 0, "Print not implemented");
             }
-            4 => {
+            5 => {
                 // Recover from journal
                 if let Some(ref buff_rc) = editor.curr_buff {
                     let fname = buff_rc.borrow().file_name.clone().unwrap_or_default();
@@ -1209,7 +1265,7 @@ fn show_file_menu(editor: &mut editor_state::EditorState, journal_file: &mut Opt
 }
 
 /// Settings submenu
-fn show_settings_menu(editor: &mut editor_state::EditorState) {
+fn show_settings_menu(editor: &mut editor_state::EditorState, prev_menu: &MenuArea) {
     let menu_items = [
         ("a", "tabs to spaces         ", false),
         ("b", "case sensitive search ", false),
@@ -1230,7 +1286,7 @@ fn show_settings_menu(editor: &mut editor_state::EditorState) {
         ("q", "save editor config    ", false),
     ];
 
-    if let Some(selected) = show_menu("settings menu", &menu_items) {
+    if let Some((selected, _)) = show_menu_with_area("settings menu", &menu_items, Some(prev_menu)) {
         match selected {
             0 => { editor.indent = !editor.indent; }
             1 => { editor.case_sen = !editor.case_sen; }
@@ -1265,15 +1321,16 @@ fn show_settings_menu(editor: &mut editor_state::EditorState) {
 }
 
 /// Search/replace submenu
-fn show_search_menu(editor: &mut editor_state::EditorState) {
+fn show_search_menu(editor: &mut editor_state::EditorState, prev_menu: &MenuArea) {
     let menu_items = [
         ("a", "search for ...       ", false),
-        ("b", "search               ", false),
-        ("c", "replace prompt ...   ", false),
-        ("d", "replace              ", false),
+        ("b", "search forward       ", false),
+        ("c", "search backward      ", false),
+        ("d", "replace prompt ...   ", false),
+        ("e", "replace              ", false),
     ];
 
-    if let Some(selected) = show_menu("search/replace menu", &menu_items) {
+    if let Some((selected, _)) = show_menu_with_area("search/replace menu", &menu_items, Some(prev_menu)) {
         match selected {
             0 => {
                 let s = get_user_input("Search for: ");
@@ -1285,13 +1342,30 @@ fn show_search_menu(editor: &mut editor_state::EditorState) {
                 }
             }
             1 => {
+                // Search forward (repeat last search)
                 if let Some(ref s) = editor.srch_str {
                     if let Some(buff_rc) = editor.curr_buff.clone() {
-                        search::search_forward(&mut buff_rc.borrow_mut(), s, editor.case_sen);
+                        if let Some(result) = search::search_forward(&mut buff_rc.borrow_mut(), s, editor.case_sen) {
+                            let _ = ui::print_at(0, 0, &format!("Found at line {}, col {}", result.line_num, result.col));
+                        } else {
+                            let _ = ui::print_at(0, 0, "Not found");
+                        }
                     }
                 }
             }
             2 => {
+                // Search backward (repeat last search)
+                if let Some(ref s) = editor.srch_str {
+                    if let Some(buff_rc) = editor.curr_buff.clone() {
+                        if let Some(result) = search::search_backward(&mut buff_rc.borrow_mut(), s, editor.case_sen) {
+                            let _ = ui::print_at(0, 0, &format!("Found at line {}, col {}", result.line_num, result.col));
+                        } else {
+                            let _ = ui::print_at(0, 0, "Not found");
+                        }
+                    }
+                }
+            }
+            3 => {
                 let s = get_user_input("Search: ");
                 let r = get_user_input("Replace with: ");
                 if !s.is_empty() {
@@ -1302,7 +1376,7 @@ fn show_search_menu(editor: &mut editor_state::EditorState) {
                     }
                 }
             }
-            3 => {
+            4 => {
                 if let Some(ref s) = editor.srch_str {
                     let r = get_user_input("Replace with: ");
                     if let Some(buff_rc) = editor.curr_buff.clone() {
@@ -1316,14 +1390,14 @@ fn show_search_menu(editor: &mut editor_state::EditorState) {
 }
 
 /// Miscellaneous submenu
-fn show_misc_menu(editor: &mut editor_state::EditorState) {
+fn show_misc_menu(editor: &mut editor_state::EditorState, prev_menu: &MenuArea) {
     let menu_items = [
         ("a", "format paragraph   ", false),
         ("b", "shell command     ", false),
         ("c", "check spelling   ", false),
     ];
 
-    if let Some(selected) = show_menu("miscellaneous menu", &menu_items) {
+    if let Some((selected, _)) = show_menu_with_area("miscellaneous menu", &menu_items, Some(prev_menu)) {
         match selected {
             0 => {
                 if let Some(buff_rc) = editor.curr_buff.clone() {

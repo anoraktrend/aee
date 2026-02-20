@@ -84,6 +84,7 @@ pub fn clear_area(start_x: u16, start_y: u16, width: u16, height: u16) -> Result
     Ok(())
 }
 
+
 // Move cursor
 pub fn move_cursor(x: u16, y: u16) -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = stdout();
@@ -153,8 +154,8 @@ pub fn print_highlighted_at(x: u16, y: u16, text: &str) -> Result<(), Box<dyn st
     execute!(
         out,
         cursor::MoveTo(x, y),
-        SetForegroundColor(Color::White),
-        style::SetBackgroundColor(Color::Black),
+        SetForegroundColor(Color::Black),
+        style::SetBackgroundColor(Color::White),
         style::Print(text),
         style::SetBackgroundColor(style::Color::Reset),
         ResetColor
